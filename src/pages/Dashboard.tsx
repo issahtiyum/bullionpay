@@ -15,6 +15,8 @@ const sampleOrders: Order[] = [
     status: 'Delivered',
     deliveryInfo: 'Email: user@example.com | Password: Pass123!',
     adminNotes: 'Delivered via WhatsApp',
+    isSubscription: true,
+    nextBillingDate: '2025-05-29T12:00:00Z', // 10 days from now
   },
   {
     id: '2',
@@ -28,6 +30,17 @@ const sampleOrders: Order[] = [
     productName: 'Xbox Game Pass',
     orderDate: '2023-05-17T15:45:00Z',
     status: 'Paid',
+    isSubscription: true,
+    nextBillingDate: '2025-05-22T15:45:00Z', // 3 days from now
+  },
+  {
+    id: '4',
+    productName: 'Spotify Premium',
+    orderDate: '2023-05-15T09:20:00Z',
+    status: 'Delivered',
+    deliveryInfo: 'Access via your Google account: user@gmail.com',
+    isSubscription: true,
+    nextBillingDate: '2025-05-25T09:20:00Z', // 6 days from now
   },
 ];
 
@@ -42,13 +55,11 @@ const Dashboard = () => {
   
   const filteredOrders = sampleOrders.filter((order) => {
     if (activeTab === 'all') return true;
-    // This is just a simple filter for demo purposes
-    // In a real app, orders would have more properties to filter on
     if (activeTab === 'subscription') {
-      return order.productName.includes('Netflix') || order.productName.includes('Spotify');
+      return order.isSubscription === true;
     }
     if (activeTab === 'one-time') {
-      return order.productName.includes('Gift Card') || order.productName.includes('Game Pass');
+      return !order.isSubscription;
     }
     return true;
   });

@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Eye, EyeOff } from 'lucide-react';
+import { Copy, Eye, EyeOff, Clock, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Progress } from "@/components/ui/progress";
 
 export type Order = {
   id: string;
@@ -13,6 +14,8 @@ export type Order = {
   status: 'Paid' | 'Delivered' | 'Pending';
   deliveryInfo?: string;
   adminNotes?: string;
+  isSubscription?: boolean;
+  nextBillingDate?: string;
 };
 
 const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
@@ -27,6 +30,45 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
       });
     }
   };
+
+  // Calculate days remaining for subscription
+  const getDaysRemaining = () => {
+    if (!order.isSubscription || !order.nextBillingDate) return null;
+    
+    const today = new Date();
+    const nextBilling = new Date(order.nextBillingDate);
+    const diffTime = nextBilling.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+  
+  // Get color based on days remaining
+  const getTimeRemainingColor = (daysRemaining: number) => {
+    if (daysRemaining <= 3) return "text-red-600";
+    if (daysRemaining <= 7) return "text-amber-600";
+    if (daysRemaining <= 14) return "text-bullion-purple-600";
+    return "text-bullion-purple-400";
+  };
+  
+  // Get progress percentage for subscription time remaining
+  const getTimeRemainingPercentage = (daysRemaining: number) => {
+    // Assume a standard 30-day billing cycle
+    const billingCycle = 30;
+    const daysUsed = billingCycle - daysRemaining;
+    return Math.min(100, Math.max(0, (daysUsed / billingCycle) * 100));
+  };
+  
+  // Handle renewal for subscription
+  const handleRenew = () => {
+    toast({
+      description: "Renewing your subscription...",
+    });
+    // In a real app, this would make an API call to process the renewal
+  };
+  
+  const daysRemaining = getDaysRemaining();
+  const showRenewOption = daysRemaining !== null && daysRemaining <= 7;
   
   return (
     <Card className="overflow-hidden">
@@ -49,6 +91,35 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
         <p className="text-sm text-gray-500 mb-3">
           Ordered on {new Date(order.orderDate).toLocaleDateString()}
         </p>
+        
+        {order.isSubscription && daysRemaining !== null && (
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-1">
+              <div className="flex items-center">
+                <Clock size={16} className="mr-1 text-gray-500" />
+                <span className="text-sm font-medium">Subscription renewal:</span>
+              </div>
+              <span className={`text-sm font-medium ${getTimeRemainingColor(daysRemaining)}`}>
+                {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} left
+              </span>
+            </div>
+            <Progress value={getTimeRemainingPercentage(daysRemaining)} className="h-2" />
+            
+            {showRenewOption && (
+              <div className="mt-2 text-right">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRenew}
+                  className="text-xs"
+                >
+                  <RefreshCw size={14} className="mr-1" />
+                  Renew Now
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
         
         {order.deliveryInfo && (
           <Collapsible 
