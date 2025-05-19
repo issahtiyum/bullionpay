@@ -12,12 +12,12 @@ type TabGroupProps<T extends string> = {
 function TabGroup<T extends string>({ tabs, activeTab, onTabChange, className = '' }: TabGroupProps<T>) {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange as (value: string) => void} className={className}>
-      <TabsList className="bg-bullion-purple-50 border border-bullion-purple-100">
+      <TabsList className="bg-bullion-purple-50 border border-bullion-purple-100 overflow-x-auto flex w-full">
         {tabs.map((tab) => (
           <TabsTrigger 
             key={tab.id} 
             value={tab.id}
-            className="data-[state=active]:bg-white data-[state=active]:text-bullion-purple data-[state=active]:shadow-sm"
+            className="data-[state=active]:bg-white data-[state=active]:text-bullion-purple data-[state=active]:shadow-sm whitespace-nowrap"
           >
             {tab.label}
           </TabsTrigger>

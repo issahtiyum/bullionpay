@@ -28,7 +28,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </header>
       
-      <main className="flex-grow container mx-auto px-4 py-6">
+      <main className="flex-grow container mx-auto px-4 py-6 pb-20 sm:pb-6">
         {children}
       </main>
       
@@ -40,8 +40,8 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </footer>
       
-      {/* Mobile Navigation */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
+      {/* Mobile Navigation - Added z-index and proper spacing */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-10">
         <div className="flex justify-around">
           <Link 
             to="/"

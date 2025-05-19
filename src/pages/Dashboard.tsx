@@ -73,16 +73,17 @@ const Dashboard = () => {
   
   return (
     <MainLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold mb-2">My Purchases</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-semibold mb-2">My Purchases</h1>
         <p className="text-gray-600">View and manage your orders</p>
       </div>
       
-      <div className="mb-6">
+      <div className="mb-6 overflow-x-auto pb-2">
         <TabGroup 
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={(value) => setActiveTab(value as FilterTab)}
+          className="min-w-max"
         />
       </div>
       
@@ -93,9 +94,9 @@ const Dashboard = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-xl font-medium mb-2">No purchases yet</h3>
-          <p className="text-gray-600 mb-6">
+        <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-lg sm:text-xl font-medium mb-2">No purchases yet</h3>
+          <p className="text-gray-600 mb-6 px-4">
             You haven't purchased anything yet. Explore the store to find digital products.
           </p>
           <Button onClick={() => navigate('/')}>

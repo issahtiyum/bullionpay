@@ -15,7 +15,7 @@ export type Product = {
 
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg animate-fade-in">
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg animate-fade-in w-full">
       <div className="aspect-square relative overflow-hidden bg-gray-100">
         <img 
           src={product.image} 
@@ -26,7 +26,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
       
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-medium text-gray-900 line-clamp-1">{product.name}</h3>
+          <h3 className="font-medium text-gray-900 line-clamp-1 mr-2">{product.name}</h3>
           <CategoryBadge category={product.category} />
         </div>
         <p className="text-lg font-semibold text-bullion-purple">

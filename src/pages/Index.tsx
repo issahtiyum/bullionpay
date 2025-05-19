@@ -72,20 +72,21 @@ const HomePage = () => {
   
   return (
     <MainLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold mb-2">Digital Products</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Digital Products</h1>
         <p className="text-gray-600">Browse our collection of digital goods and services</p>
       </div>
       
-      <div className="mb-6">
+      <div className="mb-6 overflow-x-auto pb-2">
         <TabGroup 
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={(value) => setActiveTab(value as FilterTab)}
+          className="min-w-max"
         />
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filteredProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
