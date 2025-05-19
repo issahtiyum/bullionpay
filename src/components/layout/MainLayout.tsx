@@ -1,10 +1,13 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, User, ShoppingCart } from "lucide-react";
+import { Home, User, ShoppingCart, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
+  const { user, logout, isAuthenticated } = useAuth();
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -21,9 +24,26 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             <Link to="/dashboard" className="hidden sm:block hover:text-bullion-purple-100 transition-colors">
               Dashboard
             </Link>
-            <Link to="/login" className="hidden sm:block hover:text-bullion-purple-100 transition-colors">
-              Login
-            </Link>
+            {isAuthenticated ? (
+              <div className="hidden sm:flex items-center gap-3">
+                <span className="text-sm">
+                  {user?.phoneNumber}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="hover:text-bullion-purple-100 text-white"
+                  onClick={logout}
+                >
+                  <LogOut size={16} className="mr-1" />
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <Link to="/login" className="hidden sm:block hover:text-bullion-purple-100 transition-colors">
+                Login
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -62,7 +82,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             className={`flex flex-col items-center p-2 ${location.pathname === '/login' ? 'text-bullion-purple-600' : 'text-gray-500'}`}
           >
             <User size={20} />
-            <span className="text-xs mt-1">Account</span>
+            <span className="text-xs mt-1">{isAuthenticated ? 'Account' : 'Login'}</span>
           </Link>
         </div>
       </nav>

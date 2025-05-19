@@ -5,6 +5,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import TabGroup from '@/components/ui/TabGroup';
 import OrderCard, { Order } from '@/components/ui/OrderCard';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Sample orders - in a real app this would come from API
 const sampleOrders: Order[] = [
@@ -50,8 +51,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const navigate = useNavigate();
   
-  // Mock authentication state - in real app would use auth context/hook
-  const isAuthenticated = true; // Just for demo, would be from auth state
+  const { isAuthenticated } = useAuth();
   
   const filteredOrders = sampleOrders.filter((order) => {
     if (activeTab === 'all') return true;

@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import CheckoutForm from '@/components/ui/CheckoutForm';
 import { Product } from '@/components/ui/ProductCard';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 // Sample products data - in a real app would come from API
 const sampleProducts: Product[] = [
@@ -73,60 +74,60 @@ const Checkout = () => {
   }
   
   const handlePaymentSuccess = () => {
-    // In a real app, we would redirect to a success page or dashboard
-    // For now, let's redirect to the dashboard
     navigate('/dashboard');
   };
   
   return (
-    <MainLayout>
-      <div className="max-w-md mx-auto">
-        <div className="mb-6">
-          <Link 
-            to={`/product/${product.id}`}
-            className="text-bullion-purple inline-flex items-center hover:underline"
-          >
-            <ArrowLeft size={16} className="mr-1" /> Back to product
-          </Link>
-        </div>
-        
-        <h1 className="text-2xl font-semibold mb-6">Checkout</h1>
-        
-        <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-xl">Order Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between mb-2">
-              <span className="font-medium">{product.name}</span>
-              <span>GHS {product.price.toFixed(2)}</span>
-            </div>
-            <div className="text-sm text-gray-500 mb-4">
-              {product.category}
-            </div>
-            
-            <div className="border-t border-gray-200 pt-4 mt-4">
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span className="text-bullion-purple">GHS {product.price.toFixed(2)}</span>
+    <ProtectedRoute>
+      <MainLayout>
+        <div className="max-w-md mx-auto">
+          <div className="mb-6">
+            <Link 
+              to={`/product/${product.id}`}
+              className="text-bullion-purple inline-flex items-center hover:underline"
+            >
+              <ArrowLeft size={16} className="mr-1" /> Back to product
+            </Link>
+          </div>
+          
+          <h1 className="text-2xl font-semibold mb-6">Checkout</h1>
+          
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xl">Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between mb-2">
+                <span className="font-medium">{product.name}</span>
+                <span>GHS {product.price.toFixed(2)}</span>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-xl">Payment Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CheckoutForm 
-              product={product}
-              onPaymentSuccess={handlePaymentSuccess}
-            />
-          </CardContent>
-        </Card>
-      </div>
-    </MainLayout>
+              <div className="text-sm text-gray-500 mb-4">
+                {product.category}
+              </div>
+              
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <div className="flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span className="text-bullion-purple">GHS {product.price.toFixed(2)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xl">Payment Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CheckoutForm 
+                product={product}
+                onPaymentSuccess={handlePaymentSuccess}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    </ProtectedRoute>
   );
 };
 

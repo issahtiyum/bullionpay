@@ -1,12 +1,19 @@
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import MainLayout from '@/components/layout/MainLayout';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+
+type LocationState = {
+  from?: {
+    pathname: string;
+  };
+};
 
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -14,7 +21,19 @@ const Login = () => {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const { login, isAuthenticated } = useAuth();
+  
+  // Get the redirect path from location state or default to dashboard
+  const from = (location.state as LocationState)?.from?.pathname || "/dashboard";
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
   
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,11 +77,12 @@ const Login = () => {
     // Simulate OTP verification - in a real app, this would verify with Supabase
     setTimeout(() => {
       setLoading(false);
+      login(phoneNumber);
       toast({
         title: "Login successful",
         description: "You have been logged in successfully",
       });
-      navigate('/dashboard');
+      navigate(from, { replace: true });
     }, 1500);
   };
   
@@ -73,9 +93,11 @@ const Login = () => {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-semibold">Sign In</CardTitle>
             <CardDescription>
-              {isOtpSent 
-                ? `Enter the verification code sent to ${phoneNumber}` 
-                : "Sign in using your phone number"
+              {from.includes('/checkout') 
+                ? "Please sign in to complete your purchase"
+                : isOtpSent 
+                  ? `Enter the verification code sent to ${phoneNumber}` 
+                  : "Sign in using your phone number"
               }
             </CardDescription>
           </CardHeader>
