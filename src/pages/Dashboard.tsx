@@ -54,10 +54,10 @@ const Dashboard = () => {
   });
   
   const tabs = [
-    { id: 'all', label: 'All Purchases' },
-    { id: 'one-time', label: 'One-time Purchases' },
-    { id: 'subscription', label: 'Subscriptions' },
-  ] as const;
+    { id: 'all' as const, label: 'All Purchases' },
+    { id: 'one-time' as const, label: 'One-time Purchases' },
+    { id: 'subscription' as const, label: 'Subscriptions' },
+  ];
   
   if (!isAuthenticated) {
     return (

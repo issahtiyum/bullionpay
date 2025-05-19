@@ -3,7 +3,7 @@ import React from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type TabGroupProps<T extends string> = {
-  tabs: Array<{ id: T; label: string }>;
+  tabs: ReadonlyArray<{ id: T; label: string }>;
   activeTab: T;
   onTabChange: (value: T) => void;
   className?: string;

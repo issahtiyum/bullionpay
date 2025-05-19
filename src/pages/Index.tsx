@@ -64,11 +64,11 @@ const HomePage = () => {
   });
   
   const tabs = [
-    { id: 'all', label: 'All Products' },
-    { id: 'subscription', label: 'Subscriptions' },
-    { id: 'giftcard', label: 'Gift Cards' },
-    { id: 'gamecredit', label: 'Game Credits' },
-  ] as const;
+    { id: 'all' as const, label: 'All Products' },
+    { id: 'subscription' as const, label: 'Subscriptions' },
+    { id: 'giftcard' as const, label: 'Gift Cards' },
+    { id: 'gamecredit' as const, label: 'Game Credits' },
+  ];
   
   return (
     <MainLayout>
