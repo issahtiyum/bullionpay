@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy } from 'lucide-react';
+import { Copy, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export type Order = {
   id: string;
@@ -16,6 +17,7 @@ export type Order = {
 
 const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   const { toast } = useToast();
+  const [showDeliveryInfo, setShowDeliveryInfo] = useState(false);
   
   const handleCopy = () => {
     if (order.deliveryInfo) {
@@ -49,23 +51,43 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
         </p>
         
         {order.deliveryInfo && (
-          <div className="mt-3 p-3 bg-gray-50 rounded-md">
-            <div className="flex justify-between items-center mb-1">
+          <Collapsible 
+            open={showDeliveryInfo}
+            onOpenChange={setShowDeliveryInfo}
+            className="mt-3"
+          >
+            <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Delivery Information:</span>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleCopy} 
-                className="h-8 w-8 p-0"
-                title="Copy to clipboard"
-              >
-                <Copy size={16} />
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleCopy} 
+                  className="h-8 w-8 p-0"
+                  title="Copy to clipboard"
+                >
+                  <Copy size={16} />
+                </Button>
+                <CollapsibleTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0"
+                    title={showDeliveryInfo ? "Hide information" : "Show information"}
+                  >
+                    {showDeliveryInfo ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
             </div>
-            <p className="text-sm text-gray-600 break-words">
-              {order.deliveryInfo}
-            </p>
-          </div>
+            <CollapsibleContent>
+              <div className="mt-1 p-3 bg-gray-50 rounded-md">
+                <p className="text-sm text-gray-600 break-words">
+                  {order.deliveryInfo}
+                </p>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
         
         {order.adminNotes && (
