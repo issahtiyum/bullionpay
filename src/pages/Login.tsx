@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,7 +36,14 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { login, isAuthenticated } = useAuth();
+  const { 
+    isAuthenticated, 
+    signUp, 
+    signUpWithPhone, 
+    signInWithEmail, 
+    signInWithPhone, 
+    verifyOtp 
+  } = useAuth();
   
   // Get the redirect path from location state or default to dashboard
   const from = (location.state as LocationState)?.from?.pathname || "/dashboard";
@@ -87,15 +95,53 @@ const Login = () => {
     
     setLoading(true);
     
-    // Simulate OTP sending - in a real app, this would call Supabase auth
-    setTimeout(() => {
-      setLoading(false);
-      setIsOtpSent(true);
+    try {
+      let result;
+      
+      if (isSignUp) {
+        if (contactMethod === 'email') {
+          // For email signup, we don't send OTP immediately, user needs to check email
+          result = await signUp(email, 'temp-password-123', firstName, lastName);
+        } else {
+          result = await signUpWithPhone(phoneNumber, firstName, lastName);
+        }
+      } else {
+        if (contactMethod === 'email') {
+          result = await signInWithEmail(email);
+        } else {
+          result = await signInWithPhone(phoneNumber);
+        }
+      }
+      
+      if (result.error) {
+        toast({
+          title: "Authentication Error",
+          description: result.error.message || "Something went wrong",
+          variant: "destructive",
+        });
+      } else {
+        if (contactMethod === 'email' && isSignUp) {
+          toast({
+            title: "Check your email",
+            description: "Please check your email for a confirmation link to complete signup",
+          });
+        } else {
+          setIsOtpSent(true);
+          toast({
+            title: "OTP Sent",
+            description: `A verification code has been sent to your ${contactMethod}`,
+          });
+        }
+      }
+    } catch (error: any) {
       toast({
-        title: "OTP Sent",
-        description: `A verification code has been sent to your ${contactMethod}`,
+        title: "Error",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
       });
-    }, 1500);
+    } finally {
+      setLoading(false);
+    }
   };
   
   const handleVerifyOtp = async (e: React.FormEvent) => {
@@ -112,32 +158,34 @@ const Login = () => {
     
     setLoading(true);
     
-    // Simulate OTP verification - in a real app, this would verify with Supabase
-    setTimeout(() => {
-      setLoading(false);
+    try {
       const contactValue = contactMethod === 'email' ? email : phoneNumber;
-      login(contactValue, firstName, lastName);
+      const otpType = contactMethod === 'email' ? 'email' : 'sms';
+      
+      const { error } = await verifyOtp(otp, otpType, contactValue);
+      
+      if (error) {
+        toast({
+          title: "Verification failed",
+          description: error.message || "Invalid verification code",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: isSignUp ? "Account created successfully" : "Login successful",
+          description: `Welcome! You have been ${isSignUp ? 'registered' : 'logged in'} successfully`,
+        });
+        navigate(from, { replace: true });
+      }
+    } catch (error: any) {
       toast({
-        title: isSignUp ? "Account created successfully" : "Login successful",
-        description: `Welcome${firstName ? ` ${firstName}` : ''}! You have been ${isSignUp ? 'registered' : 'logged in'} successfully`,
+        title: "Error",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
       });
-      navigate(from, { replace: true });
-    }, 1500);
-  };
-
-  const handleGoogleAuth = async () => {
-    setLoading(true);
-    
-    // Simulate Google authentication - in a real app, this would use Supabase Google auth
-    setTimeout(() => {
+    } finally {
       setLoading(false);
-      login('user@gmail.com', 'Google', 'User');
-      toast({
-        title: "Google authentication successful",
-        description: "You have been logged in with Google",
-      });
-      navigate(from, { replace: true });
-    }, 2000);
+    }
   };
   
   return (
@@ -328,7 +376,7 @@ const Login = () => {
                       <Separator className="w-full" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
+                      <span className="bg-white px-2 text-muted-foreground">Coming soon</span>
                     </div>
                   </div>
                   
@@ -336,8 +384,7 @@ const Login = () => {
                     type="button"
                     variant="outline"
                     className="w-full mt-4 border-bullion-purple-200 hover:bg-bullion-purple-50"
-                    onClick={handleGoogleAuth}
-                    disabled={loading}
+                    disabled
                   >
                     <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                       <path
@@ -357,7 +404,7 @@ const Login = () => {
                         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                       />
                     </svg>
-                    {loading ? 'Connecting...' : 'Continue with Google'}
+                    Continue with Google
                   </Button>
                 </div>
               </>

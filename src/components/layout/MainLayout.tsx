@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, profile, logout, isAuthenticated, loading } = useAuth();
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -24,36 +24,40 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             <Link to="/dashboard" className="hidden sm:block hover:text-bullion-purple-100 transition-colors">
               Dashboard
             </Link>
-            {isAuthenticated ? (
-              <div className="hidden sm:flex items-center gap-3">
-                <span className="text-sm">
-                  {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.contact}
-                </span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="hover:text-bullion-purple-100 text-white"
-                  onClick={logout}
-                >
-                  <LogOut size={16} className="mr-1" />
-                  Logout
-                </Button>
-              </div>
-            ) : (
-              <div className="hidden sm:flex items-center gap-3">
-                <Link 
-                  to="/login?tab=login" 
-                  className="hover:text-bullion-purple-100 transition-colors px-3 py-1 rounded"
-                >
-                  Login
-                </Link>
-                <Link 
-                  to="/login?tab=signup" 
-                  className="bg-white text-bullion-purple hover:bg-bullion-purple-50 transition-colors px-4 py-2 rounded font-medium"
-                >
-                  Sign Up
-                </Link>
-              </div>
+            {!loading && (
+              <>
+                {isAuthenticated ? (
+                  <div className="hidden sm:flex items-center gap-3">
+                    <span className="text-sm">
+                      {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : user?.email || user?.phone}
+                    </span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="hover:text-bullion-purple-100 text-white"
+                      onClick={logout}
+                    >
+                      <LogOut size={16} className="mr-1" />
+                      Logout
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="hidden sm:flex items-center gap-3">
+                    <Link 
+                      to="/login?tab=login" 
+                      className="hover:text-bullion-purple-100 transition-colors px-3 py-1 rounded"
+                    >
+                      Login
+                    </Link>
+                    <Link 
+                      to="/login?tab=signup" 
+                      className="bg-white text-bullion-purple hover:bg-bullion-purple-50 transition-colors px-4 py-2 rounded font-medium"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
