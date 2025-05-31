@@ -2,13 +2,15 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
 type User = {
-  phoneNumber: string;
+  contact: string; // phone number or email
+  firstName?: string;
+  lastName?: string;
   isAuthenticated: boolean;
 };
 
 type AuthContextType = {
   user: User | null;
-  login: (phoneNumber: string) => void;
+  login: (contact: string, firstName?: string, lastName?: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
 };
@@ -33,8 +35,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = (phoneNumber: string) => {
-    const newUser = { phoneNumber, isAuthenticated: true };
+  const login = (contact: string, firstName?: string, lastName?: string) => {
+    const newUser = { 
+      contact, 
+      firstName, 
+      lastName, 
+      isAuthenticated: true 
+    };
     setUser(newUser);
     localStorage.setItem('user', JSON.stringify(newUser));
   };

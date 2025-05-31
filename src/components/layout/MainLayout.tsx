@@ -27,7 +27,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             {isAuthenticated ? (
               <div className="hidden sm:flex items-center gap-3">
                 <span className="text-sm">
-                  {user?.phoneNumber}
+                  {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.contact}
                 </span>
                 <Button 
                   variant="ghost" 
