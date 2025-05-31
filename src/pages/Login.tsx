@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,9 @@ type LocationState = {
 type ContactMethod = 'email' | 'phone';
 
 const Login = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login';
+  const [isSignUp, setIsSignUp] = useState(initialTab === 'signup');
   const [contactMethod, setContactMethod] = useState<ContactMethod>('phone');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -159,7 +160,7 @@ const Login = () => {
           <CardContent>
             {!isOtpSent ? (
               <>
-                <Tabs defaultValue="login" onValueChange={handleTabChange} className="w-full">
+                <Tabs value={isSignUp ? 'signup' : 'login'} onValueChange={handleTabChange} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="login">Login</TabsTrigger>
                     <TabsTrigger value="signup">Sign Up</TabsTrigger>

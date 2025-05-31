@@ -40,9 +40,20 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 </Button>
               </div>
             ) : (
-              <Link to="/login" className="hidden sm:block hover:text-bullion-purple-100 transition-colors">
-                Login
-              </Link>
+              <div className="hidden sm:flex items-center gap-3">
+                <Link 
+                  to="/login?tab=login" 
+                  className="hover:text-bullion-purple-100 transition-colors px-3 py-1 rounded"
+                >
+                  Login
+                </Link>
+                <Link 
+                  to="/login?tab=signup" 
+                  className="bg-white text-bullion-purple hover:bg-bullion-purple-50 transition-colors px-4 py-2 rounded font-medium"
+                >
+                  Sign Up
+                </Link>
+              </div>
             )}
           </div>
         </div>
