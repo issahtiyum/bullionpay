@@ -1,59 +1,68 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import TabGroup from '@/components/ui/TabGroup';
 import OrderCard, { Order } from '@/components/ui/OrderCard';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-
-// Sample orders - in a real app this would come from API
-const sampleOrders: Order[] = [
-  {
-    id: '1',
-    productName: 'Netflix Basic',
-    orderDate: '2023-05-19T12:00:00Z',
-    status: 'Delivered',
-    deliveryInfo: 'Email: user@example.com | Password: Pass123!',
-    adminNotes: 'Delivered via WhatsApp',
-    isSubscription: true,
-    nextBillingDate: '2025-05-29T12:00:00Z', // 10 days from now
-  },
-  {
-    id: '2',
-    productName: 'Amazon Gift Card',
-    orderDate: '2023-05-18T10:30:00Z',
-    status: 'Delivered',
-    deliveryInfo: 'Gift Card Code: AMZN-1234-5678-ABCD',
-  },
-  {
-    id: '3',
-    productName: 'Xbox Game Pass',
-    orderDate: '2023-05-17T15:45:00Z',
-    status: 'Paid',
-    isSubscription: true,
-    nextBillingDate: '2025-05-22T15:45:00Z', // 3 days from now
-  },
-  {
-    id: '4',
-    productName: 'Spotify Premium',
-    orderDate: '2023-05-15T09:20:00Z',
-    status: 'Delivered',
-    deliveryInfo: 'Access via your Google account: user@gmail.com',
-    isSubscription: true,
-    nextBillingDate: '2025-05-25T09:20:00Z', // 6 days from now
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 type FilterTab = 'all' | 'one-time' | 'subscription';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
   
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchOrders();
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchOrders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform database orders to match Order interface
+      const transformedOrders: Order[] = data.map(order => ({
+        id: order.id,
+        productName: order.product_name,
+        orderDate: order.created_at,
+        status: order.status === 'paid' ? 'Delivered' : 
+                order.status === 'pending' ? 'Pending' : 'Paid',
+        deliveryInfo: order.delivery_info || undefined,
+        adminNotes: order.admin_notes || undefined,
+        isSubscription: order.is_subscription || false,
+        nextBillingDate: order.next_billing_date || undefined,
+      }));
+
+      setOrders(transformedOrders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast({
+        title: "Error loading orders",
+        description: "Failed to load your purchase history.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  const filteredOrders = sampleOrders.filter((order) => {
+  const filteredOrders = orders.filter((order) => {
     if (activeTab === 'all') return true;
     if (activeTab === 'subscription') {
       return order.isSubscription === true;
@@ -98,7 +107,11 @@ const Dashboard = () => {
         />
       </div>
       
-      {filteredOrders.length > 0 ? (
+      {loading ? (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Loading your purchases...</p>
+        </div>
+      ) : filteredOrders.length > 0 ? (
         <div className="grid gap-4">
           {filteredOrders.map((order) => (
             <OrderCard key={order.id} order={order} />

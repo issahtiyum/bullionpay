@@ -9,6 +9,65 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      orders: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string | null
+          delivery_info: string | null
+          id: string
+          is_subscription: boolean | null
+          next_billing_date: string | null
+          product_category: string
+          product_id: string
+          product_name: string
+          status: string
+          transaction_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          created_at?: string | null
+          delivery_info?: string | null
+          id?: string
+          is_subscription?: boolean | null
+          next_billing_date?: string | null
+          product_category: string
+          product_id: string
+          product_name: string
+          status: string
+          transaction_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string | null
+          delivery_info?: string | null
+          id?: string
+          is_subscription?: boolean | null
+          next_billing_date?: string | null
+          product_category?: string
+          product_id?: string
+          product_name?: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -33,6 +92,45 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string
+          id: string
+          payment_method: string | null
+          paystack_reference: string | null
+          reference: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          payment_method?: string | null
+          paystack_reference?: string | null
+          reference: string
+          status: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          payment_method?: string | null
+          paystack_reference?: string | null
+          reference?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
