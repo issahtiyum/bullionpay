@@ -27,6 +27,7 @@ const Login = () => {
   const [contactMethod, setContactMethod] = useState<ContactMethod>('phone');
   const [contactValue, setContactValue] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isEmailConfirmationSent, setIsEmailConfirmationSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,6 +52,7 @@ const Login = () => {
   const resetForm = () => {
     setContactValue('');
     setIsOtpSent(false);
+    setIsEmailConfirmationSent(false);
   };
 
   const handleTabChange = (value: string) => {
@@ -166,10 +168,10 @@ const Login = () => {
       if (contactMethod === 'email') {
         result = await signUp(contactValue, password!, firstName, lastName);
         if (!result.error) {
-          setIsOtpSent(true);
+          setIsEmailConfirmationSent(true);
           toast({
             title: "Check your email",
-            description: "A verification code has been sent to your email",
+            description: "A confirmation link has been sent to your email address",
           });
         }
       } else {
@@ -214,9 +216,7 @@ const Login = () => {
     setLoading(true);
     
     try {
-      const otpType = contactMethod === 'email' ? 'email' : 'sms';
-      
-      const { error } = await verifyOtp(otp, otpType, contactValue);
+      const { error } = await verifyOtp(otp, 'sms', contactValue);
       
       if (error) {
         toast({
@@ -253,14 +253,16 @@ const Login = () => {
             <CardDescription>
               {from.includes('/checkout') 
                 ? "Please sign in or create an account to complete your purchase"
-                : isOtpSent 
-                  ? `Enter the 6-digit verification code sent to your ${contactMethod}` 
-                  : "Sign in to your account or create a new one"
+                : isEmailConfirmationSent
+                  ? "Check your email for a confirmation link to complete your account setup"
+                  : isOtpSent 
+                    ? `Enter the 6-digit verification code sent to your ${contactMethod}` 
+                    : "Sign in to your account or create a new one"
               }
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {!isOtpSent ? (
+            {!isOtpSent && !isEmailConfirmationSent ? (
               <>
                 <Tabs value={isSignUp ? 'signup' : 'login'} onValueChange={handleTabChange} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
@@ -315,6 +317,25 @@ const Login = () => {
                   </Button>
                 </div>
               </>
+            ) : isEmailConfirmationSent ? (
+              <div className="space-y-4 text-center">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    We've sent a confirmation link to <strong>{contactValue}</strong>
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Click the link in your email to complete your account setup and sign in.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="w-full text-bullion-purple hover:text-bullion-purple-800"
+                  onClick={resetForm}
+                >
+                  Back to Sign Up
+                </Button>
+              </div>
             ) : (
               <OtpVerificationForm
                 contactMethod={contactMethod}

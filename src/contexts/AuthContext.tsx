@@ -18,7 +18,7 @@ type AuthContextType = {
   signUpWithPhone: (phone: string, firstName?: string, lastName?: string) => Promise<{ error: any }>;
   signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
   signInWithPhone: (phone: string) => Promise<{ error: any }>;
-  verifyOtp: (token: string, type: 'email' | 'sms', contactValue: string) => Promise<{ error: any }>;
+  verifyOtp: (token: string, type: 'sms', contactValue: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   loading: boolean;
@@ -50,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -83,10 +84,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, firstName?: string, lastName?: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: redirectUrl,
         data: {
           first_name: firstName,
           last_name: lastName,
@@ -129,26 +133,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
-  const verifyOtp = async (token: string, type: 'email' | 'sms', contactValue: string) => {
-    let error;
+  const verifyOtp = async (token: string, type: 'sms', contactValue: string) => {
+    const result = await supabase.auth.verifyOtp({
+      phone: contactValue,
+      token,
+      type: 'sms',
+    });
     
-    if (type === 'email') {
-      const result = await supabase.auth.verifyOtp({
-        email: contactValue,
-        token,
-        type: 'signup',
-      });
-      error = result.error;
-    } else {
-      const result = await supabase.auth.verifyOtp({
-        phone: contactValue,
-        token,
-        type: 'sms',
-      });
-      error = result.error;
-    }
-    
-    return { error };
+    return { error: result.error };
   };
 
   const logout = async () => {
