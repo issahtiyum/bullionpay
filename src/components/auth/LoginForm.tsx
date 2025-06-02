@@ -14,17 +14,15 @@ type LoginFormProps = {
   loading: boolean;
 };
 
-const AFRICAN_COUNTRIES = [
+const countryCodes = [
   { code: '+233', country: 'Ghana', flag: '🇬🇭' },
-  { code: '+254', country: 'Kenya', flag: '🇰🇪' },
-  { code: '+250', country: 'Rwanda', flag: '🇷🇼' },
+  { code: '+1', country: 'United States', flag: '🇺🇸' },
+  { code: '+44', country: 'United Kingdom', flag: '🇬🇧' },
   { code: '+234', country: 'Nigeria', flag: '🇳🇬' },
   { code: '+27', country: 'South Africa', flag: '🇿🇦' },
+  { code: '+254', country: 'Kenya', flag: '🇰🇪' },
   { code: '+256', country: 'Uganda', flag: '🇺🇬' },
-  { code: '+255', country: 'Tanzania', flag: '🇹🇿' },
-  { code: '+225', country: 'Ivory Coast', flag: '🇨🇮' },
-  { code: '+221', country: 'Senegal', flag: '🇸🇳' },
-  { code: '+220', country: 'Gambia', flag: '🇬🇲' },
+  { code: '+91', country: 'India', flag: '🇮🇳' },
 ];
 
 const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
@@ -33,27 +31,12 @@ const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('+233'); // Default to Ghana
-
-  const formatPhoneNumber = (phone: string, countryCode: string) => {
-    // Remove any existing country code from the phone number
-    let cleanPhone = phone.replace(/^\+?\d{1,4}/, '').trim();
-    
-    // Remove leading zero if present
-    if (cleanPhone.startsWith('0')) {
-      cleanPhone = cleanPhone.substring(1);
-    }
-    
-    return `${countryCode}${cleanPhone}`;
-  };
+  const [countryCode, setCountryCode] = useState('+233');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const contactValue = contactMethod === 'email' 
-      ? email 
-      : formatPhoneNumber(phoneNumber, countryCode);
-    
+    const contactValue = contactMethod === 'email' ? email : `${countryCode}${phoneNumber}`;
     await onSubmit(contactMethod, contactValue, contactMethod === 'email' ? password : undefined);
   };
 
@@ -91,13 +74,13 @@ const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
               <SelectTrigger className="w-32 border-bullion-purple-200 focus:border-bullion-purple-500">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                {AFRICAN_COUNTRIES.map((country) => (
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                {countryCodes.map((country) => (
                   <SelectItem key={country.code} value={country.code}>
-                    <span className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <span>{country.flag}</span>
                       <span>{country.code}</span>
-                    </span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -112,9 +95,6 @@ const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
               className="flex-1 border-bullion-purple-200 focus:border-bullion-purple-500"
             />
           </div>
-          <p className="text-xs text-muted-foreground">
-            Don't include the country code or leading zero
-          </p>
         </div>
       ) : (
         <>
