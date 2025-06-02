@@ -7,8 +7,6 @@ import { type Product } from './ProductCard';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-// @ts-ignore - Paystack types not available
-import { PaystackPop } from '@paystack/inline-js';
 
 type CheckoutFormProps = {
   product: Product;
@@ -91,66 +89,82 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
         throw new Error('Failed to create order');
       }
 
-      // Initialize Paystack payment
-      const paystack = new PaystackPop();
-      paystack.newTransaction({
-        key: 'pk_test_4c7d58aa3345ab31b3c13ea39c2c8d11b57b8e3c', // This should be your public key
-        email,
-        amount: amountInKobo,
-        reference,
-        currency: 'GHS',
-        callback: async (response: any) => {
-          setLoading(false);
-          
-          if (response.status === 'success') {
-            // Verify payment on backend
-            try {
-              const { data, error } = await supabase.functions.invoke('verify-payment', {
-                body: {
-                  reference: response.reference,
-                  user_id: user.id,
-                },
-              });
-
-              if (error) throw error;
-
-              if (data.success) {
-                toast({
-                  title: "Payment successful",
-                  description: "Your order has been placed successfully!",
+      // Load Paystack script dynamically and initialize payment
+      const script = document.createElement('script');
+      script.src = 'https://js.paystack.co/v2/inline.js';
+      script.onload = () => {
+        // @ts-ignore - Paystack is loaded globally
+        const paystack = new window.PaystackPop();
+        paystack.newTransaction({
+          key: 'pk_test_4c7d58aa3345ab31b3c13ea39c2c8d11b57b8e3c', // This should be your public key
+          email,
+          amount: amountInKobo,
+          reference,
+          currency: 'GHS',
+          callback: async (response: any) => {
+            setLoading(false);
+            
+            if (response.status === 'success') {
+              // Verify payment on backend
+              try {
+                const { data, error } = await supabase.functions.invoke('verify-payment', {
+                  body: {
+                    reference: response.reference,
+                    user_id: user.id,
+                  },
                 });
-                onPaymentSuccess();
-              } else {
+
+                if (error) throw error;
+
+                if (data.success) {
+                  toast({
+                    title: "Payment successful",
+                    description: "Your order has been placed successfully!",
+                  });
+                  onPaymentSuccess();
+                } else {
+                  toast({
+                    title: "Payment verification failed",
+                    description: "Please contact support if you were charged.",
+                    variant: "destructive",
+                  });
+                }
+              } catch (verifyError) {
+                console.error('Verification error:', verifyError);
                 toast({
                   title: "Payment verification failed",
                   description: "Please contact support if you were charged.",
                   variant: "destructive",
                 });
               }
-            } catch (verifyError) {
-              console.error('Verification error:', verifyError);
+            } else {
               toast({
-                title: "Payment verification failed",
-                description: "Please contact support if you were charged.",
+                title: "Payment cancelled",
+                description: "Your payment was not completed.",
                 variant: "destructive",
               });
             }
-          } else {
+          },
+          onClose: () => {
+            setLoading(false);
             toast({
               title: "Payment cancelled",
-              description: "Your payment was not completed.",
-              variant: "destructive",
+              description: "You cancelled the payment process.",
             });
-          }
-        },
-        onClose: () => {
-          setLoading(false);
-          toast({
-            title: "Payment cancelled",
-            description: "You cancelled the payment process.",
-          });
-        },
-      });
+          },
+        });
+      };
+      
+      script.onerror = () => {
+        setLoading(false);
+        toast({
+          title: "Payment failed",
+          description: "Failed to load payment system. Please try again.",
+          variant: "destructive",
+        });
+      };
+      
+      document.head.appendChild(script);
 
     } catch (error) {
       setLoading(false);
