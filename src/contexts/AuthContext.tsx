@@ -16,7 +16,7 @@ type AuthContextType = {
   session: Session | null;
   signUp: (email: string, password: string, firstName?: string, lastName?: string) => Promise<{ error: any }>;
   signUpWithPhone: (phone: string, firstName?: string, lastName?: string) => Promise<{ error: any }>;
-  signInWithEmail: (email: string) => Promise<{ error: any }>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
   signInWithPhone: (phone: string) => Promise<{ error: any }>;
   verifyOtp: (token: string, type: 'email' | 'sms', contactValue: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
@@ -83,13 +83,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, firstName?: string, lastName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
         data: {
           first_name: firstName,
           last_name: lastName,
@@ -103,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUpWithPhone = async (phone: string, firstName?: string, lastName?: string) => {
     const { error } = await supabase.auth.signUp({
       phone,
-      password: 'temp-password', // Supabase requires password even for phone auth
+      password: Math.random().toString(36).substring(2, 15), // Generate random password for phone signup
       options: {
         data: {
           first_name: firstName,
@@ -115,12 +112,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
-  const signInWithEmail = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
+  const signInWithEmail = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-      },
+      password,
     });
     
     return { error };
@@ -141,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await supabase.auth.verifyOtp({
         email: contactValue,
         token,
-        type: 'email',
+        type: 'signup',
       });
       error = result.error;
     } else {

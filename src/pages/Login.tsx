@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +12,7 @@ import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/comp
 import MainLayout from '@/components/layout/MainLayout';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Mail, Phone } from 'lucide-react';
+import { Mail, Phone, Eye, EyeOff } from 'lucide-react';
 
 type LocationState = {
   from?: {
@@ -29,6 +30,8 @@ const Login = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -59,6 +62,7 @@ const Login = () => {
     setFirstName('');
     setLastName('');
     setEmail('');
+    setPassword('');
     setPhoneNumber('');
     setOtp('');
     setIsOtpSent(false);
@@ -92,6 +96,16 @@ const Login = () => {
       });
       return;
     }
+
+    // For email signup, also validate password
+    if (isSignUp && contactMethod === 'email' && (!password || password.length < 6)) {
+      toast({
+        title: "Invalid password",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setLoading(true);
     
@@ -100,16 +114,53 @@ const Login = () => {
       
       if (isSignUp) {
         if (contactMethod === 'email') {
-          // For email signup, we don't send OTP immediately, user needs to check email
-          result = await signUp(email, 'temp-password-123', firstName, lastName);
+          result = await signUp(email, password, firstName, lastName);
+          if (!result.error) {
+            setIsOtpSent(true);
+            toast({
+              title: "Check your email",
+              description: "A verification code has been sent to your email",
+            });
+          }
         } else {
           result = await signUpWithPhone(phoneNumber, firstName, lastName);
+          if (!result.error) {
+            setIsOtpSent(true);
+            toast({
+              title: "OTP Sent",
+              description: "A verification code has been sent to your phone",
+            });
+          }
         }
       } else {
         if (contactMethod === 'email') {
-          result = await signInWithEmail(email);
+          // For email login, validate password
+          if (!password || password.length < 6) {
+            toast({
+              title: "Invalid password",
+              description: "Please enter your password",
+              variant: "destructive",
+            });
+            setLoading(false);
+            return;
+          }
+          result = await signInWithEmail(email, password);
+          if (!result.error) {
+            toast({
+              title: "Login successful",
+              description: "Welcome back!",
+            });
+            navigate(from, { replace: true });
+          }
         } else {
           result = await signInWithPhone(phoneNumber);
+          if (!result.error) {
+            setIsOtpSent(true);
+            toast({
+              title: "OTP Sent",
+              description: "A verification code has been sent to your phone",
+            });
+          }
         }
       }
       
@@ -119,19 +170,6 @@ const Login = () => {
           description: result.error.message || "Something went wrong",
           variant: "destructive",
         });
-      } else {
-        if (contactMethod === 'email' && isSignUp) {
-          toast({
-            title: "Check your email",
-            description: "Please check your email for a confirmation link to complete signup",
-          });
-        } else {
-          setIsOtpSent(true);
-          toast({
-            title: "OTP Sent",
-            description: `A verification code has been sent to your ${contactMethod}`,
-          });
-        }
       }
     } catch (error: any) {
       toast({
@@ -254,18 +292,47 @@ const Login = () => {
                           />
                         </div>
                       ) : (
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email Address</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            placeholder="Enter your email address"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="border-bullion-purple-200 focus:border-bullion-purple-500"
-                          />
-                        </div>
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email Address</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="Enter your email address"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required
+                              className="border-bullion-purple-200 focus:border-bullion-purple-500"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="password">Password</Label>
+                            <div className="relative">
+                              <Input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="border-bullion-purple-200 focus:border-bullion-purple-500 pr-10"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </>
                       )}
                       
                       <Button 
@@ -273,7 +340,7 @@ const Login = () => {
                         className="w-full bg-gradient-bullion hover:opacity-90"
                         disabled={loading}
                       >
-                        {loading ? 'Sending...' : 'Send Verification Code'}
+                        {loading ? 'Processing...' : contactMethod === 'phone' ? 'Send Verification Code' : 'Sign In'}
                       </Button>
                     </form>
                   </TabsContent>
@@ -345,18 +412,48 @@ const Login = () => {
                           />
                         </div>
                       ) : (
-                        <div className="space-y-2">
-                          <Label htmlFor="emailSignup">Email Address</Label>
-                          <Input
-                            id="emailSignup"
-                            type="email"
-                            placeholder="Enter your email address"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="border-bullion-purple-200 focus:border-bullion-purple-500"
-                          />
-                        </div>
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="emailSignup">Email Address</Label>
+                            <Input
+                              id="emailSignup"
+                              type="email"
+                              placeholder="Enter your email address"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required
+                              className="border-bullion-purple-200 focus:border-bullion-purple-500"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="passwordSignup">Password</Label>
+                            <div className="relative">
+                              <Input
+                                id="passwordSignup"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Create a secure password (min. 6 characters)"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                minLength={6}
+                                className="border-bullion-purple-200 focus:border-bullion-purple-500 pr-10"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </>
                       )}
                       
                       <Button 
