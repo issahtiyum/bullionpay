@@ -2,17 +2,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp';
 import MainLayout from '@/components/layout/MainLayout';
+import LoginForm from '@/components/auth/LoginForm';
+import SignupForm from '@/components/auth/SignupForm';
+import OtpVerificationForm from '@/components/auth/OtpVerificationForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Mail, Phone, Eye, EyeOff } from 'lucide-react';
 
 type LocationState = {
   from?: {
@@ -27,13 +25,7 @@ const Login = () => {
   const initialTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login';
   const [isSignUp, setIsSignUp] = useState(initialTab === 'signup');
   const [contactMethod, setContactMethod] = useState<ContactMethod>('phone');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
+  const [contactValue, setContactValue] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -48,10 +40,8 @@ const Login = () => {
     verifyOtp 
   } = useAuth();
   
-  // Get the redirect path from location state or default to dashboard
   const from = (location.state as LocationState)?.from?.pathname || "/dashboard";
   
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate(from, { replace: true });
@@ -59,12 +49,7 @@ const Login = () => {
   }, [isAuthenticated, navigate, from]);
 
   const resetForm = () => {
-    setFirstName('');
-    setLastName('');
-    setEmail('');
-    setPassword('');
-    setPhoneNumber('');
-    setOtp('');
+    setContactValue('');
     setIsOtpSent(false);
   };
 
@@ -73,11 +58,78 @@ const Login = () => {
     resetForm();
   };
   
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLoginSubmit = async (contactMethod: ContactMethod, contactValue: string, password?: string) => {
+    if (contactMethod === 'email' && (!password || password.length < 6)) {
+      toast({
+        title: "Invalid password",
+        description: "Please enter your password",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!contactValue || (contactMethod === 'email' ? !contactValue.includes('@') : contactValue.length < 10)) {
+      toast({
+        title: `Invalid ${contactMethod}`,
+        description: `Please enter a valid ${contactMethod}`,
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // Validation
-    if (isSignUp && (!firstName.trim() || !lastName.trim())) {
+    setLoading(true);
+    setContactMethod(contactMethod);
+    setContactValue(contactValue);
+    
+    try {
+      let result;
+      
+      if (contactMethod === 'email') {
+        result = await signInWithEmail(contactValue, password!);
+        if (!result.error) {
+          toast({
+            title: "Login successful",
+            description: "Welcome back!",
+          });
+          navigate(from, { replace: true });
+        }
+      } else {
+        result = await signInWithPhone(contactValue);
+        if (!result.error) {
+          setIsOtpSent(true);
+          toast({
+            title: "OTP Sent",
+            description: "A verification code has been sent to your phone",
+          });
+        }
+      }
+      
+      if (result.error) {
+        toast({
+          title: "Authentication Error",
+          description: result.error.message || "Something went wrong",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignupSubmit = async (
+    contactMethod: ContactMethod, 
+    contactValue: string, 
+    firstName: string, 
+    lastName: string, 
+    password?: string
+  ) => {
+    if (!firstName.trim() || !lastName.trim()) {
       toast({
         title: "Missing information",
         description: "Please enter your first and last name",
@@ -86,9 +138,7 @@ const Login = () => {
       return;
     }
 
-    const contactValue = contactMethod === 'email' ? email : phoneNumber;
-    
-    if (!contactValue || (contactMethod === 'email' ? !email.includes('@') : phoneNumber.length < 10)) {
+    if (!contactValue || (contactMethod === 'email' ? !contactValue.includes('@') : contactValue.length < 10)) {
       toast({
         title: `Invalid ${contactMethod}`,
         description: `Please enter a valid ${contactMethod}`,
@@ -97,8 +147,7 @@ const Login = () => {
       return;
     }
 
-    // For email signup, also validate password
-    if (isSignUp && contactMethod === 'email' && (!password || password.length < 6)) {
+    if (contactMethod === 'email' && (!password || password.length < 6)) {
       toast({
         title: "Invalid password",
         description: "Password must be at least 6 characters long",
@@ -108,59 +157,29 @@ const Login = () => {
     }
     
     setLoading(true);
+    setContactMethod(contactMethod);
+    setContactValue(contactValue);
     
     try {
       let result;
       
-      if (isSignUp) {
-        if (contactMethod === 'email') {
-          result = await signUp(email, password, firstName, lastName);
-          if (!result.error) {
-            setIsOtpSent(true);
-            toast({
-              title: "Check your email",
-              description: "A verification code has been sent to your email",
-            });
-          }
-        } else {
-          result = await signUpWithPhone(phoneNumber, firstName, lastName);
-          if (!result.error) {
-            setIsOtpSent(true);
-            toast({
-              title: "OTP Sent",
-              description: "A verification code has been sent to your phone",
-            });
-          }
+      if (contactMethod === 'email') {
+        result = await signUp(contactValue, password!, firstName, lastName);
+        if (!result.error) {
+          setIsOtpSent(true);
+          toast({
+            title: "Check your email",
+            description: "A verification code has been sent to your email",
+          });
         }
       } else {
-        if (contactMethod === 'email') {
-          // For email login, validate password
-          if (!password || password.length < 6) {
-            toast({
-              title: "Invalid password",
-              description: "Please enter your password",
-              variant: "destructive",
-            });
-            setLoading(false);
-            return;
-          }
-          result = await signInWithEmail(email, password);
-          if (!result.error) {
-            toast({
-              title: "Login successful",
-              description: "Welcome back!",
-            });
-            navigate(from, { replace: true });
-          }
-        } else {
-          result = await signInWithPhone(phoneNumber);
-          if (!result.error) {
-            setIsOtpSent(true);
-            toast({
-              title: "OTP Sent",
-              description: "A verification code has been sent to your phone",
-            });
-          }
+        result = await signUpWithPhone(contactValue, firstName, lastName);
+        if (!result.error) {
+          setIsOtpSent(true);
+          toast({
+            title: "OTP Sent",
+            description: "A verification code has been sent to your phone",
+          });
         }
       }
       
@@ -182,9 +201,7 @@ const Login = () => {
     }
   };
   
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleVerifyOtp = async (otp: string) => {
     if (!otp || otp.length < 6) {
       toast({
         title: "Invalid OTP",
@@ -197,7 +214,6 @@ const Login = () => {
     setLoading(true);
     
     try {
-      const contactValue = contactMethod === 'email' ? email : phoneNumber;
       const otpType = contactMethod === 'email' ? 'email' : 'sms';
       
       const { error } = await verifyOtp(otp, otpType, contactValue);
@@ -253,217 +269,11 @@ const Login = () => {
                   </TabsList>
                   
                   <TabsContent value="login" className="space-y-4 mt-4">
-                    <form onSubmit={handleSendOtp} className="space-y-4">
-                      <div className="space-y-3">
-                        <Label>How would you like to login?</Label>
-                        <RadioGroup 
-                          value={contactMethod} 
-                          onValueChange={(value) => setContactMethod(value as ContactMethod)}
-                          className="flex space-x-6"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="phone" id="phone-login" />
-                            <Label htmlFor="phone-login" className="flex items-center gap-2">
-                              <Phone size={16} />
-                              Phone
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="email" id="email-login" />
-                            <Label htmlFor="email-login" className="flex items-center gap-2">
-                              <Mail size={16} />
-                              Email
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-
-                      {contactMethod === 'phone' ? (
-                        <div className="space-y-2">
-                          <Label htmlFor="phoneNumber">Phone Number</Label>
-                          <Input
-                            id="phoneNumber"
-                            type="tel"
-                            placeholder="Enter your phone number"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                            required
-                            className="border-bullion-purple-200 focus:border-bullion-purple-500"
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          <div className="space-y-2">
-                            <Label htmlFor="email">Email Address</Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              placeholder="Enter your email address"
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              required
-                              className="border-bullion-purple-200 focus:border-bullion-purple-500"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <div className="relative">
-                              <Input
-                                id="password"
-                                type={showPassword ? "text" : "password"}
-                                placeholder="Enter your password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="border-bullion-purple-200 focus:border-bullion-purple-500 pr-10"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                onClick={() => setShowPassword(!showPassword)}
-                              >
-                                {showPassword ? (
-                                  <EyeOff className="h-4 w-4" />
-                                ) : (
-                                  <Eye className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-bullion hover:opacity-90"
-                        disabled={loading}
-                      >
-                        {loading ? 'Processing...' : contactMethod === 'phone' ? 'Send Verification Code' : 'Sign In'}
-                      </Button>
-                    </form>
+                    <LoginForm onSubmit={handleLoginSubmit} loading={loading} />
                   </TabsContent>
                   
                   <TabsContent value="signup" className="space-y-4 mt-4">
-                    <form onSubmit={handleSendOtp} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="firstName">First Name</Label>
-                          <Input
-                            id="firstName"
-                            type="text"
-                            placeholder="First name"
-                            value={firstName}
-                            onChange={(e) => setFirstName(e.target.value)}
-                            required
-                            className="border-bullion-purple-200 focus:border-bullion-purple-500"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="lastName">Last Name</Label>
-                          <Input
-                            id="lastName"
-                            type="text"
-                            placeholder="Last name"
-                            value={lastName}
-                            onChange={(e) => setLastName(e.target.value)}
-                            required
-                            className="border-bullion-purple-200 focus:border-bullion-purple-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <Label>How would you like to sign up?</Label>
-                        <RadioGroup 
-                          value={contactMethod} 
-                          onValueChange={(value) => setContactMethod(value as ContactMethod)}
-                          className="flex space-x-6"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="phone" id="phone-signup" />
-                            <Label htmlFor="phone-signup" className="flex items-center gap-2">
-                              <Phone size={16} />
-                              Phone
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="email" id="email-signup" />
-                            <Label htmlFor="email-signup" className="flex items-center gap-2">
-                              <Mail size={16} />
-                              Email
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-
-                      {contactMethod === 'phone' ? (
-                        <div className="space-y-2">
-                          <Label htmlFor="phoneNumberSignup">Phone Number</Label>
-                          <Input
-                            id="phoneNumberSignup"
-                            type="tel"
-                            placeholder="Enter your phone number"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                            required
-                            className="border-bullion-purple-200 focus:border-bullion-purple-500"
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          <div className="space-y-2">
-                            <Label htmlFor="emailSignup">Email Address</Label>
-                            <Input
-                              id="emailSignup"
-                              type="email"
-                              placeholder="Enter your email address"
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              required
-                              className="border-bullion-purple-200 focus:border-bullion-purple-500"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="passwordSignup">Password</Label>
-                            <div className="relative">
-                              <Input
-                                id="passwordSignup"
-                                type={showPassword ? "text" : "password"}
-                                placeholder="Create a secure password (min. 6 characters)"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                minLength={6}
-                                className="border-bullion-purple-200 focus:border-bullion-purple-500 pr-10"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                onClick={() => setShowPassword(!showPassword)}
-                              >
-                                {showPassword ? (
-                                  <EyeOff className="h-4 w-4" />
-                                ) : (
-                                  <Eye className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-bullion hover:opacity-90"
-                        disabled={loading}
-                      >
-                        {loading ? 'Creating Account...' : 'Create Account'}
-                      </Button>
-                    </form>
+                    <SignupForm onSubmit={handleSignupSubmit} loading={loading} />
                   </TabsContent>
                 </Tabs>
                 
@@ -506,70 +316,13 @@ const Login = () => {
                 </div>
               </>
             ) : (
-              // OTP verification form with new design
-              <form onSubmit={handleVerifyOtp} className="space-y-6">
-                <div className="space-y-4">
-                  <Label className="text-center block">Enter verification code</Label>
-                  <div className="flex justify-center">
-                    <InputOTP
-                      maxLength={6}
-                      value={otp}
-                      onChange={(value) => setOtp(value)}
-                      className="gap-2"
-                    >
-                      <InputOTPGroup>
-                        <InputOTPSlot 
-                          index={0} 
-                          className="w-12 h-12 text-lg border-bullion-purple-200 focus:border-bullion-purple-500 focus:ring-bullion-purple-500" 
-                        />
-                        <InputOTPSlot 
-                          index={1} 
-                          className="w-12 h-12 text-lg border-bullion-purple-200 focus:border-bullion-purple-500 focus:ring-bullion-purple-500" 
-                        />
-                        <InputOTPSlot 
-                          index={2} 
-                          className="w-12 h-12 text-lg border-bullion-purple-200 focus:border-bullion-purple-500 focus:ring-bullion-purple-500" 
-                        />
-                      </InputOTPGroup>
-                      <InputOTPSeparator className="text-bullion-purple-400" />
-                      <InputOTPGroup>
-                        <InputOTPSlot 
-                          index={3} 
-                          className="w-12 h-12 text-lg border-bullion-purple-200 focus:border-bullion-purple-500 focus:ring-bullion-purple-500" 
-                        />
-                        <InputOTPSlot 
-                          index={4} 
-                          className="w-12 h-12 text-lg border-bullion-purple-200 focus:border-bullion-purple-500 focus:ring-bullion-purple-500" 
-                        />
-                        <InputOTPSlot 
-                          index={5} 
-                          className="w-12 h-12 text-lg border-bullion-purple-200 focus:border-bullion-purple-500 focus:ring-bullion-purple-500" 
-                        />
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-bullion hover:opacity-90"
-                    disabled={loading || otp.length < 6}
-                  >
-                    {loading ? 'Verifying...' : `Verify & ${isSignUp ? 'Create Account' : 'Login'}`}
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="w-full text-bullion-purple hover:text-bullion-purple-800"
-                    onClick={() => setIsOtpSent(false)}
-                    disabled={loading}
-                  >
-                    Change {contactMethod === 'phone' ? 'Phone Number' : 'Email Address'}
-                  </Button>
-                </div>
-              </form>
+              <OtpVerificationForm
+                contactMethod={contactMethod}
+                isSignUp={isSignUp}
+                onVerify={handleVerifyOtp}
+                onChangeContact={() => setIsOtpSent(false)}
+                loading={loading}
+              />
             )}
           </CardContent>
         </Card>
