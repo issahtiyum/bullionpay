@@ -20,6 +20,7 @@ type AuthContextType = {
   signInWithPhone: (phone: string) => Promise<{ error: any }>;
   verifyOtp: (token: string, type: 'sms', contactValue: string) => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
+  updatePassword: (newPassword: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   loading: boolean;
@@ -35,6 +36,7 @@ const AuthContext = createContext<AuthContextType>({
   signInWithPhone: async () => ({ error: null }),
   verifyOtp: async () => ({ error: null }),
   resetPassword: async () => ({ error: null }),
+  updatePassword: async () => ({ error: null }),
   logout: async () => {},
   isAuthenticated: false,
   loading: true,
@@ -155,6 +157,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    return { error };
+  };
+
   const logout = async () => {
     await supabase.auth.signOut();
   };
@@ -170,6 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signInWithPhone,
       verifyOtp,
       resetPassword,
+      updatePassword,
       logout,
       isAuthenticated: !!user,
       loading,

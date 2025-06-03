@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
 import OtpVerificationForm from '@/components/auth/OtpVerificationForm';
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
+import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -31,6 +31,7 @@ const Login = () => {
   const [isEmailConfirmationSent, setIsEmailConfirmationSent] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isResetLinkSent, setIsResetLinkSent] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,16 +43,27 @@ const Login = () => {
     signInWithEmail, 
     signInWithPhone, 
     verifyOtp,
-    resetPassword
+    resetPassword,
+    updatePassword
   } = useAuth();
   
   const from = (location.state as LocationState)?.from?.pathname || "/dashboard";
   
   useEffect(() => {
-    if (isAuthenticated) {
+    // Check if user arrived from password reset email
+    const accessToken = searchParams.get('access_token');
+    const refreshToken = searchParams.get('refresh_token');
+    const type = searchParams.get('type');
+    
+    if (accessToken && refreshToken && type === 'recovery') {
+      setShowResetPassword(true);
+      return;
+    }
+    
+    if (isAuthenticated && !showResetPassword) {
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, navigate, from, searchParams, showResetPassword]);
 
   const resetForm = () => {
     setContactValue('');
@@ -59,6 +71,7 @@ const Login = () => {
     setIsEmailConfirmationSent(false);
     setShowForgotPassword(false);
     setIsResetLinkSent(false);
+    setShowResetPassword(false);
   };
 
   const handleTabChange = (value: string) => {
@@ -73,6 +86,46 @@ const Login = () => {
   const handleBackToLogin = () => {
     setShowForgotPassword(false);
     setIsResetLinkSent(false);
+  };
+
+  const handleUpdatePassword = async (newPassword: string) => {
+    if (newPassword.length < 6) {
+      toast({
+        title: "Invalid password",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const { error } = await updatePassword(newPassword);
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to update password",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Password updated",
+          description: "Your password has been successfully updated",
+        });
+        setShowResetPassword(false);
+        navigate(from, { replace: true });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
   const handleLoginSubmit = async (contactMethod: ContactMethod, contactValue: string, password?: string) => {
@@ -298,6 +351,7 @@ const Login = () => {
 
   const getCardTitle = () => {
     if (from.includes('/checkout')) return "Complete Your Purchase";
+    if (showResetPassword) return "Set New Password";
     if (showForgotPassword) return "Reset Your Password";
     return "Welcome to BullionPay";
   };
@@ -305,6 +359,9 @@ const Login = () => {
   const getCardDescription = () => {
     if (from.includes('/checkout')) {
       return "Please sign in or create an account to complete your purchase";
+    }
+    if (showResetPassword) {
+      return "Enter your new password below";
     }
     if (showForgotPassword) {
       return isResetLinkSent 
@@ -333,33 +390,17 @@ const Login = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {showForgotPassword ? (
-              isResetLinkSent ? (
-                <div className="space-y-4 text-center">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      If an account with that email exists, you'll receive a password reset link shortly.
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Check your email and follow the instructions to reset your password.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="w-full text-bullion-purple hover:text-bullion-purple-800"
-                    onClick={handleBackToLogin}
-                  >
-                    Back to Login
-                  </Button>
-                </div>
-              ) : (
-                <ForgotPasswordForm
-                  onSubmit={handleResetPasswordSubmit}
-                  onBack={handleBackToLogin}
-                  loading={loading}
-                />
-              )
+            {showResetPassword ? (
+              <ResetPasswordForm
+                onSubmit={handleUpdatePassword}
+                loading={loading}
+              />
+            ) : showForgotPassword ? (
+              <ForgotPasswordForm
+                onSubmit={handleResetPasswordSubmit}
+                onBack={handleBackToLogin}
+                loading={loading}
+              />
             ) : !isOtpSent && !isEmailConfirmationSent ? (
               <>
                 <Tabs value={isSignUp ? 'signup' : 'login'} onValueChange={handleTabChange} className="w-full">
