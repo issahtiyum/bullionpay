@@ -55,7 +55,10 @@ const Login = () => {
     const refreshToken = searchParams.get('refresh_token');
     const type = searchParams.get('type');
     
+    console.log('URL params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
+    
     if (accessToken && refreshToken && type === 'recovery') {
+      console.log('Password reset link detected, showing reset form');
       setShowResetPassword(true);
       return;
     }
@@ -104,6 +107,7 @@ const Login = () => {
       const { error } = await updatePassword(newPassword);
       
       if (error) {
+        console.error('Password update error:', error);
         toast({
           title: "Error",
           description: error.message || "Failed to update password",
@@ -115,9 +119,12 @@ const Login = () => {
           description: "Your password has been successfully updated",
         });
         setShowResetPassword(false);
+        // Clear URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
         navigate(from, { replace: true });
       }
     } catch (error: any) {
+      console.error('Password update error:', error);
       toast({
         title: "Error",
         description: error.message || "Something went wrong",
