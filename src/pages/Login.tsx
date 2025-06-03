@@ -9,6 +9,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
 import OtpVerificationForm from '@/components/auth/OtpVerificationForm';
+import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -28,6 +29,8 @@ const Login = () => {
   const [contactValue, setContactValue] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isEmailConfirmationSent, setIsEmailConfirmationSent] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [isResetLinkSent, setIsResetLinkSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,7 +41,8 @@ const Login = () => {
     signUpWithPhone, 
     signInWithEmail, 
     signInWithPhone, 
-    verifyOtp 
+    verifyOtp,
+    resetPassword
   } = useAuth();
   
   const from = (location.state as LocationState)?.from?.pathname || "/dashboard";
@@ -53,11 +57,22 @@ const Login = () => {
     setContactValue('');
     setIsOtpSent(false);
     setIsEmailConfirmationSent(false);
+    setShowForgotPassword(false);
+    setIsResetLinkSent(false);
   };
 
   const handleTabChange = (value: string) => {
     setIsSignUp(value === 'signup');
     resetForm();
+  };
+
+  const handleForgotPassword = () => {
+    setShowForgotPassword(true);
+  };
+
+  const handleBackToLogin = () => {
+    setShowForgotPassword(false);
+    setIsResetLinkSent(false);
   };
   
   const handleLoginSubmit = async (contactMethod: ContactMethod, contactValue: string, password?: string) => {
@@ -202,6 +217,45 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  const handleResetPasswordSubmit = async (email: string) => {
+    if (!email || !email.includes('@')) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const { error } = await resetPassword(email);
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message || "Something went wrong",
+          variant: "destructive",
+        });
+      } else {
+        setIsResetLinkSent(true);
+        toast({
+          title: "Reset link sent",
+          description: "Check your email for a password reset link",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const handleVerifyOtp = async (otp: string) => {
     if (!otp || otp.length < 6) {
@@ -241,6 +295,30 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  const getCardTitle = () => {
+    if (from.includes('/checkout')) return "Complete Your Purchase";
+    if (showForgotPassword) return "Reset Your Password";
+    return "Welcome to BullionPay";
+  };
+
+  const getCardDescription = () => {
+    if (from.includes('/checkout')) {
+      return "Please sign in or create an account to complete your purchase";
+    }
+    if (showForgotPassword) {
+      return isResetLinkSent 
+        ? "We've sent a password reset link to your email" 
+        : "Enter your email address to receive a password reset link";
+    }
+    if (isEmailConfirmationSent) {
+      return "Check your email for a confirmation link to complete your account setup";
+    }
+    if (isOtpSent) {
+      return `Enter the 6-digit verification code sent to your ${contactMethod}`;
+    }
+    return "Sign in to your account or create a new one";
+  };
   
   return (
     <MainLayout>
@@ -248,21 +326,41 @@ const Login = () => {
         <Card className="border-bullion-purple-100">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-semibold">
-              {from.includes('/checkout') ? "Complete Your Purchase" : "Welcome to BullionPay"}
+              {getCardTitle()}
             </CardTitle>
             <CardDescription>
-              {from.includes('/checkout') 
-                ? "Please sign in or create an account to complete your purchase"
-                : isEmailConfirmationSent
-                  ? "Check your email for a confirmation link to complete your account setup"
-                  : isOtpSent 
-                    ? `Enter the 6-digit verification code sent to your ${contactMethod}` 
-                    : "Sign in to your account or create a new one"
-              }
+              {getCardDescription()}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {!isOtpSent && !isEmailConfirmationSent ? (
+            {showForgotPassword ? (
+              isResetLinkSent ? (
+                <div className="space-y-4 text-center">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      If an account with that email exists, you'll receive a password reset link shortly.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Check your email and follow the instructions to reset your password.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="w-full text-bullion-purple hover:text-bullion-purple-800"
+                    onClick={handleBackToLogin}
+                  >
+                    Back to Login
+                  </Button>
+                </div>
+              ) : (
+                <ForgotPasswordForm
+                  onSubmit={handleResetPasswordSubmit}
+                  onBack={handleBackToLogin}
+                  loading={loading}
+                />
+              )
+            ) : !isOtpSent && !isEmailConfirmationSent ? (
               <>
                 <Tabs value={isSignUp ? 'signup' : 'login'} onValueChange={handleTabChange} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
@@ -271,7 +369,11 @@ const Login = () => {
                   </TabsList>
                   
                   <TabsContent value="login" className="space-y-4 mt-4">
-                    <LoginForm onSubmit={handleLoginSubmit} loading={loading} />
+                    <LoginForm 
+                      onSubmit={handleLoginSubmit} 
+                      onForgotPassword={handleForgotPassword}
+                      loading={loading} 
+                    />
                   </TabsContent>
                   
                   <TabsContent value="signup" className="space-y-4 mt-4">
