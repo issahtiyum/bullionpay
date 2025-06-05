@@ -52,43 +52,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
       const reference = generateReference();
       const amountInKobo = Math.round(product.price * 100); // Convert to kobo
 
-      // Create transaction record
-      const { data: transaction, error: transactionError } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          reference,
-          amount: product.price,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (transactionError) {
-        throw new Error('Failed to create transaction');
-      }
-
-      // Create order record
-      const { error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          transaction_id: transaction.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_category: product.category,
-          amount: product.price,
-          status: 'pending',
-          is_subscription: product.category === 'Subscription',
-          next_billing_date: product.category === 'Subscription' 
-            ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-            : null,
-        });
-
-      if (orderError) {
-        throw new Error('Failed to create order');
-      }
-
       // Load Paystack script dynamically and initialize payment
       const script = document.createElement('script');
       script.src = 'https://js.paystack.co/v2/inline.js';
@@ -105,8 +68,26 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
             setLoading(false);
             
             if (response.status === 'success') {
-              // Verify payment on backend
+              // Only create transaction and order records AFTER successful payment
               try {
+                // Create transaction record
+                const { data: transaction, error: transactionError } = await supabase
+                  .from('transactions')
+                  .insert({
+                    user_id: user.id,
+                    reference,
+                    amount: product.price,
+                    status: 'pending', // Will be updated by verification
+                    paystack_reference: response.reference,
+                  })
+                  .select()
+                  .single();
+
+                if (transactionError) {
+                  throw new Error('Failed to create transaction record');
+                }
+
+                // Verify payment on backend
                 const { data, error } = await supabase.functions.invoke('verify-payment', {
                   body: {
                     reference: response.reference,
@@ -117,6 +98,33 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
                 if (error) throw error;
 
                 if (data.success) {
+                  // Create order record only after successful verification
+                  const { error: orderError } = await supabase
+                    .from('orders')
+                    .insert({
+                      user_id: user.id,
+                      transaction_id: transaction.id,
+                      product_id: product.id,
+                      product_name: product.name,
+                      product_category: product.category,
+                      amount: product.price,
+                      status: 'paid',
+                      is_subscription: product.category === 'Subscription',
+                      next_billing_date: product.category === 'Subscription' 
+                        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+                        : null,
+                    });
+
+                  if (orderError) {
+                    console.error('Order creation error:', orderError);
+                    toast({
+                      title: "Order creation failed",
+                      description: "Payment was successful but order creation failed. Please contact support.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+
                   toast({
                     title: "Payment successful",
                     description: "Your order has been placed successfully!",
