@@ -10,11 +10,10 @@ type ContactMethod = 'email' | 'phone';
 
 type LoginFormProps = {
   onSubmit: (contactMethod: ContactMethod, contactValue: string, password?: string) => Promise<void>;
-  onForgotPassword: () => void;
   loading: boolean;
 };
 
-const LoginForm = ({ onSubmit, onForgotPassword, loading }: LoginFormProps) => {
+const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
   const [contactMethod, setContactMethod] = useState<ContactMethod>('phone');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -107,16 +106,6 @@ const LoginForm = ({ onSubmit, onForgotPassword, loading }: LoginFormProps) => {
                 )}
               </Button>
             </div>
-          </div>
-          <div className="text-right">
-            <Button
-              type="button"
-              variant="link"
-              className="p-0 h-auto text-sm text-bullion-purple hover:text-bullion-purple-800"
-              onClick={onForgotPassword}
-            >
-              Forgot your password?
-            </Button>
           </div>
         </>
       )}
