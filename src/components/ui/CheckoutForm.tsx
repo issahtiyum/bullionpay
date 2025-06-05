@@ -49,6 +49,13 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
     setLoading(true);
     
     try {
+      // First, get the Paystack public key from our edge function
+      const { data: keyData, error: keyError } = await supabase.functions.invoke('get-paystack-key');
+      
+      if (keyError || !keyData?.publicKey) {
+        throw new Error('Failed to get payment configuration');
+      }
+
       const reference = generateReference();
       const amountInKobo = Math.round(product.price * 100); // Convert to kobo
 
@@ -59,7 +66,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
         // @ts-ignore - Paystack is loaded globally
         const paystack = new window.PaystackPop();
         paystack.newTransaction({
-          key: 'pk_test_4c7d58aa3345ab31b3c13ea39c2c8d11b57b8e3c', // This should be your public key
+          key: keyData.publicKey, // Use the key from our edge function
           email,
           amount: amountInKobo,
           reference,

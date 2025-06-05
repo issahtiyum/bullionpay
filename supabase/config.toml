@@ -39,6 +39,9 @@ pop3_port = 54326
 [functions.verify-payment]
 verify_jwt = true
 
+[functions.get-paystack-key]
+verify_jwt = false
+
 [auth]
 enabled = true
 site_url = "http://127.0.0.1:3000"
