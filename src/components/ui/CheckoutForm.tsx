@@ -66,7 +66,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
         // @ts-ignore - Paystack is loaded globally
         const paystack = new window.PaystackPop();
         paystack.newTransaction({
-          key: keyData.publicKey, // Use the key from our edge function
+          key: keyData.publicKey,
           email,
           amount: amountInKobo,
           reference,
@@ -102,21 +102,22 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
 
                 // Now verify payment on backend
                 console.log('Verifying payment...');
-                const { data, error } = await supabase.functions.invoke('verify-payment', {
+                const { data: verificationData, error: verificationError } = await supabase.functions.invoke('verify-payment', {
                   body: {
                     reference: response.reference,
                     user_id: user.id,
                   },
                 });
 
-                if (error) {
-                  console.error('Verification error:', error);
-                  throw new Error(`Payment verification failed: ${error.message}`);
+                if (verificationError) {
+                  console.error('Verification error:', verificationError);
+                  throw new Error(`Payment verification failed: ${verificationError.message}`);
                 }
 
-                console.log('Verification response:', data);
+                console.log('Verification response:', verificationData);
 
-                if (data.success) {
+                // Check if verification was successful
+                if (verificationData && verificationData.success === true) {
                   console.log('Payment verified successfully, creating order...');
                   
                   // Create order record only after successful verification
@@ -151,14 +152,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
                       code: orderError.code
                     });
                     
-                    // Show specific error but still consider payment successful
                     toast({
                       title: "Payment successful",
                       description: `Payment completed but order creation had an issue: ${orderError.message}. Please contact support with your reference: ${response.reference}`,
                       variant: "destructive",
                     });
                     
-                    // Still call success since payment went through
                     onPaymentSuccess();
                     return;
                   }
@@ -171,7 +170,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
                   });
                   onPaymentSuccess();
                 } else {
-                  console.error('Payment verification failed:', data);
+                  console.error('Payment verification failed - data:', verificationData);
                   toast({
                     title: "Payment verification failed",
                     description: "Please contact support if you were charged.",
