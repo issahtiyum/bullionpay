@@ -75,26 +75,28 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
             setLoading(false);
             
             if (response.status === 'success') {
-              // Only create transaction and order records AFTER successful payment
               try {
-                // Create transaction record
+                // Create transaction record FIRST
                 const { data: transaction, error: transactionError } = await supabase
                   .from('transactions')
                   .insert({
                     user_id: user.id,
                     reference,
                     amount: product.price,
-                    status: 'pending', // Will be updated by verification
+                    status: 'pending',
                     paystack_reference: response.reference,
                   })
                   .select()
                   .single();
 
                 if (transactionError) {
+                  console.error('Transaction creation error:', transactionError);
                   throw new Error('Failed to create transaction record');
                 }
 
-                // Verify payment on backend
+                console.log('Transaction created:', transaction);
+
+                // Now verify payment on backend
                 const { data, error } = await supabase.functions.invoke('verify-payment', {
                   body: {
                     reference: response.reference,
@@ -102,7 +104,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
                   },
                 });
 
-                if (error) throw error;
+                if (error) {
+                  console.error('Verification error:', error);
+                  throw error;
+                }
+
+                console.log('Verification response:', data);
 
                 if (data.success) {
                   // Create order record only after successful verification
@@ -145,9 +152,9 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
                   });
                 }
               } catch (verifyError) {
-                console.error('Verification error:', verifyError);
+                console.error('Payment processing error:', verifyError);
                 toast({
-                  title: "Payment verification failed",
+                  title: "Payment processing failed",
                   description: "Please contact support if you were charged.",
                   variant: "destructive",
                 });

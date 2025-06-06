@@ -15,6 +15,8 @@ Deno.serve(async (req) => {
   try {
     const { reference, user_id } = await req.json()
 
+    console.log('Verification request:', { reference, user_id })
+
     if (!reference) {
       return new Response(
         JSON.stringify({ error: 'Payment reference is required' }),
@@ -35,10 +37,11 @@ Deno.serve(async (req) => {
     )
 
     const paystackData = await paystackResponse.json()
+    console.log('Paystack verification response:', paystackData)
 
     if (!paystackData.status) {
       return new Response(
-        JSON.stringify({ error: 'Payment verification failed' }),
+        JSON.stringify({ error: 'Payment verification failed', details: paystackData.message }),
         { status: 400, headers: corsHeaders }
       )
     }
@@ -60,27 +63,12 @@ Deno.serve(async (req) => {
     if (transactionError) {
       console.error('Transaction update error:', transactionError)
       return new Response(
-        JSON.stringify({ error: 'Failed to update transaction' }),
+        JSON.stringify({ error: 'Failed to update transaction', details: transactionError.message }),
         { status: 500, headers: corsHeaders }
       )
     }
 
-    // If payment successful, update order status
-    if (data.status === 'success') {
-      const { error: orderError } = await supabase
-        .from('orders')
-        .update({ status: 'paid' })
-        .eq('transaction_id', (await supabase
-          .from('transactions')
-          .select('id')
-          .eq('reference', reference)
-          .single()
-        ).data?.id)
-
-      if (orderError) {
-        console.error('Order update error:', orderError)
-      }
-    }
+    console.log('Transaction updated successfully')
 
     return new Response(
       JSON.stringify({
@@ -95,7 +83,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Verification error:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
       { status: 500, headers: corsHeaders }
     )
   }
