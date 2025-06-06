@@ -72,11 +72,15 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
           reference,
           currency: 'GHS',
           callback: async (response: any) => {
+            console.log('Paystack callback response:', response);
             setLoading(false);
             
             if (response.status === 'success') {
               try {
+                console.log('Starting payment processing...');
+                
                 // Create transaction record FIRST
+                console.log('Creating transaction record...');
                 const { data: transaction, error: transactionError } = await supabase
                   .from('transactions')
                   .insert({
@@ -91,12 +95,13 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
 
                 if (transactionError) {
                   console.error('Transaction creation error:', transactionError);
-                  throw new Error('Failed to create transaction record');
+                  throw new Error(`Failed to create transaction record: ${transactionError.message}`);
                 }
 
-                console.log('Transaction created:', transaction);
+                console.log('Transaction created successfully:', transaction);
 
                 // Now verify payment on backend
+                console.log('Verifying payment...');
                 const { data, error } = await supabase.functions.invoke('verify-payment', {
                   body: {
                     reference: response.reference,
@@ -106,38 +111,59 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
 
                 if (error) {
                   console.error('Verification error:', error);
-                  throw error;
+                  throw new Error(`Payment verification failed: ${error.message}`);
                 }
 
                 console.log('Verification response:', data);
 
                 if (data.success) {
+                  console.log('Payment verified successfully, creating order...');
+                  
                   // Create order record only after successful verification
-                  const { error: orderError } = await supabase
+                  const orderData = {
+                    user_id: user.id,
+                    transaction_id: transaction.id,
+                    product_id: product.id,
+                    product_name: product.name,
+                    product_category: product.category,
+                    amount: product.price,
+                    status: 'paid',
+                    is_subscription: product.category === 'Subscription',
+                    next_billing_date: product.category === 'Subscription' 
+                      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+                      : null,
+                  };
+
+                  console.log('Attempting to create order with data:', orderData);
+
+                  const { data: orderResult, error: orderError } = await supabase
                     .from('orders')
-                    .insert({
-                      user_id: user.id,
-                      transaction_id: transaction.id,
-                      product_id: product.id,
-                      product_name: product.name,
-                      product_category: product.category,
-                      amount: product.price,
-                      status: 'paid',
-                      is_subscription: product.category === 'Subscription',
-                      next_billing_date: product.category === 'Subscription' 
-                        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-                        : null,
-                    });
+                    .insert(orderData)
+                    .select()
+                    .single();
 
                   if (orderError) {
                     console.error('Order creation error:', orderError);
+                    console.error('Order error details:', {
+                      message: orderError.message,
+                      details: orderError.details,
+                      hint: orderError.hint,
+                      code: orderError.code
+                    });
+                    
+                    // Show specific error but still consider payment successful
                     toast({
-                      title: "Order creation failed",
-                      description: "Payment was successful but order creation failed. Please contact support.",
+                      title: "Payment successful",
+                      description: `Payment completed but order creation had an issue: ${orderError.message}. Please contact support with your reference: ${response.reference}`,
                       variant: "destructive",
                     });
+                    
+                    // Still call success since payment went through
+                    onPaymentSuccess();
                     return;
                   }
+
+                  console.log('Order created successfully:', orderResult);
 
                   toast({
                     title: "Payment successful",
@@ -145,21 +171,24 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
                   });
                   onPaymentSuccess();
                 } else {
+                  console.error('Payment verification failed:', data);
                   toast({
                     title: "Payment verification failed",
                     description: "Please contact support if you were charged.",
                     variant: "destructive",
                   });
                 }
-              } catch (verifyError) {
-                console.error('Payment processing error:', verifyError);
+              } catch (processingError) {
+                console.error('Payment processing error:', processingError);
+                const errorMessage = processingError instanceof Error ? processingError.message : 'Unknown error occurred';
                 toast({
                   title: "Payment processing failed",
-                  description: "Please contact support if you were charged.",
+                  description: `Error: ${errorMessage}. Please contact support if you were charged.`,
                   variant: "destructive",
                 });
               }
             } else {
+              console.log('Payment was not successful:', response);
               toast({
                 title: "Payment cancelled",
                 description: "Your payment was not completed.",
@@ -168,6 +197,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
             }
           },
           onClose: () => {
+            console.log('Payment popup closed by user');
             setLoading(false);
             toast({
               title: "Payment cancelled",
@@ -191,9 +221,10 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
     } catch (error) {
       setLoading(false);
       console.error('Payment initialization error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Payment failed",
-        description: "Failed to initialize payment. Please try again.",
+        description: `Failed to initialize payment: ${errorMessage}. Please try again.`,
         variant: "destructive",
       });
     }
