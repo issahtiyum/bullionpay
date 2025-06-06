@@ -102,7 +102,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
 
                 // Now verify payment on backend
                 console.log('Verifying payment...');
-                const { data: verificationData, error: verificationError } = await supabase.functions.invoke('verify-payment', {
+                const { data: verificationResponse, error: verificationError } = await supabase.functions.invoke('verify-payment', {
                   body: {
                     reference: response.reference,
                     user_id: user.id,
@@ -114,7 +114,20 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
                   throw new Error(`Payment verification failed: ${verificationError.message}`);
                 }
 
-                console.log('Verification response:', verificationData);
+                console.log('Raw verification response:', verificationResponse);
+
+                // Parse the response if it's a string
+                let verificationData;
+                try {
+                  verificationData = typeof verificationResponse === 'string' 
+                    ? JSON.parse(verificationResponse) 
+                    : verificationResponse;
+                } catch (parseError) {
+                  console.error('Failed to parse verification response:', parseError);
+                  throw new Error('Invalid verification response format');
+                }
+
+                console.log('Parsed verification data:', verificationData);
 
                 // Check if verification was successful
                 if (verificationData && verificationData.success === true) {
