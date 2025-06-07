@@ -14,13 +14,22 @@ const SetPassword = () => {
   const { toast } = useToast();
   const { updatePassword, isAuthenticated } = useAuth();
 
-  // Check if we have the necessary tokens from the email link
+  // Step 2: Ensure /set-password route handles the reset flow properly
   const accessToken = searchParams.get('access_token');
   const refreshToken = searchParams.get('refresh_token');
+  const type = searchParams.get('type');
+
+  console.log('SetPassword page loaded with params:', {
+    accessToken: accessToken ? 'present' : 'missing',
+    refreshToken: refreshToken ? 'present' : 'missing',
+    type,
+    allParams: Object.fromEntries(searchParams.entries())
+  });
 
   useEffect(() => {
     // If no tokens in URL, redirect to login
     if (!accessToken || !refreshToken) {
+      console.log('Missing tokens, redirecting to login');
       toast({
         title: "Invalid reset link",
         description: "This password reset link is invalid or has expired",
@@ -29,14 +38,19 @@ const SetPassword = () => {
       navigate('/login');
       return;
     }
+
+    // Log that we have the necessary tokens
+    console.log('Password reset tokens found, ready for password update');
   }, [accessToken, refreshToken, navigate, toast]);
 
   useEffect(() => {
-    // If user is authenticated after password update, redirect to dashboard
-    if (isAuthenticated) {
+    // Step 3: Prevent auto-redirects to dashboard from interfering on /set-password
+    // Only redirect to dashboard after successful password update, not just because user is authenticated
+    if (isAuthenticated && !accessToken && !refreshToken) {
+      console.log('User is authenticated but no reset tokens, redirecting to dashboard');
       navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, accessToken, refreshToken]);
 
   const handlePasswordUpdate = async (password: string) => {
     if (password.length < 6) {
@@ -49,24 +63,29 @@ const SetPassword = () => {
     }
 
     setLoading(true);
+    console.log('Attempting to update password...');
 
     try {
       const { error } = await updatePassword(password);
 
       if (error) {
+        console.error('Password update failed:', error);
         toast({
           title: "Update failed",
           description: error.message || "Failed to update password",
           variant: "destructive",
         });
       } else {
+        console.log('Password updated successfully');
         toast({
           title: "Password updated",
           description: "Your password has been updated successfully",
         });
-        // User will be automatically redirected by the useEffect above
+        // Now redirect to dashboard after successful password update
+        navigate('/dashboard');
       }
     } catch (error: any) {
+      console.error('Password update error:', error);
       toast({
         title: "Error",
         description: error.message || "Something went wrong",
