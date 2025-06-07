@@ -6,15 +6,16 @@ import MainLayout from '@/components/layout/MainLayout';
 import SetNewPasswordForm from '@/components/auth/SetNewPasswordForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const SetPassword = () => {
   const [loading, setLoading] = useState(false);
+  const [sessionEstablished, setSessionEstablished] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { updatePassword, isAuthenticated } = useAuth();
 
-  // Step 2: Ensure /set-password route handles the reset flow properly
   const accessToken = searchParams.get('access_token');
   const refreshToken = searchParams.get('refresh_token');
   const type = searchParams.get('type');
@@ -27,25 +28,57 @@ const SetPassword = () => {
   });
 
   useEffect(() => {
-    // If no tokens in URL, redirect to login
-    if (!accessToken || !refreshToken) {
-      console.log('Missing tokens, redirecting to login');
-      toast({
-        title: "Invalid reset link",
-        description: "This password reset link is invalid or has expired",
-        variant: "destructive",
-      });
-      navigate('/login');
-      return;
-    }
+    const establishSession = async () => {
+      // If no tokens in URL, redirect to login
+      if (!accessToken || !refreshToken) {
+        console.log('Missing tokens, redirecting to login');
+        toast({
+          title: "Invalid reset link",
+          description: "This password reset link is invalid or has expired",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
 
-    // Log that we have the necessary tokens
-    console.log('Password reset tokens found, ready for password update');
+      try {
+        console.log('Attempting to establish session with tokens...');
+        
+        // Set the session using the tokens from the URL
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+
+        if (error) {
+          console.error('Failed to establish session:', error);
+          toast({
+            title: "Invalid reset link",
+            description: "This password reset link is invalid or has expired",
+            variant: "destructive",
+          });
+          navigate('/login');
+        } else {
+          console.log('Session established successfully:', data);
+          setSessionEstablished(true);
+        }
+      } catch (error) {
+        console.error('Error establishing session:', error);
+        toast({
+          title: "Error",
+          description: "Failed to process reset link",
+          variant: "destructive",
+        });
+        navigate('/login');
+      }
+    };
+
+    establishSession();
   }, [accessToken, refreshToken, navigate, toast]);
 
   useEffect(() => {
-    // Step 3: Prevent auto-redirects to dashboard from interfering on /set-password
-    // Only redirect to dashboard after successful password update, not just because user is authenticated
+    // Only redirect if user is authenticated AND we don't have reset tokens
+    // This prevents redirecting during the password reset flow
     if (isAuthenticated && !accessToken && !refreshToken) {
       console.log('User is authenticated but no reset tokens, redirecting to dashboard');
       navigate('/dashboard');
@@ -53,6 +86,15 @@ const SetPassword = () => {
   }, [isAuthenticated, navigate, accessToken, refreshToken]);
 
   const handlePasswordUpdate = async (password: string) => {
+    if (!sessionEstablished) {
+      toast({
+        title: "Session error",
+        description: "Please try clicking the reset link again",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (password.length < 6) {
       toast({
         title: "Invalid password",
@@ -81,8 +123,8 @@ const SetPassword = () => {
           title: "Password updated",
           description: "Your password has been updated successfully",
         });
-        // Now redirect to dashboard after successful password update
-        navigate('/dashboard');
+        // Clear the URL params and redirect to dashboard
+        navigate('/dashboard', { replace: true });
       }
     } catch (error: any) {
       console.error('Password update error:', error);
@@ -96,9 +138,21 @@ const SetPassword = () => {
     }
   };
 
-  // Don't render the form if we don't have the necessary tokens
-  if (!accessToken || !refreshToken) {
-    return null;
+  // Don't render the form if we don't have the necessary tokens or session isn't established
+  if (!accessToken || !refreshToken || !sessionEstablished) {
+    return (
+      <MainLayout>
+        <div className="max-w-md mx-auto">
+          <Card className="border-bullion-purple-100">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-muted-foreground">Processing reset link...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
   }
 
   return (
