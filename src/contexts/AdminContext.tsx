@@ -41,6 +41,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(true);
   const { user, isAuthenticated } = useAuth();
 
+  // Use Supabase RPC functions to check admin status and role
   const checkAdminStatus = async () => {
     if (!user || !isAuthenticated) {
       setIsAdmin(false);
@@ -50,22 +51,51 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
 
+    setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
+      // Check if user is admin using security definer function
+      const { data: isAdminResult, error: isAdminError } = await supabase.rpc('check_is_admin', {
+        user_id: user.id,
+      });
 
-      if (error || !data) {
+      if (isAdminError || !isAdminResult) {
         setIsAdmin(false);
         setAdminRole(null);
         setAdminUser(null);
+        setLoading(false);
+        return;
+      }
+
+      setIsAdmin(!!isAdminResult);
+
+      if (isAdminResult) {
+        // Get admin role from rpc
+        const { data: adminRoleData, error: adminRoleError } = await supabase.rpc('get_admin_role', {
+          user_id: user.id,
+        });
+
+        if (!adminRoleError && adminRoleData) {
+          setAdminRole(adminRoleData as AdminRole);
+
+          // (Optional): fetch additional admin user info for context, but you may skip this if not required
+          const { data, error } = await supabase
+            .from('admin_users')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+            .single();
+          if (!error && data) {
+            setAdminUser(data as AdminUser);
+          } else {
+            setAdminUser(null);
+          }
+        } else {
+          setAdminRole(null);
+          setAdminUser(null);
+        }
       } else {
-        setIsAdmin(true);
-        setAdminRole(data.role as AdminRole);
-        setAdminUser(data as AdminUser);
+        setAdminRole(null);
+        setAdminUser(null);
       }
     } catch (error) {
       console.error('Error checking admin status:', error);
@@ -79,6 +109,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     checkAdminStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isAuthenticated]);
 
   return (
