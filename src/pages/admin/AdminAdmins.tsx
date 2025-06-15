@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -26,7 +25,6 @@ const AdminAdmins = () => {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
-  // fix: union type for allowed roles
   const [inviteRole, setInviteRole] = useState<"admin" | "moderator" | "super_admin">("admin");
   const [inviting, setInviting] = useState(false);
   const { toast } = useToast();
@@ -64,52 +62,17 @@ const AdminAdmins = () => {
       return;
     }
 
-    // 2. Check if user exists (by email) in profiles
-    const { data: profiles, error: profileError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", inviteEmail)
-      .maybeSingle();
-
-    if (!profiles || !profiles.id) {
-      toast({
-        title: "User Not Found",
-        description: "User with this email has not registered. Ask them to sign up before inviting.",
-        variant: "destructive",
-      });
-      setInviting(false);
-      return;
-    }
-
-    // 3. Insert new admin with user_id
-    const { error } = await supabase
-      .from("admin_users")
-      .insert({
-        email: inviteEmail,
-        user_id: profiles.id,
-        role: inviteRole,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        created_by: null,
-      });
-
-    if (!error) {
-      toast({
-        title: "Success",
-        description: "Admin invited. User must sign in to access admin features.",
-      });
-      fetchAdmins();
-      setInviteEmail("");
-      setInviteRole("admin");
-    } else {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    // 2. Since we cannot look up by email in profiles, we fail gracefully
+    toast({
+      title: "Cannot Invite by Email",
+      description:
+        "User profiles do not contain emails. Please contact support, or invite using user IDs. (Ask your developer to add emails to the profiles table for this feature.)",
+      variant: "destructive",
+    });
     setInviting(false);
+    // -- If you want to proceed anyway by inserting the admin with a fake or placeholder user_id,
+    // you could do that here, but that would break referential integrity and app logic.
+    return;
   };
 
   const handleActivationToggle = async (admin: AdminUser) => {
@@ -163,7 +126,8 @@ const AdminAdmins = () => {
                 <Button disabled={inviting || !inviteEmail} onClick={handleInvite}>Invite as Admin</Button>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Only existing site users can receive admin roles. New admins should sign up with this email before using admin features.
+                Only existing site users can receive admin roles. <br />
+                <b>NOTE:</b> Profile emails unavailable. Contact your developer if you need this feature.
               </p>
             </CardContent>
           </Card>
