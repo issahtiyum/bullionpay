@@ -219,6 +219,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_is_admin: {
+        Args: { user_id?: string }
+        Returns: boolean
+      }
+      check_is_super_admin: {
+        Args: { user_id?: string }
+        Returns: boolean
+      }
       get_admin_role: {
         Args: { user_id?: string }
         Returns: Database["public"]["Enums"]["admin_role"]
