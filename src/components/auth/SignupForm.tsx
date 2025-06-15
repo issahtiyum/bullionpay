@@ -3,42 +3,29 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Mail, Phone, Eye, EyeOff } from 'lucide-react';
-
-type ContactMethod = 'email' | 'phone';
+import { Eye, EyeOff } from 'lucide-react';
 
 type SignupFormProps = {
   onSubmit: (
-    contactMethod: ContactMethod, 
+    contactMethod: 'email', 
     contactValue: string, 
     firstName: string, 
     lastName: string, 
-    password?: string
+    password: string
   ) => Promise<void>;
   loading: boolean;
 };
 
 const SignupForm = ({ onSubmit, loading }: SignupFormProps) => {
-  const [contactMethod, setContactMethod] = useState<ContactMethod>('phone');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const contactValue = contactMethod === 'email' ? email : phoneNumber;
-    await onSubmit(
-      contactMethod, 
-      contactValue, 
-      firstName, 
-      lastName, 
-      contactMethod === 'email' ? password : undefined
-    );
+    await onSubmit('email', email, firstName, lastName, password);
   };
 
   return (
@@ -70,87 +57,47 @@ const SignupForm = ({ onSubmit, loading }: SignupFormProps) => {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <Label>How would you like to sign up?</Label>
-        <RadioGroup 
-          value={contactMethod} 
-          onValueChange={(value) => setContactMethod(value as ContactMethod)}
-          className="flex space-x-6"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="phone" id="phone-signup" />
-            <Label htmlFor="phone-signup" className="flex items-center gap-2">
-              <Phone size={16} />
-              Phone
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="email" id="email-signup" />
-            <Label htmlFor="email-signup" className="flex items-center gap-2">
-              <Mail size={16} />
-              Email
-            </Label>
-          </div>
-        </RadioGroup>
+      <div className="space-y-2">
+        <Label htmlFor="emailSignup">Email Address</Label>
+        <Input
+          id="emailSignup"
+          type="email"
+          placeholder="Enter your email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="border-bullion-purple-200 focus:border-bullion-purple-500"
+        />
       </div>
-
-      {contactMethod === 'phone' ? (
-        <div className="space-y-2">
-          <Label htmlFor="phoneNumberSignup">Phone Number</Label>
+      
+      <div className="space-y-2">
+        <Label htmlFor="passwordSignup">Password</Label>
+        <div className="relative">
           <Input
-            id="phoneNumberSignup"
-            type="tel"
-            placeholder="Enter your phone number"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
+            id="passwordSignup"
+            type={showPassword ? "text" : "password"}
+            placeholder="Create a secure password (min. 6 characters)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
-            className="border-bullion-purple-200 focus:border-bullion-purple-500"
+            minLength={6}
+            className="border-bullion-purple-200 focus:border-bullion-purple-500 pr-10"
           />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </Button>
         </div>
-      ) : (
-        <>
-          <div className="space-y-2">
-            <Label htmlFor="emailSignup">Email Address</Label>
-            <Input
-              id="emailSignup"
-              type="email"
-              placeholder="Enter your email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="border-bullion-purple-200 focus:border-bullion-purple-500"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="passwordSignup">Password</Label>
-            <div className="relative">
-              <Input
-                id="passwordSignup"
-                type={showPassword ? "text" : "password"}
-                placeholder="Create a secure password (min. 6 characters)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="border-bullion-purple-200 focus:border-bullion-purple-500 pr-10"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
+      </div>
       
       <Button 
         type="submit" 
