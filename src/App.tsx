@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +22,9 @@ import NotFound from "./pages/NotFound";
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
+import AdminRevenue from "./pages/admin/AdminRevenue";
+import AdminDisputes from "./pages/admin/AdminDisputes";
+import AdminAdmins from "./pages/admin/AdminAdmins";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,21 @@ const App = () => (
               <Route path="/admin/orders" element={
                 <AdminRoute>
                   <AdminOrders />
+                </AdminRoute>
+              } />
+              <Route path="/admin/revenue" element={
+                <AdminRoute>
+                  <AdminRevenue />
+                </AdminRoute>
+              } />
+              <Route path="/admin/disputes" element={
+                <AdminRoute>
+                  <AdminDisputes />
+                </AdminRoute>
+              } />
+              <Route path="/admin/admins" element={
+                <AdminRoute requireRole="super_admin">
+                  <AdminAdmins />
                 </AdminRoute>
               } />
               
