@@ -1,14 +1,16 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, User, ShoppingCart, LogOut } from "lucide-react";
+import { Home, User, ShoppingCart, LogOut, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdmin } from "@/contexts/AdminContext";
 import { Button } from "@/components/ui/button";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const { user, profile, logout, isAuthenticated, loading } = useAuth();
-  
+  const { isAdmin, loading: adminLoading } = useAdmin();
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <header className="bg-gradient-bullion text-white shadow-md">
@@ -24,6 +26,13 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             <Link to="/dashboard" className="hidden sm:block hover:text-bullion-purple-100 transition-colors">
               Dashboard
             </Link>
+            {/* Show Admin link if user is admin and not still loading admin check*/}
+            {!adminLoading && isAdmin && (
+              <Link to="/admin" className="hidden sm:flex items-center gap-1 hover:text-bullion-purple-100 transition-colors font-medium">
+                <LayoutDashboard size={18} className="mr-1" />
+                Admin
+              </Link>
+            )}
             {!loading && (
               <>
                 {isAuthenticated ? (
@@ -92,6 +101,16 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             <ShoppingCart size={20} />
             <span className="text-xs mt-1">Orders</span>
           </Link>
+          {/* Mobile Admin Icon */}
+          {!adminLoading && isAdmin && (
+            <Link 
+              to="/admin"
+              className={`flex flex-col items-center p-2 ${location.pathname.startsWith('/admin') ? 'text-bullion-purple-600' : 'text-gray-500'}`}
+            >
+              <LayoutDashboard size={20} />
+              <span className="text-xs mt-1">Admin</span>
+            </Link>
+          )}
           <Link 
             to="/login" 
             className={`flex flex-col items-center p-2 ${location.pathname === '/login' ? 'text-bullion-purple-600' : 'text-gray-500'}`}
@@ -106,3 +125,4 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default MainLayout;
+
