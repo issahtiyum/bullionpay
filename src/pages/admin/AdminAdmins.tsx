@@ -26,7 +26,8 @@ const AdminAdmins = () => {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("admin");
+  // fix: union type for allowed roles
+  const [inviteRole, setInviteRole] = useState<"admin" | "moderator" | "super_admin">("admin");
   const [inviting, setInviting] = useState(false);
   const { toast } = useToast();
 
@@ -42,17 +43,16 @@ const AdminAdmins = () => {
       .from("admin_users")
       .select("*")
       .order("created_at", { ascending: false });
-
     if (data) setAdmins(data as AdminUser[]);
     setLoading(false);
   };
 
   const handleInvite = async () => {
-    // Only allow inviting if super_admin
     if (!isSuperAdmin) return;
 
     setInviting(true);
-    // Find if already exists
+
+    // 1. Check if user already an admin
     const { data: existing, error: existingError } = await supabase
       .from("admin_users")
       .select("*")
@@ -64,26 +64,50 @@ const AdminAdmins = () => {
       return;
     }
 
-    // Insert to admin_users (assume admin user must sign up separately)
+    // 2. Check if user exists (by email) in profiles
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", inviteEmail)
+      .maybeSingle();
+
+    if (!profiles || !profiles.id) {
+      toast({
+        title: "User Not Found",
+        description: "User with this email has not registered. Ask them to sign up before inviting.",
+        variant: "destructive",
+      });
+      setInviting(false);
+      return;
+    }
+
+    // 3. Insert new admin with user_id
     const { error } = await supabase
       .from("admin_users")
       .insert({
         email: inviteEmail,
+        user_id: profiles.id,
         role: inviteRole,
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         created_by: null,
-        // user_id will be null until the invited user registers/signs in
       });
 
     if (!error) {
-      toast({ title: "Success", description: "Admin invited (add by email); user must register separately." });
+      toast({
+        title: "Success",
+        description: "Admin invited. User must sign in to access admin features.",
+      });
       fetchAdmins();
       setInviteEmail("");
       setInviteRole("admin");
     } else {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
     setInviting(false);
   };
@@ -131,7 +155,7 @@ const AdminAdmins = () => {
                 <select
                   disabled={inviting}
                   value={inviteRole}
-                  onChange={e => setInviteRole(e.target.value)}
+                  onChange={e => setInviteRole(e.target.value as "admin" | "moderator" | "super_admin")}
                   className="border px-3 py-2 rounded"
                 >
                   {roles.map(r => <option key={r} value={r}>{r}</option>)}
@@ -177,7 +201,7 @@ const AdminAdmins = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {new Date(a.created_at).toLocaleDateString()}
+                        {a.created_at ? new Date(a.created_at).toLocaleDateString() : ""}
                       </TableCell>
                       {isSuperAdmin && (
                         <TableCell>
@@ -185,7 +209,7 @@ const AdminAdmins = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleActivationToggle(a)}
-                            disabled={a.email === "superadmin@bullionpay.com"}  // add your seed email here if needed
+                            disabled={a.email === "superadmin@bullionpay.com"}
                           >
                             {a.is_active ? "Deactivate" : "Activate"}
                           </Button>
