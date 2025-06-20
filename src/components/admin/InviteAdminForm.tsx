@@ -23,62 +23,42 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
     if (!isSuperAdmin || !inviteEmail) return;
 
     const trimmedEmail = inviteEmail.trim().toLowerCase();
-    console.log('Starting admin invitation process for:', trimmedEmail);
-
     setInviting(true);
 
     try {
-      console.log('Step 1: Checking all profiles in database...');
-      // First, let's see what profiles exist
-      const { data: allProfiles, error: allProfilesError } = await supabase
-        .from('profiles')
-        .select('id, email');
-
-      console.log('All profiles in database:', allProfiles);
-      console.log('All profiles error:', allProfilesError);
-
-      console.log('Step 2: Looking up specific user profile by email...');
+      // Look up user profile by email
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id, email')
         .eq('email', trimmedEmail)
         .single();
 
-      console.log('Profile lookup result:', { existingProfile, profileError });
-
       if (profileError) {
         if (profileError.code === 'PGRST116') {
-          console.log('No user found with email:', trimmedEmail);
           toast({
             title: "User Not Found",
-            description: `No user found with email "${trimmedEmail}". Available emails: ${allProfiles?.map(p => p.email).join(', ') || 'none'}`,
+            description: `No user found with email "${trimmedEmail}". The user must sign up first before being invited as an admin.`,
             variant: "destructive",
           });
         } else {
-          console.error('Profile lookup error:', profileError);
           toast({
-            title: "Database Error",
-            description: `Error looking up user profile: ${profileError.message}`,
+            title: "Error",
+            description: `Error looking up user: ${profileError.message}`,
             variant: "destructive",
           });
         }
-        setInviting(false);
         return;
       }
 
       if (!existingProfile) {
-        console.log('No profile found for email:', trimmedEmail);
         toast({
           title: "User Not Found",
           description: `No user found with email "${trimmedEmail}". The user must sign up first before being invited as an admin.`,
           variant: "destructive",
         });
-        setInviting(false);
         return;
       }
 
-      console.log('Step 3: Found user profile, checking if already admin...', existingProfile);
-      
       // Check if user is already an admin
       const { data: existingAdmin, error: adminCheckError } = await supabase
         .from('admin_users')
@@ -86,21 +66,16 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
         .eq('user_id', existingProfile.id)
         .single();
 
-      console.log('Admin check result:', { existingAdmin, adminCheckError });
-
       if (adminCheckError && adminCheckError.code !== 'PGRST116') {
-        console.error('Admin check error:', adminCheckError);
         toast({
-          title: "Database Error",
+          title: "Error",
           description: `Error checking admin status: ${adminCheckError.message}`,
           variant: "destructive",
         });
-        setInviting(false);
         return;
       }
 
       if (existingAdmin) {
-        console.log('User is already an admin:', existingAdmin);
         if (existingAdmin.is_active) {
           toast({
             title: "Already an Admin",
@@ -114,23 +89,10 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
             variant: "destructive",
           });
         }
-        setInviting(false);
         return;
       }
 
-      console.log('Step 4: Creating new admin user...');
-      
-      if (!existingProfile.id) {
-        console.error('Missing user_id for profile:', existingProfile);
-        toast({
-          title: "Error",
-          description: "Invalid user profile found. Missing user ID.",
-          variant: "destructive",
-        });
-        setInviting(false);
-        return;
-      }
-
+      // Create new admin user
       const adminData = {
         user_id: existingProfile.id,
         email: trimmedEmail,
@@ -138,28 +100,18 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
         is_active: true,
       };
 
-      console.log('Inserting admin data:', adminData);
-
-      const { data: insertedAdmin, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('admin_users')
-        .insert(adminData)
-        .select()
-        .single();
-
-      console.log('Insert result:', { insertedAdmin, insertError });
+        .insert(adminData);
 
       if (insertError) {
-        console.error('Insert error details:', insertError);
         toast({
-          title: "Database Error",
+          title: "Error",
           description: `Failed to create admin user: ${insertError.message}`,
           variant: "destructive",
         });
-        setInviting(false);
         return;
       }
-
-      console.log('Step 5: Admin user created successfully!', insertedAdmin);
 
       toast({
         title: "Admin Invited Successfully",
@@ -171,7 +123,6 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
       onInviteSuccess();
 
     } catch (error) {
-      console.error('Unexpected error during admin invitation:', error);
       toast({
         title: "Unexpected Error",
         description: `An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -218,11 +169,6 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
         <p className="text-xs text-gray-500 mt-2">
           Only existing site users can receive admin roles. The user must have an account first.
         </p>
-        {inviting && (
-          <p className="text-xs text-blue-600 mt-1">
-            Processing invitation for {inviteEmail.trim()}...
-          </p>
-        )}
       </CardContent>
     </Card>
   );
