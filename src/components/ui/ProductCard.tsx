@@ -4,21 +4,16 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CategoryBadge from './CategoryBadge';
+import { Database } from '@/integrations/supabase/types';
 
-export type Product = {
-  id: string;
-  name: string;
-  category: 'Subscription' | 'Gift Card' | 'Game Credit';
-  price: number;
-  image: string;
-};
+export type Product = Database['public']['Tables']['products']['Row'];
 
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg animate-fade-in w-full">
       <div className="aspect-square relative overflow-hidden bg-gray-100">
         <img 
-          src={product.image} 
+          src={product.image || '/placeholder.svg'} 
           alt={product.name} 
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
         />
@@ -30,7 +25,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           <CategoryBadge category={product.category} />
         </div>
         <p className="text-lg font-semibold text-bullion-purple">
-          GHS {product.price.toFixed(2)}
+          GHS {Number(product.price).toFixed(2)}
         </p>
       </CardContent>
       

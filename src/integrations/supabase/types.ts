@@ -148,6 +148,53 @@ export type Database = {
           },
         ]
       }
+      products: {
+        Row: {
+          category: Database["public"]["Enums"]["product_category"]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          image: string | null
+          is_active: boolean
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["product_category"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image?: string | null
+          is_active?: boolean
+          name: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["product_category"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image?: string | null
+          is_active?: boolean
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -241,6 +288,7 @@ export type Database = {
     }
     Enums: {
       admin_role: "super_admin" | "admin" | "moderator"
+      product_category: "Subscription" | "Gift Card" | "Game Credit"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -357,6 +405,7 @@ export const Constants = {
   public: {
     Enums: {
       admin_role: ["super_admin", "admin", "moderator"],
+      product_category: ["Subscription", "Gift Card", "Game Credit"],
     },
   },
 } as const
