@@ -26,16 +26,33 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     navigate('/');
   };
 
-  const navigationItems = [
-    { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
-    { path: '/admin/products', icon: Package, label: 'Products' },
-    { path: '/admin/revenue', icon: DollarSign, label: 'Revenue' },
-    { path: '/admin/disputes', icon: AlertTriangle, label: 'Disputes' },
-    ...(adminRole === 'super_admin' ? [
+  // Define navigation items based on roles
+  const getNavigationItems = () => {
+    const baseItems = [
+      { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' }
+    ];
+
+    // All roles can view orders, revenue, and disputes
+    const commonItems = [
+      { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
+      { path: '/admin/revenue', icon: DollarSign, label: 'Revenue' },
+      { path: '/admin/disputes', icon: AlertTriangle, label: 'Disputes' }
+    ];
+
+    // Only admins and super_admins can manage products
+    const productItems = (adminRole === 'admin' || adminRole === 'super_admin') ? [
+      { path: '/admin/products', icon: Package, label: 'Products' }
+    ] : [];
+
+    // Only super_admins can manage other admins
+    const superAdminItems = adminRole === 'super_admin' ? [
       { path: '/admin/admins', icon: Users, label: 'Manage Admins' }
-    ] : []),
-  ];
+    ] : [];
+
+    return [...baseItems, ...commonItems, ...productItems, ...superAdminItems];
+  };
+
+  const navigationItems = getNavigationItems();
 
   return (
     <div className="min-h-screen flex bg-gray-50">

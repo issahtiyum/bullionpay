@@ -41,9 +41,23 @@ const AdminProducts = () => {
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
   
-  const isSuperAdmin = adminRole === 'super_admin';
-  const canDelete = isSuperAdmin;
-  const canEdit = adminRole === 'admin' || adminRole === 'super_admin';
+  // Check permissions based on role
+  const canManageProducts = adminRole === 'admin' || adminRole === 'super_admin';
+  const canDelete = adminRole === 'super_admin';
+
+  // If user doesn't have permission to manage products, show access denied
+  if (!canManageProducts) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+            <p className="text-gray-600">You don't have permission to manage products.</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   const handleCreateProduct = async (productData: any) => {
     await createProduct.mutateAsync(productData);
@@ -106,12 +120,10 @@ const AdminProducts = () => {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold">Product Management</h1>
-          {canEdit && (
-            <Button onClick={() => setShowForm(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Product
-            </Button>
-          )}
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Product
+          </Button>
         </div>
 
         <Card>
@@ -156,28 +168,24 @@ const AdminProducts = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {canEdit && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => toggleProductStatus(product)}
-                              disabled={updateProduct.isPending}
-                            >
-                              {product.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setEditingProduct(product);
-                                setShowForm(true);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => toggleProductStatus(product)}
+                          disabled={updateProduct.isPending}
+                        >
+                          {product.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingProduct(product);
+                            setShowForm(true);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
                         {canDelete && (
                           <Button
                             size="sm"
@@ -196,7 +204,7 @@ const AdminProducts = () => {
             
             {!products?.length && (
               <div className="text-center py-8 text-gray-500">
-                No products found. {canEdit && "Add your first product to get started."}
+                No products found. Add your first product to get started.
               </div>
             )}
           </CardContent>
