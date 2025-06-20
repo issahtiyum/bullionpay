@@ -30,11 +30,11 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
 
     try {
       console.log('Step 1: Looking up user profile by email...');
-      // Use case-insensitive search for email
+      // Use proper Supabase filter syntax with .eq() method
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id, email')
-        .ilike('email', trimmedEmail)
+        .eq('email', trimmedEmail)
         .single();
 
       console.log('Profile lookup result:', { existingProfile, profileError });
