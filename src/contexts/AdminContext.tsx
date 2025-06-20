@@ -41,7 +41,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(true);
   const { user, isAuthenticated } = useAuth();
 
-  // Use Supabase RPC functions to check admin status and role
   const checkAdminStatus = async () => {
     if (!user || !isAuthenticated) {
       setIsAdmin(false);
@@ -53,12 +52,37 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setLoading(true);
     try {
+      console.log('Checking admin status for user:', user.id);
+      
+      // Try to directly query admin_users table first (fallback approach)
+      const { data: adminData, error: directError } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (!directError && adminData) {
+        console.log('Direct query successful:', adminData);
+        setIsAdmin(true);
+        setAdminRole(adminData.role as AdminRole);
+        setAdminUser(adminData as AdminUser);
+        setLoading(false);
+        return;
+      }
+
+      // If direct query fails, try RPC functions
+      console.log('Direct query failed, trying RPC functions...');
+      
       // Check if user is admin using security definer function
       const { data: isAdminResult, error: isAdminError } = await supabase.rpc('check_is_admin', {
         user_id: user.id,
       });
 
-      if (isAdminError || !isAdminResult) {
+      if (isAdminError) {
+        console.error('RPC check_is_admin error:', isAdminError);
+        // If RPC fails due to CORS or other issues, fallback to direct table query
+        console.log('RPC failed, using direct table query results');
         setIsAdmin(false);
         setAdminRole(null);
         setAdminUser(null);
@@ -76,22 +100,17 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (!adminRoleError && adminRoleData) {
           setAdminRole(adminRoleData as AdminRole);
-
-          // (Optional): fetch additional admin user info for context, but you may skip this if not required
-          const { data, error } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('is_active', true)
-            .single();
-          if (!error && data) {
-            setAdminUser(data as AdminUser);
+          setAdminUser(adminData as AdminUser);
+        } else {
+          console.error('Error getting admin role:', adminRoleError);
+          // Fallback: use the direct query result if we have it
+          if (adminData) {
+            setAdminRole(adminData.role as AdminRole);
+            setAdminUser(adminData as AdminUser);
           } else {
+            setAdminRole(null);
             setAdminUser(null);
           }
-        } else {
-          setAdminRole(null);
-          setAdminUser(null);
         }
       } else {
         setAdminRole(null);
