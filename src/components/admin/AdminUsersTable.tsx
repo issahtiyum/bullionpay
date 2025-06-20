@@ -27,6 +27,15 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
   isSuperAdmin,
   onActivationToggle,
 }) => {
+  // Count active super admins
+  const activeSuperAdminsCount = admins.filter(admin => 
+    admin.role === 'super_admin' && admin.is_active
+  ).length;
+
+  const isLastActiveSuperAdmin = (admin: AdminUser) => {
+    return admin.role === 'super_admin' && admin.is_active && activeSuperAdminsCount === 1;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -69,7 +78,15 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                         size="sm"
                         variant="outline"
                         onClick={() => onActivationToggle(admin)}
-                        disabled={admin.email === "superadmin@bullionpay.com"}
+                        disabled={
+                          admin.email === "superadmin@bullionpay.com" || 
+                          isLastActiveSuperAdmin(admin)
+                        }
+                        title={
+                          isLastActiveSuperAdmin(admin) 
+                            ? "Cannot deactivate the last active super admin" 
+                            : undefined
+                        }
                       >
                         {admin.is_active ? "Deactivate" : "Activate"}
                       </Button>

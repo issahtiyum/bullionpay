@@ -29,6 +29,23 @@ export const useAdmins = () => {
   };
 
   const handleActivationToggle = async (admin: AdminUser) => {
+    // Check if this is a super admin being deactivated
+    if (admin.role === 'super_admin' && admin.is_active) {
+      // Count active super admins
+      const activeSuperAdmins = admins.filter(a => 
+        a.role === 'super_admin' && a.is_active && a.id !== admin.id
+      );
+      
+      if (activeSuperAdmins.length === 0) {
+        toast({ 
+          title: "Cannot deactivate", 
+          description: "There must be at least one active super admin in the system.", 
+          variant: "destructive" 
+        });
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from("admin_users")
       .update({ is_active: !admin.is_active, updated_at: new Date().toISOString() })
