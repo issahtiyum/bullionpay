@@ -22,15 +22,22 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
   const handleInvite = async () => {
     if (!isSuperAdmin || !inviteEmail) return;
 
-    // Trim whitespace from email
     const trimmedEmail = inviteEmail.trim().toLowerCase();
     console.log('Starting admin invitation process for:', trimmedEmail);
 
     setInviting(true);
 
     try {
-      console.log('Step 1: Looking up user profile by email...');
-      // Use proper Supabase filter syntax with .eq() method
+      console.log('Step 1: Checking all profiles in database...');
+      // First, let's see what profiles exist
+      const { data: allProfiles, error: allProfilesError } = await supabase
+        .from('profiles')
+        .select('id, email');
+
+      console.log('All profiles in database:', allProfiles);
+      console.log('All profiles error:', allProfilesError);
+
+      console.log('Step 2: Looking up specific user profile by email...');
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id, email')
@@ -44,7 +51,7 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
           console.log('No user found with email:', trimmedEmail);
           toast({
             title: "User Not Found",
-            description: `No user found with email "${trimmedEmail}". The user must sign up first before being invited as an admin.`,
+            description: `No user found with email "${trimmedEmail}". Available emails: ${allProfiles?.map(p => p.email).join(', ') || 'none'}`,
             variant: "destructive",
           });
         } else {
@@ -70,7 +77,7 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
         return;
       }
 
-      console.log('Step 2: Found user profile, checking if already admin...', existingProfile);
+      console.log('Step 3: Found user profile, checking if already admin...', existingProfile);
       
       // Check if user is already an admin
       const { data: existingAdmin, error: adminCheckError } = await supabase
@@ -111,9 +118,8 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
         return;
       }
 
-      console.log('Step 3: Creating new admin user...');
+      console.log('Step 4: Creating new admin user...');
       
-      // Validate we have the user_id before insertion
       if (!existingProfile.id) {
         console.error('Missing user_id for profile:', existingProfile);
         toast({
@@ -125,7 +131,6 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
         return;
       }
 
-      // Create new admin user
       const adminData = {
         user_id: existingProfile.id,
         email: trimmedEmail,
@@ -154,7 +159,7 @@ const InviteAdminForm: React.FC<InviteAdminFormProps> = ({ onInviteSuccess, isSu
         return;
       }
 
-      console.log('Step 4: Admin user created successfully!', insertedAdmin);
+      console.log('Step 5: Admin user created successfully!', insertedAdmin);
 
       toast({
         title: "Admin Invited Successfully",
