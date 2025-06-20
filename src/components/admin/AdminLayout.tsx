@@ -11,7 +11,8 @@ import {
   AlertTriangle, 
   Users, 
   LogOut,
-  Home
+  Home,
+  Package
 } from 'lucide-react';
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
@@ -28,6 +29,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const navigationItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
+    { path: '/admin/products', icon: Package, label: 'Products' },
     { path: '/admin/revenue', icon: DollarSign, label: 'Revenue' },
     { path: '/admin/disputes', icon: AlertTriangle, label: 'Disputes' },
     ...(adminRole === 'super_admin' ? [
