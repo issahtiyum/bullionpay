@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Trash2, UserCog } from "lucide-react";
 
+type AdminRole = "super_admin" | "admin" | "moderator";
+
 type AdminUser = {
   id: string;
   email: string;
@@ -38,7 +40,7 @@ interface AdminUsersTableProps {
   loading: boolean;
   isSuperAdmin: boolean;
   onActivationToggle: (admin: AdminUser) => void;
-  onRoleChange: (adminId: string, newRole: string) => void;
+  onRoleChange: (adminId: string, newRole: AdminRole) => void;
   onRemoveAdmin: (adminId: string) => void;
 }
 
@@ -52,7 +54,7 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
 }) => {
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [actionType, setActionType] = useState<'activate' | 'remove' | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [selectedRole, setSelectedRole] = useState<AdminRole | "">("");
 
   // Count active super admins
   const activeSuperAdminsCount = admins.filter(admin => 
@@ -80,8 +82,8 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
   };
 
   const handleRoleChangeConfirm = () => {
-    if (selectedAdmin && selectedRole) {
-      onRoleChange(selectedAdmin.id, selectedRole);
+    if (selectedAdmin && selectedRole && selectedRole !== "") {
+      onRoleChange(selectedAdmin.id, selectedRole as AdminRole);
       setSelectedAdmin(null);
       setSelectedRole("");
     }
@@ -94,7 +96,7 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
 
   const openRoleDialog = (admin: AdminUser) => {
     setSelectedAdmin(admin);
-    setSelectedRole(admin.role);
+    setSelectedRole(admin.role as AdminRole);
   };
 
   return (
@@ -333,7 +335,7 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
+            <Select value={selectedRole} onValueChange={(value: AdminRole) => setSelectedRole(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>

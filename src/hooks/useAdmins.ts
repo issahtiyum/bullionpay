@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+type AdminRole = "super_admin" | "admin" | "moderator";
+
 type AdminUser = {
   id: string;
   email: string;
@@ -59,7 +61,7 @@ export const useAdmins = () => {
     }
   };
 
-  const handleRoleChange = async (adminId: string, newRole: string) => {
+  const handleRoleChange = async (adminId: string, newRole: AdminRole) => {
     const { error } = await supabase.rpc('update_admin_role', {
       target_admin_id: adminId,
       new_role: newRole
