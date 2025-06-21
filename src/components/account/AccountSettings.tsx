@@ -4,18 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Download, User } from 'lucide-react';
+import { AlertTriangle, User } from 'lucide-react';
 
 const AccountSettings = () => {
   const { user, logout } = useAuth();
   const { toast } = useToast();
-
-  const handleDownloadData = () => {
-    toast({
-      title: "Data export requested",
-      description: "Your account data will be prepared and sent to your email within 24 hours.",
-    });
-  };
 
   const handleDeleteAccount = () => {
     toast({
@@ -52,28 +45,6 @@ const AccountSettings = () => {
               {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
             </span>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Download size={20} />
-            Data Export
-          </CardTitle>
-          <CardDescription>
-            Download a copy of your account data and purchase history
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button 
-            variant="outline" 
-            onClick={handleDownloadData}
-            className="w-full sm:w-auto"
-          >
-            <Download size={16} className="mr-2" />
-            Request Data Export
-          </Button>
         </CardContent>
       </Card>
 
