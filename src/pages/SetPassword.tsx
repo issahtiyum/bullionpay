@@ -34,6 +34,7 @@ const SetPassword = () => {
   console.log('🔍 SetPassword: AuthLoading from context:', authLoading);
   console.log('🔍 SetPassword: Tokens state:', tokens);
   console.log('🔍 SetPassword: SessionEstablished state:', sessionEstablished);
+  console.log('🔍 SetPassword: Recovery flag in sessionStorage:', sessionStorage.getItem('supabase-recovery-session'));
   console.log('🔍 SetPassword: ===== COMPONENT MOUNT/RENDER END =====');
 
   // Handle successful token establishment
@@ -51,7 +52,7 @@ const SetPassword = () => {
     setSessionEstablished(false);
   };
 
-  // Redirect authenticated users who aren't in password recovery
+  // Redirect logic - only redirect if not in recovery mode and not processing tokens
   useEffect(() => {
     console.log('🔍 SetPassword: REDIRECT CHECK EFFECT');
     console.log('🔍 SetPassword: isAuthenticated:', isAuthenticated);
@@ -59,6 +60,7 @@ const SetPassword = () => {
     console.log('🔍 SetPassword: tokens:', tokens);
     console.log('🔍 SetPassword: isPasswordRecovery:', isPasswordRecovery);
     console.log('🔍 SetPassword: sessionEstablished:', sessionEstablished);
+    console.log('🔍 SetPassword: recovery flag:', sessionStorage.getItem('supabase-recovery-session'));
     
     // Don't redirect if auth is still loading
     if (authLoading) {
@@ -66,14 +68,15 @@ const SetPassword = () => {
       return;
     }
     
-    // Don't redirect if we have tokens or are in password recovery mode
-    if (tokens || isPasswordRecovery || sessionEstablished) {
+    // Don't redirect if we have recovery indicators
+    const hasRecoveryFlag = sessionStorage.getItem('supabase-recovery-session');
+    if (tokens || isPasswordRecovery || sessionEstablished || hasRecoveryFlag) {
       console.log('🔍 SetPassword: In password recovery mode, not redirecting');
       return;
     }
     
     // Only redirect regular authenticated users who aren't in password recovery
-    if (isAuthenticated && !isPasswordRecovery && !tokens) {
+    if (isAuthenticated && !isPasswordRecovery && !tokens && !hasRecoveryFlag) {
       console.log('🔍 SetPassword: 🚀 REDIRECTING TO DASHBOARD - Regular authenticated user');
       navigate('/dashboard');
     }
@@ -83,7 +86,7 @@ const SetPassword = () => {
     console.log('🔍 SetPassword: 🔄 PASSWORD UPDATE INITIATED');
     console.log('🔍 SetPassword: Session established?', sessionEstablished);
     
-    if (!sessionEstablished) {
+    if (!sessionEstablished && !isAuthenticated) {
       console.log('🔍 SetPassword: ❌ Session not established, showing error');
       toast({
         title: "Session error",
@@ -108,12 +111,13 @@ const SetPassword = () => {
         });
       } else {
         console.log('🔍 SetPassword: ✅ Password updated successfully');
+        // Clear recovery flag
+        sessionStorage.removeItem('supabase-recovery-session');
         toast({
           title: "Password updated",
           description: "Your password has been updated successfully",
         });
         console.log('🔍 SetPassword: Navigating to dashboard...');
-        window.history.replaceState({}, document.title, '/dashboard');
         navigate('/dashboard', { replace: true });
       }
     } catch (error: any) {
@@ -145,6 +149,9 @@ const SetPassword = () => {
     );
   }
 
+  const hasRecoveryFlag = sessionStorage.getItem('supabase-recovery-session');
+  const canShowForm = sessionEstablished || (isAuthenticated && (isPasswordRecovery || hasRecoveryFlag));
+
   return (
     <MainLayout>
       <div className="max-w-md mx-auto space-y-4">
@@ -155,7 +162,7 @@ const SetPassword = () => {
         />
 
         <Card className="border-bullion-purple-100">
-          {!tokens || !sessionEstablished ? (
+          {!canShowForm ? (
             <CardContent className="pt-6">
               <div className="text-center space-y-4">
                 <p className="text-muted-foreground">Processing reset link...</p>

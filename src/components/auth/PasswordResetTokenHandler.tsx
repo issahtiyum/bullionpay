@@ -22,6 +22,9 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
   useEffect(() => {
     const parseAndEstablishTokens = async () => {
       console.log('🔍 TokenHandler: Starting token parsing and session establishment...');
+      console.log('🔍 TokenHandler: Current URL:', window.location.href);
+      console.log('🔍 TokenHandler: Current search:', window.location.search);
+      console.log('🔍 TokenHandler: Current hash:', window.location.hash);
       
       // Parse tokens from URL
       const searchParams = new URLSearchParams(window.location.search);
@@ -43,18 +46,38 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
       console.log('🔍 TokenHandler: Parsed tokens:', {
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
-        type
+        type,
+        accessTokenLength: accessToken?.length,
+        refreshTokenLength: refreshToken?.length
       });
 
+      // If we don't have tokens, check if there's already an active session
       if (!accessToken || !refreshToken) {
-        console.log('❌ TokenHandler: Missing tokens, invalid reset link');
+        console.log('🔍 TokenHandler: No tokens found, checking existing session...');
+        
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('🔍 TokenHandler: Existing session check:', { hasSession: !!session, error });
+        
+        if (session && session.user) {
+          console.log('🔍 TokenHandler: Found existing session, treating as recovery session');
+          // Set recovery flag since user is on /set-password
+          sessionStorage.setItem('supabase-recovery-session', 'true');
+          onTokensEstablished({ 
+            accessToken: session.access_token, 
+            refreshToken: session.refresh_token, 
+            type: 'recovery' 
+          });
+          return;
+        }
+        
+        console.log('❌ TokenHandler: No tokens and no session, invalid reset link');
         toast({
           title: "Invalid reset link",
-          description: "This password reset link is invalid or has expired",
+          description: "This password reset link is invalid or has expired. Please request a new one.",
           variant: "destructive",
         });
         onTokensInvalid();
-        navigate('/login');
+        navigate('/reset-password');
         return;
       }
 
@@ -73,10 +96,15 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
             variant: "destructive",
           });
           onTokensInvalid();
-          navigate('/login');
+          navigate('/reset-password');
         } else {
           console.log('✅ TokenHandler: Session established successfully');
+          // Set recovery flag
+          sessionStorage.setItem('supabase-recovery-session', 'true');
           onTokensEstablished({ accessToken, refreshToken, type });
+          
+          // Clean up URL to remove tokens
+          window.history.replaceState({}, document.title, '/set-password');
         }
       } catch (error) {
         console.error('❌ TokenHandler: Exception during session establishment:', error);
@@ -86,7 +114,7 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
           variant: "destructive",
         });
         onTokensInvalid();
-        navigate('/login');
+        navigate('/reset-password');
       }
     };
 
