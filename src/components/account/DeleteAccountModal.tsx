@@ -22,6 +22,12 @@ type DeleteAccountModalProps = {
   onClose: () => void;
 };
 
+type DeleteAccountResponse = {
+  success: boolean;
+  message?: string;
+  error?: string;
+};
+
 const DeleteAccountModal = ({ isOpen, onClose }: DeleteAccountModalProps) => {
   const { user, logout } = useAuth();
   const { toast } = useToast();
@@ -81,8 +87,11 @@ const DeleteAccountModal = ({ isOpen, onClose }: DeleteAccountModalProps) => {
         throw new Error(dbError.message);
       }
 
-      if (!data?.success) {
-        throw new Error(data?.error || 'Failed to delete account data');
+      // Type cast the response to our expected format
+      const response = data as DeleteAccountResponse;
+
+      if (!response?.success) {
+        throw new Error(response?.error || 'Failed to delete account data');
       }
 
       // Delete the user from Supabase Auth
