@@ -35,7 +35,8 @@ export const authService = {
     console.log('🔍 AuthService: Sending password reset email:', {
       email,
       redirectUrl,
-      currentOrigin: window.location.origin
+      currentOrigin: window.location.origin,
+      fullUrl: window.location.href
     });
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -46,7 +47,7 @@ export const authService = {
       console.error('❌ AuthService: Password reset error:', error);
     } else {
       console.log('✅ AuthService: Password reset email sent successfully');
-      console.log('✅ AuthService: User should check their email and click the link to go to /set-password');
+      console.log('✅ AuthService: Email should redirect to:', redirectUrl);
     }
     
     return { error };
