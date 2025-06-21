@@ -1,15 +1,17 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, User, ShoppingCart, LogOut, LayoutDashboard, Settings } from "lucide-react";
+import { Home, User, ShoppingCart, LayoutDashboard, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/contexts/AdminContext";
-import { Button } from "@/components/ui/button";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const { user, profile, logout, isAuthenticated, loading } = useAuth();
+  const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
+
+  // Show admin link only when we're sure about admin status
+  const showAdminLink = !authLoading && !adminLoading && isAuthenticated && isAdmin;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -23,15 +25,14 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           </Link>
           
           <div className="flex items-center gap-4">
-            {!loading && (
+            {!authLoading && (
               <>
                 {isAuthenticated ? (
                   <div className="hidden sm:flex items-center gap-6">
                     <Link to="/dashboard" className="hover:text-bullion-purple-100 transition-colors">
                       Dashboard
                     </Link>
-                    {/* Show Admin link if user is admin and not still loading admin check*/}
-                    {!adminLoading && isAdmin && (
+                    {showAdminLink && (
                       <Link to="/admin" className="flex items-center gap-1 hover:text-bullion-purple-100 transition-colors font-medium">
                         <LayoutDashboard size={18} className="mr-1" />
                         Admin
@@ -75,7 +76,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </footer>
       
-      {/* Mobile Navigation - Added z-index and proper spacing */}
+      {/* Mobile Navigation */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-10">
         <div className="flex justify-around">
           <Link 
@@ -92,8 +93,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             <ShoppingCart size={20} />
             <span className="text-xs mt-1">Orders</span>
           </Link>
-          {/* Mobile Admin Icon */}
-          {!adminLoading && isAdmin && (
+          {showAdminLink && (
             <Link 
               to="/admin"
               className={`flex flex-col items-center p-2 ${location.pathname.startsWith('/admin') ? 'text-bullion-purple-600' : 'text-gray-500'}`}
@@ -102,7 +102,6 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               <span className="text-xs mt-1">Admin</span>
             </Link>
           )}
-          {/* Mobile Account Icon */}
           {isAuthenticated ? (
             <Link 
               to="/account"

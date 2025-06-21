@@ -50,55 +50,27 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
 
-    setLoading(true);
     try {
-      const { data: adminData, error: directError } = await supabase
+      setLoading(true);
+      
+      // Single query to get admin user data
+      const { data: adminData, error } = await supabase
         .from('admin_users')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
-      if (!directError && adminData) {
+      if (error) {
+        throw error;
+      }
+
+      if (adminData) {
         setIsAdmin(true);
         setAdminRole(adminData.role as AdminRole);
         setAdminUser(adminData as AdminUser);
-        setLoading(false);
-        return;
-      }
-
-      const { data: isAdminResult, error: isAdminError } = await supabase.rpc('check_is_admin', {
-        user_id: user.id,
-      });
-
-      if (isAdminError) {
-        setIsAdmin(false);
-        setAdminRole(null);
-        setAdminUser(null);
-        setLoading(false);
-        return;
-      }
-
-      setIsAdmin(!!isAdminResult);
-
-      if (isAdminResult) {
-        const { data: adminRoleData, error: adminRoleError } = await supabase.rpc('get_admin_role', {
-          user_id: user.id,
-        });
-
-        if (!adminRoleError && adminRoleData) {
-          setAdminRole(adminRoleData as AdminRole);
-          setAdminUser(adminData as AdminUser);
-        } else {
-          if (adminData) {
-            setAdminRole(adminData.role as AdminRole);
-            setAdminUser(adminData as AdminUser);
-          } else {
-            setAdminRole(null);
-            setAdminUser(null);
-          }
-        }
       } else {
+        setIsAdmin(false);
         setAdminRole(null);
         setAdminUser(null);
       }
