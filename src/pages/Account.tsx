@@ -15,11 +15,8 @@ const Account = () => {
   const { isAuthenticated, user, profile, logout, isPasswordRecovery } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect to set-password if this is a password recovery session
   useEffect(() => {
-    console.log('🔍 Account: Checking password recovery state:', { isPasswordRecovery });
     if (isPasswordRecovery) {
-      console.log('🔍 Account: Redirecting to set-password for password recovery');
       navigate('/set-password', { replace: true });
     }
   }, [isPasswordRecovery, navigate]);

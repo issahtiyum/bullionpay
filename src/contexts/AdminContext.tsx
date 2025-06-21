@@ -52,7 +52,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setLoading(true);
     try {
-      // Try to directly query admin_users table first (fallback approach)
       const { data: adminData, error: directError } = await supabase
         .from('admin_users')
         .select('*')
@@ -68,15 +67,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return;
       }
 
-      // If direct query fails, try RPC functions
-      
-      // Check if user is admin using security definer function
       const { data: isAdminResult, error: isAdminError } = await supabase.rpc('check_is_admin', {
         user_id: user.id,
       });
 
       if (isAdminError) {
-        // If RPC fails due to CORS or other issues, fallback to direct table query
         setIsAdmin(false);
         setAdminRole(null);
         setAdminUser(null);
@@ -87,7 +82,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setIsAdmin(!!isAdminResult);
 
       if (isAdminResult) {
-        // Get admin role from rpc
         const { data: adminRoleData, error: adminRoleError } = await supabase.rpc('get_admin_role', {
           user_id: user.id,
         });
@@ -96,7 +90,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           setAdminRole(adminRoleData as AdminRole);
           setAdminUser(adminData as AdminUser);
         } else {
-          // Fallback: use the direct query result if we have it
           if (adminData) {
             setAdminRole(adminData.role as AdminRole);
             setAdminUser(adminData as AdminUser);

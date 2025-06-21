@@ -21,16 +21,13 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
 
   useEffect(() => {
     const parseAndEstablishTokens = async () => {
-      // First check if we already have an active session
       const { data: { session: existingSession }, error: sessionError } = await supabase.auth.getSession();
       
-      // Parse tokens from URL
       const searchParams = new URLSearchParams(window.location.search);
       let accessToken = searchParams.get('access_token');
       let refreshToken = searchParams.get('refresh_token');
       let type = searchParams.get('type');
 
-      // Check URL fragment if not in search params
       if (!accessToken && !refreshToken) {
         const hash = window.location.hash.substring(1);
         if (hash) {
@@ -41,7 +38,6 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
         }
       }
 
-      // If we have tokens, establish the session
       if (accessToken && refreshToken) {
         try {
           const { data, error } = await supabase.auth.setSession({
@@ -63,7 +59,6 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
           sessionStorage.setItem('supabase-recovery-session', 'true');
           onTokensEstablished({ accessToken, refreshToken, type });
           
-          // Clean up URL to remove tokens
           const cleanUrl = window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
           
@@ -77,7 +72,6 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
           navigate('/reset-password');
         }
       } 
-      // If we have an existing session and we're on the set-password page, treat as recovery
       else if (existingSession && window.location.pathname === '/set-password') {
         sessionStorage.setItem('supabase-recovery-session', 'true');
         onTokensEstablished({ 
@@ -86,9 +80,7 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
           type: 'recovery' 
         });
       }
-      // No tokens and no valid session - invalid link
       else {
-        // Only show error if we're not already processing
         if (!sessionStorage.getItem('supabase-recovery-session')) {
           toast({
             title: "Invalid reset link",
@@ -104,7 +96,7 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
     parseAndEstablishTokens();
   }, [onTokensEstablished, onTokensInvalid, toast, navigate]);
 
-  return null; // This component doesn't render anything
+  return null;
 };
 
 export default PasswordResetTokenHandler;

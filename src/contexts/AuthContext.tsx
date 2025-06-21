@@ -30,34 +30,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { isPasswordRecovery, setIsPasswordRecovery, checkPasswordRecovery } = usePasswordRecovery();
 
   useEffect(() => {
-    // Initial recovery check
     const isRecovery = checkPasswordRecovery();
     
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        // Check current recovery state
         const currentRecoveryCheck = checkPasswordRecovery();
         
-        // Set session and user
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Handle password recovery state
         if (event === 'PASSWORD_RECOVERY' || currentRecoveryCheck) {
           setIsPasswordRecovery(true);
-          // Don't fetch profile during password recovery
           setProfile(null);
         } else if (session?.user && !currentRecoveryCheck && window.location.pathname !== '/set-password') {
           setIsPasswordRecovery(false);
-          // Fetch profile for regular sessions
           setTimeout(async () => {
             const profileData = await authService.fetchProfile(session.user.id);
             setProfile(profileData);
           }, 0);
         } else if (!session?.user) {
           setProfile(null);
-          // Only clear password recovery if not on set-password page
           if (window.location.pathname !== '/set-password') {
             setIsPasswordRecovery(false);
           }
@@ -67,9 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // Always set session and user from existing session check
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);

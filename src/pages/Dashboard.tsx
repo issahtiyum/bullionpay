@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -19,11 +20,8 @@ const Dashboard = () => {
   
   const { isAuthenticated, user, isPasswordRecovery } = useAuth();
 
-  // Redirect to set-password if this is a password recovery session
   useEffect(() => {
-    console.log('🔍 Dashboard: Checking password recovery state:', { isPasswordRecovery });
     if (isPasswordRecovery) {
-      console.log('🔍 Dashboard: Redirecting to set-password for password recovery');
       navigate('/set-password', { replace: true });
     }
   }, [isPasswordRecovery, navigate]);
@@ -44,7 +42,6 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      // Transform database orders to match Order interface with proper status mapping
       const transformedOrders: Order[] = data.map(order => ({
         id: order.id,
         productName: order.product_name,
@@ -59,7 +56,6 @@ const Dashboard = () => {
 
       setOrders(transformedOrders);
     } catch (error) {
-      console.error('Error fetching orders:', error);
       toast({
         title: "Error loading orders",
         description: "Failed to load your purchase history.",
