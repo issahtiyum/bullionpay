@@ -6,16 +6,34 @@ export const usePasswordRecovery = () => {
 
   const checkPasswordRecovery = () => {
     const url = window.location.href;
+    const pathname = window.location.pathname;
+    const search = window.location.search;
+    const hash = window.location.hash;
+    
+    // Check for recovery tokens in URL params or hash
+    const searchParams = new URLSearchParams(search);
+    const hashParams = hash ? new URLSearchParams(hash.substring(1)) : null;
+    
+    const hasAccessToken = searchParams.get('access_token') || hashParams?.get('access_token');
+    const hasRefreshToken = searchParams.get('refresh_token') || hashParams?.get('refresh_token');
+    const hasType = searchParams.get('type') || hashParams?.get('type');
+    
     const hasRecoveryTokens = (
-      (url.includes('access_token') && url.includes('refresh_token')) ||
-      (url.includes('type=recovery')) ||
-      window.location.pathname === '/set-password'
+      (hasAccessToken && hasRefreshToken) ||
+      (hasType === 'recovery') ||
+      pathname === '/set-password'
     );
     
-    console.log('🔍 PasswordRecovery: Enhanced password recovery check:', { 
-      hasRecoveryTokens, 
+    console.log('🔍 PasswordRecovery: DETAILED password recovery check:', { 
+      hasRecoveryTokens,
       currentUrl: url,
-      pathname: window.location.pathname
+      pathname,
+      search,
+      hash,
+      hasAccessToken: !!hasAccessToken,
+      hasRefreshToken: !!hasRefreshToken,
+      hasType: !!hasType,
+      typeValue: hasType
     });
     
     setIsPasswordRecovery(hasRecoveryTokens);
@@ -23,6 +41,7 @@ export const usePasswordRecovery = () => {
   };
 
   useEffect(() => {
+    console.log('🔍 PasswordRecovery: Hook initializing...');
     checkPasswordRecovery();
   }, []);
 
