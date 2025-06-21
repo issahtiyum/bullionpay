@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -40,17 +40,39 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  
+  // Use ref to track if we've already checked admin status for current user
+  const lastCheckedUserRef = useRef<string | null>(null);
+  const checkInProgressRef = useRef(false);
 
   const checkAdminStatus = useCallback(async () => {
-    // Don't check admin status if auth is still loading or user isn't authenticated
-    if (authLoading || !isAuthenticated || !user) {
+    // Prevent multiple simultaneous checks
+    if (checkInProgressRef.current) {
+      return;
+    }
+
+    // Don't check admin status if auth is still loading
+    if (authLoading) {
+      return;
+    }
+
+    // If user isn't authenticated, clear admin state immediately
+    if (!isAuthenticated || !user) {
       setIsAdmin(false);
       setAdminRole(null);
       setAdminUser(null);
       setLoading(false);
+      lastCheckedUserRef.current = null;
       return;
     }
 
+    // Skip if we've already checked for this user
+    if (lastCheckedUserRef.current === user.id) {
+      return;
+    }
+
+    checkInProgressRef.current = true;
+    
     try {
       setLoading(true);
       
@@ -74,18 +96,29 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setAdminRole(null);
         setAdminUser(null);
       }
+      
+      lastCheckedUserRef.current = user.id;
     } catch (error) {
+      console.error('Error checking admin status:', error);
       setIsAdmin(false);
       setAdminRole(null);
       setAdminUser(null);
     } finally {
       setLoading(false);
+      checkInProgressRef.current = false;
     }
-  }, [user, isAuthenticated, authLoading]);
+  }, [user?.id, isAuthenticated, authLoading]);
 
   useEffect(() => {
     checkAdminStatus();
   }, [checkAdminStatus]);
+
+  // Reset admin state when user changes
+  useEffect(() => {
+    if (!user || !isAuthenticated) {
+      lastCheckedUserRef.current = null;
+    }
+  }, [user?.id, isAuthenticated]);
 
   return (
     <AdminContext.Provider value={{

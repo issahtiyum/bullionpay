@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export const usePasswordRecovery = () => {
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
-  const checkPasswordRecovery = () => {
+  const checkPasswordRecovery = useCallback(() => {
     const url = window.location.href;
     const pathname = window.location.pathname;
     const search = window.location.search;
@@ -35,15 +35,16 @@ export const usePasswordRecovery = () => {
       sessionStorage.removeItem('supabase-recovery-session');
     }
     
-    setIsPasswordRecovery(hasRecoveryTokens);
     return hasRecoveryTokens;
-  };
+  }, []);
 
   useEffect(() => {
-    checkPasswordRecovery();
+    const result = checkPasswordRecovery();
+    setIsPasswordRecovery(result);
     
     const handleUrlChange = () => {
-      checkPasswordRecovery();
+      const result = checkPasswordRecovery();
+      setIsPasswordRecovery(result);
     };
     
     window.addEventListener('popstate', handleUrlChange);
@@ -51,7 +52,7 @@ export const usePasswordRecovery = () => {
     return () => {
       window.removeEventListener('popstate', handleUrlChange);
     };
-  }, []);
+  }, [checkPasswordRecovery]);
 
   return { isPasswordRecovery, setIsPasswordRecovery, checkPasswordRecovery };
 };
