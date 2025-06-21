@@ -23,35 +23,23 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           </Link>
           
           <div className="flex items-center gap-4">
-            <Link to="/dashboard" className="hidden sm:block hover:text-bullion-purple-100 transition-colors">
-              Dashboard
-            </Link>
-            {/* Show Admin link if user is admin and not still loading admin check*/}
-            {!adminLoading && isAdmin && (
-              <Link to="/admin" className="hidden sm:flex items-center gap-1 hover:text-bullion-purple-100 transition-colors font-medium">
-                <LayoutDashboard size={18} className="mr-1" />
-                Admin
-              </Link>
-            )}
             {!loading && (
               <>
                 {isAuthenticated ? (
-                  <div className="hidden sm:flex items-center gap-3">
+                  <div className="hidden sm:flex items-center gap-6">
+                    <Link to="/dashboard" className="hover:text-bullion-purple-100 transition-colors">
+                      Dashboard
+                    </Link>
+                    {/* Show Admin link if user is admin and not still loading admin check*/}
+                    {!adminLoading && isAdmin && (
+                      <Link to="/admin" className="flex items-center gap-1 hover:text-bullion-purple-100 transition-colors font-medium">
+                        <LayoutDashboard size={18} className="mr-1" />
+                        Admin
+                      </Link>
+                    )}
                     <Link to="/account" className="hover:text-bullion-purple-100 transition-colors">
                       Account
                     </Link>
-                    <span className="text-sm">
-                      {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : user?.email || user?.phone}
-                    </span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="hover:text-bullion-purple-100 text-white"
-                      onClick={logout}
-                    >
-                      <LogOut size={16} className="mr-1" />
-                      Logout
-                    </Button>
                   </div>
                 ) : (
                   <div className="hidden sm:flex items-center gap-3">

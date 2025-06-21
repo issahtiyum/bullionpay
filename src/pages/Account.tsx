@@ -6,13 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
 import ProfileForm from '@/components/account/ProfileForm';
 import PasswordForm from '@/components/account/PasswordForm';
 import AccountSettings from '@/components/account/AccountSettings';
 
 const Account = () => {
-  const { isAuthenticated, user, profile } = useAuth();
+  const { isAuthenticated, user, profile, logout } = useAuth();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   if (!isAuthenticated) {
     return (
@@ -29,9 +35,21 @@ const Account = () => {
   return (
     <MainLayout>
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Account Settings</h1>
-          <p className="text-gray-600">Manage your profile and account preferences</p>
+        <div className="mb-6 flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Account Settings</h1>
+            <p className="text-gray-600">
+              Welcome, {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : user?.email || user?.phone}
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={handleLogout}
+            className="flex items-center gap-2"
+          >
+            <LogOut size={16} />
+            Logout
+          </Button>
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
