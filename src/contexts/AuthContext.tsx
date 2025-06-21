@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,14 +45,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔍 AuthProvider: Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session);
+        console.log('🔍 AuthProvider: Auth state change detected:', {
+          event,
+          user: session?.user?.email,
+          hasSession: !!session
+        });
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          console.log('🔍 AuthProvider: User session found, fetching profile...');
           // Fetch user profile
           setTimeout(async () => {
             const { data: profileData } = await supabase
@@ -62,9 +69,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .eq('id', session.user.id)
               .single();
             
+            console.log('🔍 AuthProvider: Profile data:', profileData);
             setProfile(profileData);
           }, 0);
         } else {
+          console.log('🔍 AuthProvider: No user session, clearing profile');
           setProfile(null);
         }
         
@@ -73,7 +82,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
+    console.log('🔍 AuthProvider: Checking for existing session...');
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔍 AuthProvider: Existing session check result:', {
+        hasSession: !!session,
+        user: session?.user?.email
+      });
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -112,25 +126,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetPassword = async (email: string) => {
     const redirectUrl = `${window.location.origin}/set-password`;
     
-    console.log('Sending password reset email with redirect URL:', redirectUrl);
+    console.log('🔍 AuthProvider: Sending password reset email:', {
+      email,
+      redirectUrl,
+      currentOrigin: window.location.origin
+    });
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });
     
     if (error) {
-      console.error('Password reset error:', error);
+      console.error('❌ AuthProvider: Password reset error:', error);
     } else {
-      console.log('Password reset email sent successfully');
+      console.log('✅ AuthProvider: Password reset email sent successfully');
+      console.log('✅ AuthProvider: User should check their email and click the link to go to /set-password');
     }
     
     return { error };
   };
 
   const updatePassword = async (password: string) => {
+    console.log('🔍 AuthProvider: Updating password...');
+    
     const { error } = await supabase.auth.updateUser({
       password: password,
     });
+    
+    if (error) {
+      console.error('❌ AuthProvider: Password update error:', error);
+    } else {
+      console.log('✅ AuthProvider: Password updated successfully');
+    }
     
     return { error };
   };
