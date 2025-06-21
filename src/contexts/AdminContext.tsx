@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -41,7 +41,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(true);
   const { user, isAuthenticated } = useAuth();
 
-  const checkAdminStatus = async () => {
+  const checkAdminStatus = useCallback(async () => {
     if (!user || !isAuthenticated) {
       setIsAdmin(false);
       setAdminRole(null);
@@ -116,12 +116,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, isAuthenticated]);
 
   useEffect(() => {
     checkAdminStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isAuthenticated]);
+  }, [checkAdminStatus]);
 
   return (
     <AdminContext.Provider value={{
