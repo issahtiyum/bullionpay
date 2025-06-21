@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🔍 AuthProvider: Current URL at startup:', window.location.href);
     console.log('🔍 AuthProvider: Current pathname at startup:', window.location.pathname);
     
-    // Initial check
+    // Initial recovery check
     const isRecovery = checkPasswordRecovery();
     console.log('🔍 AuthProvider: Initial recovery check result:', isRecovery);
     
@@ -47,43 +47,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🔍 AuthProvider: User email:', session?.user?.email);
         console.log('🔍 AuthProvider: Current URL during auth change:', window.location.href);
         console.log('🔍 AuthProvider: Current pathname during auth change:', window.location.pathname);
-        console.log('🔍 AuthProvider: isPasswordRecovery state:', isPasswordRecovery);
-        console.log('🔍 AuthProvider: isRecovery variable:', isRecovery);
         
-        // Check if this is a recovery session
+        // Check current recovery state
         const currentRecoveryCheck = checkPasswordRecovery();
         console.log('🔍 AuthProvider: Current recovery check during auth change:', currentRecoveryCheck);
         
-        // Update password recovery state based on event and URL
-        if (event === 'PASSWORD_RECOVERY' || currentRecoveryCheck) {
-          console.log('🔍 AuthProvider: 🟢 PASSWORD RECOVERY STATE DETECTED');
-          setIsPasswordRecovery(true);
-        } else if (event === 'SIGNED_IN' && !currentRecoveryCheck && window.location.pathname !== '/set-password') {
-          console.log('🔍 AuthProvider: 🔵 REGULAR SIGN IN DETECTED');
-          setIsPasswordRecovery(false);
-        }
-        
+        // Set session and user
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Only fetch profile for regular authenticated sessions (not password recovery)
-        if (session?.user && !currentRecoveryCheck && event !== 'PASSWORD_RECOVERY' && window.location.pathname !== '/set-password') {
-          console.log('🔍 AuthProvider: 🟡 USER SESSION FOUND, fetching profile...');
+        // Handle password recovery state
+        if (event === 'PASSWORD_RECOVERY' || currentRecoveryCheck) {
+          console.log('🔍 AuthProvider: 🟢 PASSWORD RECOVERY STATE DETECTED');
+          setIsPasswordRecovery(true);
+          // Don't fetch profile during password recovery
+          setProfile(null);
+        } else if (session?.user && !currentRecoveryCheck && window.location.pathname !== '/set-password') {
+          console.log('🔍 AuthProvider: 🟡 REGULAR USER SESSION, fetching profile...');
+          setIsPasswordRecovery(false);
+          // Fetch profile for regular sessions
           setTimeout(async () => {
             const profileData = await authService.fetchProfile(session.user.id);
             console.log('🔍 AuthProvider: Profile fetched:', profileData);
             setProfile(profileData);
           }, 0);
         } else if (!session?.user) {
-          console.log('🔍 AuthProvider: 🔴 NO USER SESSION, clearing profile');
+          console.log('🔍 AuthProvider: 🔴 NO USER SESSION, clearing state');
           setProfile(null);
-          // Only clear password recovery state if not on set-password page
+          // Only clear password recovery if not on set-password page
           if (window.location.pathname !== '/set-password') {
             setIsPasswordRecovery(false);
           }
-        } else if (currentRecoveryCheck || event === 'PASSWORD_RECOVERY') {
-          console.log('🔍 AuthProvider: 🟠 PASSWORD RECOVERY SESSION - not fetching profile');
-          setProfile(null);
         }
         
         setLoading(false);
@@ -97,12 +91,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('🔍 AuthProvider: ===== EXISTING SESSION CHECK =====');
       console.log('🔍 AuthProvider: Existing session found:', !!session);
       console.log('🔍 AuthProvider: Existing user email:', session?.user?.email);
-      console.log('🔍 AuthProvider: isPasswordRecovery during existing check:', isRecovery);
-      console.log('🔍 AuthProvider: ===== EXISTING SESSION CHECK END =====');
       
+      // Always set session and user from existing session check
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      console.log('🔍 AuthProvider: ===== EXISTING SESSION CHECK END =====');
     });
 
     return () => {
@@ -117,7 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: !!user,
     loading,
     isPasswordRecovery,
-    currentPath: window.location.pathname
+    currentPath: window.location.pathname,
+    recoveryFlag: sessionStorage.getItem('supabase-recovery-session')
   });
 
   return (

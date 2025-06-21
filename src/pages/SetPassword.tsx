@@ -24,18 +24,16 @@ const SetPassword = () => {
   const { updatePassword, isAuthenticated, isPasswordRecovery, loading: authLoading } = useAuth();
 
   console.log('🔍 SetPassword: ===== COMPONENT MOUNT/RENDER =====');
-  console.log('🔍 SetPassword: Component mounted/rendered');
-  console.log('🔍 SetPassword: Current URL:', window.location.href);
-  console.log('🔍 SetPassword: Current pathname:', window.location.pathname);
-  console.log('🔍 SetPassword: Current search:', window.location.search);
-  console.log('🔍 SetPassword: Current hash:', window.location.hash);
-  console.log('🔍 SetPassword: IsPasswordRecovery from context:', isPasswordRecovery);
-  console.log('🔍 SetPassword: IsAuthenticated from context:', isAuthenticated);
-  console.log('🔍 SetPassword: AuthLoading from context:', authLoading);
-  console.log('🔍 SetPassword: Tokens state:', tokens);
-  console.log('🔍 SetPassword: SessionEstablished state:', sessionEstablished);
-  console.log('🔍 SetPassword: Recovery flag in sessionStorage:', sessionStorage.getItem('supabase-recovery-session'));
-  console.log('🔍 SetPassword: ===== COMPONENT MOUNT/RENDER END =====');
+  console.log('🔍 SetPassword: Component state:', {
+    loading,
+    sessionEstablished,
+    tokens,
+    isAuthenticated,
+    isPasswordRecovery,
+    authLoading,
+    recoveryFlag: sessionStorage.getItem('supabase-recovery-session'),
+    currentUrl: window.location.href
+  });
 
   // Handle successful token establishment
   const handleTokensEstablished = (tokenInfo: TokenInfo) => {
@@ -43,6 +41,9 @@ const SetPassword = () => {
     console.log('🔍 SetPassword: Token info:', tokenInfo);
     setTokens(tokenInfo);
     setSessionEstablished(true);
+    
+    // Ensure recovery flag is set
+    sessionStorage.setItem('supabase-recovery-session', 'true');
   };
 
   // Handle invalid tokens
@@ -52,39 +53,38 @@ const SetPassword = () => {
     setSessionEstablished(false);
   };
 
-  // Redirect logic - only redirect if not in recovery mode and not processing tokens
+  // Redirect logic - be very careful about when to redirect
   useEffect(() => {
     console.log('🔍 SetPassword: REDIRECT CHECK EFFECT');
-    console.log('🔍 SetPassword: isAuthenticated:', isAuthenticated);
-    console.log('🔍 SetPassword: authLoading:', authLoading);
-    console.log('🔍 SetPassword: tokens:', tokens);
-    console.log('🔍 SetPassword: isPasswordRecovery:', isPasswordRecovery);
-    console.log('🔍 SetPassword: sessionEstablished:', sessionEstablished);
-    console.log('🔍 SetPassword: recovery flag:', sessionStorage.getItem('supabase-recovery-session'));
     
     // Don't redirect if auth is still loading
     if (authLoading) {
-      console.log('🔍 SetPassword: Auth still loading, skipping redirect check');
+      console.log('🔍 SetPassword: Auth still loading, not redirecting');
       return;
     }
     
-    // Don't redirect if we have recovery indicators
+    // Check for recovery indicators
     const hasRecoveryFlag = sessionStorage.getItem('supabase-recovery-session');
-    if (tokens || isPasswordRecovery || sessionEstablished || hasRecoveryFlag) {
-      console.log('🔍 SetPassword: In password recovery mode, not redirecting');
-      return;
-    }
+    const hasTokensInUrl = window.location.search.includes('access_token') || window.location.hash.includes('access_token');
     
-    // Only redirect regular authenticated users who aren't in password recovery
-    if (isAuthenticated && !isPasswordRecovery && !tokens && !hasRecoveryFlag) {
+    console.log('🔍 SetPassword: Redirect check details:', {
+      isAuthenticated,
+      isPasswordRecovery,
+      hasRecoveryFlag,
+      hasTokensInUrl,
+      sessionEstablished,
+      tokens: !!tokens
+    });
+    
+    // Only redirect if user is authenticated but NOT in password recovery mode
+    if (isAuthenticated && !isPasswordRecovery && !hasRecoveryFlag && !hasTokensInUrl && !sessionEstablished && !tokens) {
       console.log('🔍 SetPassword: 🚀 REDIRECTING TO DASHBOARD - Regular authenticated user');
       navigate('/dashboard');
     }
-  }, [isAuthenticated, authLoading, navigate, tokens, isPasswordRecovery, sessionEstablished]);
+  }, [isAuthenticated, authLoading, navigate, isPasswordRecovery, sessionEstablished, tokens]);
 
   const handlePasswordUpdate = async (password: string) => {
     console.log('🔍 SetPassword: 🔄 PASSWORD UPDATE INITIATED');
-    console.log('🔍 SetPassword: Session established?', sessionEstablished);
     
     if (!sessionEstablished && !isAuthenticated) {
       console.log('🔍 SetPassword: ❌ Session not established, showing error');
@@ -149,13 +149,24 @@ const SetPassword = () => {
     );
   }
 
+  // Determine if we should show the form
   const hasRecoveryFlag = sessionStorage.getItem('supabase-recovery-session');
-  const canShowForm = sessionEstablished || (isAuthenticated && (isPasswordRecovery || hasRecoveryFlag));
+  const hasTokensInUrl = window.location.search.includes('access_token') || window.location.hash.includes('access_token');
+  const canShowForm = sessionEstablished || (isAuthenticated && (isPasswordRecovery || hasRecoveryFlag)) || hasTokensInUrl;
+
+  console.log('🔍 SetPassword: Form display logic:', {
+    canShowForm,
+    sessionEstablished,
+    isAuthenticated,
+    isPasswordRecovery,
+    hasRecoveryFlag,
+    hasTokensInUrl
+  });
 
   return (
     <MainLayout>
       <div className="max-w-md mx-auto space-y-4">
-        {/* Token Handler Component */}
+        {/* Token Handler Component - always present to handle tokens */}
         <PasswordResetTokenHandler 
           onTokensEstablished={handleTokensEstablished}
           onTokensInvalid={handleTokensInvalid}
