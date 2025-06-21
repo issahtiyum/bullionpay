@@ -29,6 +29,18 @@ AS $$
   );
 $$;
 
+-- Create a security definer function to get admin role
+CREATE OR REPLACE FUNCTION public.get_admin_role(user_id UUID DEFAULT auth.uid())
+RETURNS admin_role
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+AS $$
+  SELECT role FROM public.admin_users 
+  WHERE admin_users.user_id = $1 AND is_active = true
+  LIMIT 1;
+$$;
+
 -- Recreate the RLS policies using the security definer functions
 CREATE POLICY "Admin users can view admin users" 
   ON public.admin_users 

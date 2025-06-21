@@ -52,8 +52,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setLoading(true);
     try {
-      console.log('Checking admin status for user:', user.id);
-      
       // Try to directly query admin_users table first (fallback approach)
       const { data: adminData, error: directError } = await supabase
         .from('admin_users')
@@ -63,7 +61,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .single();
 
       if (!directError && adminData) {
-        console.log('Direct query successful:', adminData);
         setIsAdmin(true);
         setAdminRole(adminData.role as AdminRole);
         setAdminUser(adminData as AdminUser);
@@ -72,7 +69,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
 
       // If direct query fails, try RPC functions
-      console.log('Direct query failed, trying RPC functions...');
       
       // Check if user is admin using security definer function
       const { data: isAdminResult, error: isAdminError } = await supabase.rpc('check_is_admin', {
@@ -80,9 +76,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
 
       if (isAdminError) {
-        console.error('RPC check_is_admin error:', isAdminError);
         // If RPC fails due to CORS or other issues, fallback to direct table query
-        console.log('RPC failed, using direct table query results');
         setIsAdmin(false);
         setAdminRole(null);
         setAdminUser(null);
@@ -102,7 +96,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           setAdminRole(adminRoleData as AdminRole);
           setAdminUser(adminData as AdminUser);
         } else {
-          console.error('Error getting admin role:', adminRoleError);
           // Fallback: use the direct query result if we have it
           if (adminData) {
             setAdminRole(adminData.role as AdminRole);
@@ -117,7 +110,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setAdminUser(null);
       }
     } catch (error) {
-      console.error('Error checking admin status:', error);
       setIsAdmin(false);
       setAdminRole(null);
       setAdminUser(null);
