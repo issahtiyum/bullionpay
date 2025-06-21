@@ -12,7 +12,6 @@ type ProfileFormData = {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
 };
 
 const ProfileForm = () => {
@@ -32,7 +31,6 @@ const ProfileForm = () => {
       setValue('firstName', profile.first_name || '');
       setValue('lastName', profile.last_name || '');
       setValue('email', profile.email || user?.email || '');
-      setValue('phone', profile.phone || '');
     }
   }, [profile, user, setValue]);
 
@@ -44,7 +42,6 @@ const ProfileForm = () => {
         .update({
           first_name: data.firstName,
           last_name: data.lastName,
-          phone: data.phone,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user?.id);
@@ -107,16 +104,6 @@ const ProfileForm = () => {
         <p className="text-sm text-gray-500">
           Email cannot be changed here. Contact support if you need to update your email.
         </p>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number</Label>
-        <Input
-          id="phone"
-          type="tel"
-          {...register('phone')}
-          placeholder="Enter your phone number"
-        />
       </div>
 
       <Button 
