@@ -133,7 +133,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
                 if (verificationData && verificationData.success === true) {
                   console.log('Payment verified successfully, creating order...');
                   
-                  // Create order record only after successful verification
+                  // Create order record with pending status after successful verification
                   const orderData = {
                     user_id: user.id,
                     transaction_id: transaction.id,
@@ -141,7 +141,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
                     product_name: product.name,
                     product_category: product.category,
                     amount: product.price,
-                    status: 'paid',
+                    status: 'pending', // Changed from 'paid' to 'pending'
                     is_subscription: product.category === 'Subscription',
                     next_billing_date: product.category === 'Subscription' 
                       ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -179,7 +179,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
 
                   toast({
                     title: "Payment successful",
-                    description: "Your order has been placed successfully!",
+                    description: "Your order has been placed successfully and is pending delivery!",
                   });
                   onPaymentSuccess();
                 } else {

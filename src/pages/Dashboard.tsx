@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -36,12 +35,12 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      // Transform database orders to match Order interface
+      // Transform database orders to match Order interface with proper status mapping
       const transformedOrders: Order[] = data.map(order => ({
         id: order.id,
         productName: order.product_name,
         orderDate: order.created_at,
-        status: order.status === 'paid' ? 'Delivered' : 
+        status: order.attended ? 'Delivered' : 
                 order.status === 'pending' ? 'Pending' : 'Paid',
         deliveryInfo: order.delivery_info || undefined,
         adminNotes: order.admin_notes || undefined,
