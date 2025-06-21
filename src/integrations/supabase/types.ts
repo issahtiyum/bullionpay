@@ -284,6 +284,10 @@ export type Database = {
         Args: { user_id?: string }
         Returns: Database["public"]["Enums"]["admin_role"]
       }
+      hybrid_delete_user_account: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       is_admin: {
         Args: { user_id?: string }
         Returns: boolean

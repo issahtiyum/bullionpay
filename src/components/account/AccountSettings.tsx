@@ -1,22 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, User } from 'lucide-react';
+import DeleteAccountModal from './DeleteAccountModal';
 
 const AccountSettings = () => {
-  const { user, logout } = useAuth();
-  const { toast } = useToast();
-
-  const handleDeleteAccount = () => {
-    toast({
-      title: "Account deletion",
-      description: "Please contact support to delete your account.",
-      variant: "destructive",
-    });
-  };
+  const { user } = useAuth();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -66,7 +58,7 @@ const AccountSettings = () => {
             </p>
             <Button 
               variant="destructive" 
-              onClick={handleDeleteAccount}
+              onClick={() => setIsDeleteModalOpen(true)}
               className="w-full sm:w-auto"
             >
               Delete Account
@@ -74,6 +66,11 @@ const AccountSettings = () => {
           </div>
         </CardContent>
       </Card>
+
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+      />
     </div>
   );
 };
