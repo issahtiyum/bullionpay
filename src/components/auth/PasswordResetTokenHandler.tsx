@@ -21,16 +21,8 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
 
   useEffect(() => {
     const parseAndEstablishTokens = async () => {
-      const currentUrl = window.location.href;
-      console.log('🔍 TokenHandler: Starting token parsing for URL:', currentUrl);
-      
       // First check if we already have an active session
       const { data: { session: existingSession }, error: sessionError } = await supabase.auth.getSession();
-      console.log('🔍 TokenHandler: Existing session check:', { 
-        hasSession: !!existingSession, 
-        error: sessionError,
-        userEmail: existingSession?.user?.email 
-      });
       
       // Parse tokens from URL
       const searchParams = new URLSearchParams(window.location.search);
@@ -49,18 +41,8 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
         }
       }
 
-      console.log('🔍 TokenHandler: Parsed tokens:', {
-        hasAccessToken: !!accessToken,
-        hasRefreshToken: !!refreshToken,
-        type,
-        accessTokenLength: accessToken?.length,
-        refreshTokenLength: refreshToken?.length
-      });
-
       // If we have tokens, establish the session
       if (accessToken && refreshToken) {
-        console.log('🔍 TokenHandler: Found tokens, establishing session...');
-        
         try {
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -68,7 +50,6 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
           });
 
           if (error) {
-            console.error('❌ TokenHandler: Session establishment failed:', error);
             toast({
               title: "Invalid reset link",
               description: "This password reset link is invalid or has expired",
@@ -79,7 +60,6 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
             return;
           }
 
-          console.log('✅ TokenHandler: Session established successfully');
           sessionStorage.setItem('supabase-recovery-session', 'true');
           onTokensEstablished({ accessToken, refreshToken, type });
           
@@ -88,7 +68,6 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
           window.history.replaceState({}, document.title, cleanUrl);
           
         } catch (error) {
-          console.error('❌ TokenHandler: Exception during session establishment:', error);
           toast({
             title: "Error",
             description: "Failed to process reset link",
@@ -100,7 +79,6 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
       } 
       // If we have an existing session and we're on the set-password page, treat as recovery
       else if (existingSession && window.location.pathname === '/set-password') {
-        console.log('🔍 TokenHandler: Using existing session for password recovery');
         sessionStorage.setItem('supabase-recovery-session', 'true');
         onTokensEstablished({ 
           accessToken: existingSession.access_token, 
@@ -110,7 +88,6 @@ const PasswordResetTokenHandler = ({ onTokensEstablished, onTokensInvalid }: Tok
       }
       // No tokens and no valid session - invalid link
       else {
-        console.log('❌ TokenHandler: No tokens and no valid session');
         // Only show error if we're not already processing
         if (!sessionStorage.getItem('supabase-recovery-session')) {
           toast({

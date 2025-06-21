@@ -32,39 +32,17 @@ export const authService = {
   resetPassword: async (email: string) => {
     const redirectUrl = `${window.location.origin}/set-password`;
     
-    console.log('🔍 AuthService: Sending password reset email:', {
-      email,
-      redirectUrl,
-      currentOrigin: window.location.origin,
-      fullUrl: window.location.href
-    });
-    
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });
-    
-    if (error) {
-      console.error('❌ AuthService: Password reset error:', error);
-    } else {
-      console.log('✅ AuthService: Password reset email sent successfully');
-      console.log('✅ AuthService: Email should redirect to:', redirectUrl);
-    }
     
     return { error };
   },
 
   updatePassword: async (password: string) => {
-    console.log('🔍 AuthService: Updating password...');
-    
     const { error } = await supabase.auth.updateUser({
       password: password,
     });
-    
-    if (error) {
-      console.error('❌ AuthService: Password update error:', error);
-    } else {
-      console.log('✅ AuthService: Password updated successfully');
-    }
     
     return { error };
   },
@@ -80,7 +58,6 @@ export const authService = {
       .eq('id', userId)
       .single();
     
-    console.log('🔍 AuthService: Profile data:', profileData);
     return profileData;
   }
 };
