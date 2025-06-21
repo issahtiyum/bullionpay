@@ -15,11 +15,12 @@ const SetPassword = () => {
   const [debugInfo, setDebugInfo] = useState<string>('');
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { updatePassword, isAuthenticated } = useAuth();
+  const { updatePassword, isAuthenticated, isPasswordRecovery } = useAuth();
 
   console.log('🔍 SetPassword component mounted');
   console.log('🔍 Current URL:', window.location.href);
   console.log('🔍 Current route should be /set-password');
+  console.log('🔍 IsPasswordRecovery:', isPasswordRecovery);
 
   // Helper function to parse tokens from URL
   const parseTokensFromUrl = () => {
@@ -68,7 +69,8 @@ const SetPassword = () => {
       fullUrl: window.location.href,
       search: window.location.search,
       hash: window.location.hash,
-      pathname: window.location.pathname
+      pathname: window.location.pathname,
+      isPasswordRecovery
     };
 
     console.log('🔍 Final token parsing results:', result);
@@ -85,6 +87,14 @@ const SetPassword = () => {
     const establishSession = async () => {
       console.log('🔍 Starting session establishment...');
       const { accessToken, refreshToken, type } = parseTokensFromUrl();
+
+      // If already authenticated via password recovery, just mark session as established
+      if (isPasswordRecovery && isAuthenticated) {
+        console.log('✅ Already authenticated via password recovery');
+        setSessionEstablished(true);
+        setTokens({ accessToken: 'established', refreshToken: 'established' });
+        return;
+      }
 
       // If no tokens in URL, redirect to login
       if (!accessToken || !refreshToken) {
@@ -146,22 +156,22 @@ const SetPassword = () => {
     };
 
     establishSession();
-  }, [navigate, toast]);
+  }, [navigate, toast, isPasswordRecovery, isAuthenticated]);
 
-  // Only redirect to dashboard if user is authenticated AND we don't have reset tokens
-  // This prevents redirecting during the password reset flow
+  // Only redirect to dashboard if user is authenticated AND we don't have reset tokens AND it's not a password recovery
   useEffect(() => {
     console.log('🔍 Auth redirect check:', {
       isAuthenticated,
       hasTokens: !!tokens,
-      shouldRedirect: isAuthenticated && !tokens
+      isPasswordRecovery,
+      shouldRedirect: isAuthenticated && !tokens && !isPasswordRecovery
     });
     
-    if (isAuthenticated && !tokens) {
-      console.log('🔍 User is authenticated but no reset tokens, redirecting to dashboard');
+    if (isAuthenticated && !tokens && !isPasswordRecovery) {
+      console.log('🔍 User is authenticated but no reset tokens and not password recovery, redirecting to dashboard');
       navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate, tokens]);
+  }, [isAuthenticated, navigate, tokens, isPasswordRecovery]);
 
   const handlePasswordUpdate = async (password: string) => {
     console.log('🔍 Password update initiated');
@@ -206,6 +216,7 @@ const SetPassword = () => {
           description: "Your password has been updated successfully",
         });
         // Clear the URL params and redirect to dashboard
+        window.history.replaceState({}, document.title, '/dashboard');
         navigate('/dashboard', { replace: true });
       }
     } catch (error: any) {
@@ -241,6 +252,7 @@ const SetPassword = () => {
                     <p><strong>Current path:</strong> {window.location.pathname}</p>
                     <p><strong>Has tokens:</strong> {tokens ? 'Yes' : 'No'}</p>
                     <p><strong>Session established:</strong> {sessionEstablished ? 'Yes' : 'No'}</p>
+                    <p><strong>Is password recovery:</strong> {isPasswordRecovery ? 'Yes' : 'No'}</p>
                   </div>
                 </div>
               </div>

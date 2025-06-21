@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,8 +12,17 @@ import PasswordForm from '@/components/account/PasswordForm';
 import AccountSettings from '@/components/account/AccountSettings';
 
 const Account = () => {
-  const { isAuthenticated, user, profile, logout } = useAuth();
+  const { isAuthenticated, user, profile, logout, isPasswordRecovery } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect to set-password if this is a password recovery session
+  useEffect(() => {
+    console.log('🔍 Account: Checking password recovery state:', { isPasswordRecovery });
+    if (isPasswordRecovery) {
+      console.log('🔍 Account: Redirecting to set-password for password recovery');
+      navigate('/set-password', { replace: true });
+    }
+  }, [isPasswordRecovery, navigate]);
 
   const handleLogout = async () => {
     await logout();

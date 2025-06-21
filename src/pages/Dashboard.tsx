@@ -17,13 +17,22 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isPasswordRecovery } = useAuth();
+
+  // Redirect to set-password if this is a password recovery session
+  useEffect(() => {
+    console.log('🔍 Dashboard: Checking password recovery state:', { isPasswordRecovery });
+    if (isPasswordRecovery) {
+      console.log('🔍 Dashboard: Redirecting to set-password for password recovery');
+      navigate('/set-password', { replace: true });
+    }
+  }, [isPasswordRecovery, navigate]);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && !isPasswordRecovery) {
       fetchOrders();
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, isPasswordRecovery]);
 
   const fetchOrders = async () => {
     try {
