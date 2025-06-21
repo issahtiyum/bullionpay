@@ -62,90 +62,167 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
         <CardTitle>All Admins</CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date Added</TableHead>
-              {isSuperAdmin && <TableHead>Actions</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+        {/* Desktop Table - Hidden on mobile */}
+        <div className="hidden lg:block overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5}>Loading admins...</TableCell>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date Added</TableHead>
+                {isSuperAdmin && <TableHead>Actions</TableHead>}
               </TableRow>
-            ) : admins.length ? (
-              admins.map(admin => (
-                <TableRow key={admin.id}>
-                  <TableCell>{admin.email}</TableCell>
-                  <TableCell>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5}>Loading admins...</TableCell>
+                </TableRow>
+              ) : admins.length ? (
+                admins.map(admin => (
+                  <TableRow key={admin.id}>
+                    <TableCell>{admin.email}</TableCell>
+                    <TableCell>
+                      <Badge>{admin.role}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={admin.is_active ? "default" : "secondary"}>
+                        {admin.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {admin.created_at ? new Date(admin.created_at).toLocaleDateString() : ""}
+                    </TableCell>
+                    {isSuperAdmin && (
+                      <TableCell>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={
+                                admin.email === "superadmin@bullionpay.com" || 
+                                isLastActiveSuperAdmin(admin)
+                              }
+                              title={
+                                isLastActiveSuperAdmin(admin) 
+                                  ? "Cannot deactivate the last active super admin" 
+                                  : undefined
+                              }
+                              onClick={() => setSelectedAdmin(admin)}
+                            >
+                              {admin.is_active ? "Deactivate" : "Activate"}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                {admin.is_active ? "Deactivate" : "Activate"} Admin
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to {admin.is_active ? "deactivate" : "activate"} {admin.email}?
+                                {admin.is_active 
+                                  ? " This will remove their admin access immediately." 
+                                  : " This will restore their admin access."}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setSelectedAdmin(null)}>
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction onClick={handleConfirmToggle}>
+                                {admin.is_active ? "Deactivate" : "Activate"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5}>No admins found.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Mobile Cards - Visible only on mobile */}
+        <div className="lg:hidden space-y-4">
+          {loading ? (
+            <div className="py-8 text-center text-gray-500">Loading admins...</div>
+          ) : admins.length ? (
+            admins.map(admin => (
+              <div key={admin.id} className="border rounded-lg p-4 bg-white">
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-medium text-lg truncate">{admin.email}</p>
+                    <p className="text-sm text-gray-500">
+                      Added: {admin.created_at ? new Date(admin.created_at).toLocaleDateString() : ""}
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
                     <Badge>{admin.role}</Badge>
-                  </TableCell>
-                  <TableCell>
                     <Badge variant={admin.is_active ? "default" : "secondary"}>
                       {admin.is_active ? "Active" : "Inactive"}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {admin.created_at ? new Date(admin.created_at).toLocaleDateString() : ""}
-                  </TableCell>
+                  </div>
+                  
                   {isSuperAdmin && (
-                    <TableCell>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={
-                              admin.email === "superadmin@bullionpay.com" || 
-                              isLastActiveSuperAdmin(admin)
-                            }
-                            title={
-                              isLastActiveSuperAdmin(admin) 
-                                ? "Cannot deactivate the last active super admin" 
-                                : undefined
-                            }
-                            onClick={() => setSelectedAdmin(admin)}
-                          >
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={
+                            admin.email === "superadmin@bullionpay.com" || 
+                            isLastActiveSuperAdmin(admin)
+                          }
+                          title={
+                            isLastActiveSuperAdmin(admin) 
+                              ? "Cannot deactivate the last active super admin" 
+                              : undefined
+                          }
+                          onClick={() => setSelectedAdmin(admin)}
+                          className="w-full"
+                        >
+                          {admin.is_active ? "Deactivate" : "Activate"}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            {admin.is_active ? "Deactivate" : "Activate"} Admin
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to {admin.is_active ? "deactivate" : "activate"} {admin.email}?
+                            {admin.is_active 
+                              ? " This will remove their admin access immediately." 
+                              : " This will restore their admin access."}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel onClick={() => setSelectedAdmin(null)}>
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction onClick={handleConfirmToggle}>
                             {admin.is_active ? "Deactivate" : "Activate"}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              {admin.is_active ? "Deactivate" : "Activate"} Admin
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to {admin.is_active ? "deactivate" : "activate"} {admin.email}?
-                              {admin.is_active 
-                                ? " This will remove their admin access immediately." 
-                                : " This will restore their admin access."}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setSelectedAdmin(null)}>
-                              Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction onClick={handleConfirmToggle}>
-                              {admin.is_active ? "Deactivate" : "Activate"}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5}>No admins found.</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="py-8 text-center text-gray-500">No admins found.</div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
