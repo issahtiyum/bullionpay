@@ -54,7 +54,7 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
 }) => {
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [actionType, setActionType] = useState<'activate' | 'remove' | null>(null);
-  const [selectedRole, setSelectedRole] = useState<AdminRole | "">("");
+  const [selectedRole, setSelectedRole] = useState<AdminRole | null>(null);
 
   // Count active super admins
   const activeSuperAdminsCount = admins.filter(admin => 
@@ -82,10 +82,10 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
   };
 
   const handleRoleChangeConfirm = () => {
-    if (selectedAdmin && selectedRole && selectedRole !== "") {
-      onRoleChange(selectedAdmin.id, selectedRole as AdminRole);
+    if (selectedAdmin && selectedRole) {
+      onRoleChange(selectedAdmin.id, selectedRole);
       setSelectedAdmin(null);
-      setSelectedRole("");
+      setSelectedRole(null);
     }
   };
 
@@ -325,7 +325,7 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
       {/* Change Role Dialog */}
       <AlertDialog open={!!selectedAdmin && !actionType} onOpenChange={() => {
         setSelectedAdmin(null);
-        setSelectedRole("");
+        setSelectedRole(null);
       }}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -335,7 +335,7 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
-            <Select value={selectedRole} onValueChange={(value: AdminRole) => setSelectedRole(value)}>
+            <Select value={selectedRole || ""} onValueChange={(value: AdminRole) => setSelectedRole(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
@@ -349,7 +349,7 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => {
               setSelectedAdmin(null);
-              setSelectedRole("");
+              setSelectedRole(null);
             }}>
               Cancel
             </AlertDialogCancel>
