@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableRow, TableCell, TableBody, TableHead, TableHeader } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +16,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, Trash2, UserCog } from "lucide-react";
 
 type AdminUser = {
   id: string;
@@ -30,6 +38,8 @@ interface AdminUsersTableProps {
   loading: boolean;
   isSuperAdmin: boolean;
   onActivationToggle: (admin: AdminUser) => void;
+  onRoleChange: (adminId: string, newRole: string) => void;
+  onRemoveAdmin: (adminId: string) => void;
 }
 
 const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
@@ -37,8 +47,12 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
   loading,
   isSuperAdmin,
   onActivationToggle,
+  onRoleChange,
+  onRemoveAdmin,
 }) => {
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
+  const [actionType, setActionType] = useState<'activate' | 'remove' | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>("");
 
   // Count active super admins
   const activeSuperAdminsCount = admins.filter(admin => 
@@ -49,11 +63,38 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
     return admin.role === 'super_admin' && admin.is_active && activeSuperAdminsCount === 1;
   };
 
-  const handleConfirmToggle = () => {
-    if (selectedAdmin) {
-      onActivationToggle(selectedAdmin);
+  const isMainSuperAdmin = (admin: AdminUser) => {
+    return admin.email === "myharis.issah@gmail.com";
+  };
+
+  const handleConfirmAction = () => {
+    if (selectedAdmin && actionType) {
+      if (actionType === 'activate') {
+        onActivationToggle(selectedAdmin);
+      } else if (actionType === 'remove') {
+        onRemoveAdmin(selectedAdmin.id);
+      }
       setSelectedAdmin(null);
+      setActionType(null);
     }
+  };
+
+  const handleRoleChangeConfirm = () => {
+    if (selectedAdmin && selectedRole) {
+      onRoleChange(selectedAdmin.id, selectedRole);
+      setSelectedAdmin(null);
+      setSelectedRole("");
+    }
+  };
+
+  const openActionDialog = (admin: AdminUser, action: 'activate' | 'remove') => {
+    setSelectedAdmin(admin);
+    setActionType(action);
+  };
+
+  const openRoleDialog = (admin: AdminUser) => {
+    setSelectedAdmin(admin);
+    setSelectedRole(admin.role);
   };
 
   return (
@@ -96,47 +137,45 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                     </TableCell>
                     {isSuperAdmin && (
                       <TableCell>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={
-                                admin.email === "superadmin@bullionpay.com" || 
-                                isLastActiveSuperAdmin(admin)
-                              }
-                              title={
-                                isLastActiveSuperAdmin(admin) 
-                                  ? "Cannot deactivate the last active super admin" 
-                                  : undefined
-                              }
-                              onClick={() => setSelectedAdmin(admin)}
-                            >
-                              {admin.is_active ? "Deactivate" : "Activate"}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                {admin.is_active ? "Deactivate" : "Activate"} Admin
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to {admin.is_active ? "deactivate" : "activate"} {admin.email}?
-                                {admin.is_active 
-                                  ? " This will remove their admin access immediately." 
-                                  : " This will restore their admin access."}
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel onClick={() => setSelectedAdmin(null)}>
-                                Cancel
-                              </AlertDialogCancel>
-                              <AlertDialogAction onClick={handleConfirmToggle}>
-                                {admin.is_active ? "Deactivate" : "Activate"}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={
+                              isMainSuperAdmin(admin) || 
+                              isLastActiveSuperAdmin(admin)
+                            }
+                            onClick={() => openActionDialog(admin, 'activate')}
+                          >
+                            {admin.is_active ? "Deactivate" : "Activate"}
+                          </Button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                disabled={isMainSuperAdmin(admin)}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onClick={() => openRoleDialog(admin)}>
+                                <UserCog className="mr-2 h-4 w-4" />
+                                Change Role
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => openActionDialog(admin, 'remove')}
+                                className="text-red-600"
+                                disabled={isLastActiveSuperAdmin(admin)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Remove Admin
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     )}
                   </TableRow>
@@ -173,48 +212,43 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                   </div>
                   
                   {isSuperAdmin && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                    <div className="space-y-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={
+                          isMainSuperAdmin(admin) || 
+                          isLastActiveSuperAdmin(admin)
+                        }
+                        onClick={() => openActionDialog(admin, 'activate')}
+                        className="w-full"
+                      >
+                        {admin.is_active ? "Deactivate" : "Activate"}
+                      </Button>
+                      
+                      <div className="flex gap-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={
-                            admin.email === "superadmin@bullionpay.com" || 
-                            isLastActiveSuperAdmin(admin)
-                          }
-                          title={
-                            isLastActiveSuperAdmin(admin) 
-                              ? "Cannot deactivate the last active super admin" 
-                              : undefined
-                          }
-                          onClick={() => setSelectedAdmin(admin)}
-                          className="w-full"
+                          onClick={() => openRoleDialog(admin)}
+                          disabled={isMainSuperAdmin(admin)}
+                          className="flex-1"
                         >
-                          {admin.is_active ? "Deactivate" : "Activate"}
+                          <UserCog className="mr-2 h-4 w-4" />
+                          Change Role
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            {admin.is_active ? "Deactivate" : "Activate"} Admin
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to {admin.is_active ? "deactivate" : "activate"} {admin.email}?
-                            {admin.is_active 
-                              ? " This will remove their admin access immediately." 
-                              : " This will restore their admin access."}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel onClick={() => setSelectedAdmin(null)}>
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction onClick={handleConfirmToggle}>
-                            {admin.is_active ? "Deactivate" : "Activate"}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openActionDialog(admin, 'remove')}
+                          disabled={isMainSuperAdmin(admin) || isLastActiveSuperAdmin(admin)}
+                          className="flex-1 text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -224,6 +258,105 @@ const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
           )}
         </div>
       </CardContent>
+
+      {/* Activation/Deactivation Dialog */}
+      <AlertDialog open={!!selectedAdmin && actionType === 'activate'} onOpenChange={() => {
+        setSelectedAdmin(null);
+        setActionType(null);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {selectedAdmin?.is_active ? "Deactivate" : "Activate"} Admin
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to {selectedAdmin?.is_active ? "deactivate" : "activate"} {selectedAdmin?.email}?
+              {selectedAdmin?.is_active 
+                ? " This will remove their admin access immediately." 
+                : " This will restore their admin access."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setSelectedAdmin(null);
+              setActionType(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmAction}>
+              {selectedAdmin?.is_active ? "Deactivate" : "Activate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Remove Admin Dialog */}
+      <AlertDialog open={!!selectedAdmin && actionType === 'remove'} onOpenChange={() => {
+        setSelectedAdmin(null);
+        setActionType(null);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Admin</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove {selectedAdmin?.email} as an admin? 
+              This action cannot be undone and they will lose all admin privileges immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setSelectedAdmin(null);
+              setActionType(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmAction}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Remove Admin
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Change Role Dialog */}
+      <AlertDialog open={!!selectedAdmin && !actionType} onOpenChange={() => {
+        setSelectedAdmin(null);
+        setSelectedRole("");
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Admin Role</AlertDialogTitle>
+            <AlertDialogDescription>
+              Change the role for {selectedAdmin?.email}. This will affect their permissions immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Select value={selectedRole} onValueChange={setSelectedRole}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="super_admin">Super Admin</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="moderator">Moderator</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setSelectedAdmin(null);
+              setSelectedRole("");
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleRoleChangeConfirm}>
+              Change Role
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

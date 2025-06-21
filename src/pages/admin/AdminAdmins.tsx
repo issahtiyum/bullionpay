@@ -8,7 +8,7 @@ import { useAdmins } from "@/hooks/useAdmins";
 
 const AdminAdmins = () => {
   const { adminRole } = useAdmin();
-  const { admins, loading, fetchAdmins, handleActivationToggle } = useAdmins();
+  const { admins, loading, fetchAdmins, handleActivationToggle, handleRoleChange, handleRemoveAdmin } = useAdmins();
   
   const isSuperAdmin = adminRole === "super_admin";
 
@@ -19,7 +19,7 @@ const AdminAdmins = () => {
           <h1 className="text-3xl font-bold">Manage Admins</h1>
           <p className="text-gray-600">
             {isSuperAdmin
-              ? "Invite new admins and toggle admin statuses."
+              ? "Invite new admins, manage roles, and toggle admin statuses."
               : "Only super admins can add/remove admins. You can view all admins below."}
           </p>
         </div>
@@ -31,6 +31,8 @@ const AdminAdmins = () => {
           loading={loading}
           isSuperAdmin={isSuperAdmin}
           onActivationToggle={handleActivationToggle}
+          onRoleChange={handleRoleChange}
+          onRemoveAdmin={handleRemoveAdmin}
         />
       </div>
     </AdminLayout>

@@ -292,6 +292,17 @@ export type Database = {
         Args: { user_id?: string }
         Returns: boolean
       }
+      remove_admin_user: {
+        Args: { target_admin_id: string }
+        Returns: boolean
+      }
+      update_admin_role: {
+        Args: {
+          target_admin_id: string
+          new_role: Database["public"]["Enums"]["admin_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       admin_role: "super_admin" | "admin" | "moderator"

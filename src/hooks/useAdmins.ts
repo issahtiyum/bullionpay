@@ -59,6 +59,41 @@ export const useAdmins = () => {
     }
   };
 
+  const handleRoleChange = async (adminId: string, newRole: string) => {
+    const { error } = await supabase.rpc('update_admin_role', {
+      target_admin_id: adminId,
+      new_role: newRole
+    });
+
+    if (!error) {
+      toast({ title: "Success", description: "Admin role updated successfully." });
+      fetchAdmins();
+    } else {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to update role", 
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const handleRemoveAdmin = async (adminId: string) => {
+    const { error } = await supabase.rpc('remove_admin_user', {
+      target_admin_id: adminId
+    });
+
+    if (!error) {
+      toast({ title: "Success", description: "Admin removed successfully." });
+      fetchAdmins();
+    } else {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to remove admin", 
+        variant: "destructive" 
+      });
+    }
+  };
+
   useEffect(() => {
     fetchAdmins();
   }, []);
@@ -68,5 +103,7 @@ export const useAdmins = () => {
     loading,
     fetchAdmins,
     handleActivationToggle,
+    handleRoleChange,
+    handleRemoveAdmin,
   };
 };
