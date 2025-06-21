@@ -117,10 +117,10 @@ const AdminProducts = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
+      <div className="p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h1 className="text-2xl font-semibold">Product Management</h1>
-          <Button onClick={() => setShowForm(true)}>
+          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             Add Product
           </Button>
@@ -131,76 +131,158 @@ const AdminProducts = () => {
             <CardTitle>Products ({products?.length || 0})</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products?.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell>
-                      <img 
-                        src={product.image || '/placeholder.svg'} 
-                        alt={product.name}
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{product.category}</Badge>
-                    </TableCell>
-                    <TableCell>GHS {product.price.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge variant={product.is_active ? "default" : "secondary"}>
-                        {product.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(product.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => toggleProductStatus(product)}
-                          disabled={updateProduct.isPending}
-                        >
-                          {product.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingProduct(product);
-                            setShowForm(true);
-                          }}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        {canDelete && (
+            {/* Desktop Table - Hidden on mobile */}
+            <div className="hidden lg:block overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Image</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products?.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell>
+                        <img 
+                          src={product.image || '/placeholder.svg'} 
+                          alt={product.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{product.category}</Badge>
+                      </TableCell>
+                      <TableCell>GHS {product.price.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Badge variant={product.is_active ? "default" : "secondary"}>
+                          {product.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(product.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setDeleteProductId(product.id)}
+                            onClick={() => toggleProductStatus(product)}
+                            disabled={updateProduct.isPending}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            {product.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </Button>
-                        )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingProduct(product);
+                              setShowForm(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          {canDelete && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setDeleteProductId(product.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile Cards - Visible only on mobile */}
+            <div className="lg:hidden space-y-4">
+              {products?.map((product) => (
+                <div key={product.id} className="border rounded-lg p-4 bg-white">
+                  <div className="flex gap-4 mb-4">
+                    <img 
+                      src={product.image || '/placeholder.svg'} 
+                      alt={product.name}
+                      className="w-16 h-16 object-cover rounded flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-lg truncate">{product.name}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-xs">{product.category}</Badge>
+                        <Badge variant={product.is_active ? "default" : "secondary"} className="text-xs">
+                          {product.is_active ? "Active" : "Inactive"}
+                        </Badge>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <p className="text-xl font-semibold text-bullion-purple">
+                        GHS {product.price.toFixed(2)}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Created: {new Date(product.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => toggleProductStatus(product)}
+                      disabled={updateProduct.isPending}
+                      className="flex-1"
+                    >
+                      {product.is_active ? (
+                        <>
+                          <EyeOff className="w-4 h-4 mr-2" />
+                          Hide
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Show
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingProduct(product);
+                        setShowForm(true);
+                      }}
+                      className="flex-1"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                    {canDelete && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setDeleteProductId(product.id)}
+                        className="px-3"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
             
             {!products?.length && (
               <div className="text-center py-8 text-gray-500">
