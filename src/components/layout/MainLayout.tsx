@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, User, ShoppingCart, LogOut, LayoutDashboard } from "lucide-react";
+import { Home, User, ShoppingCart, LogOut, LayoutDashboard, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/contexts/AdminContext";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,9 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               <>
                 {isAuthenticated ? (
                   <div className="hidden sm:flex items-center gap-3">
+                    <Link to="/account" className="hover:text-bullion-purple-100 transition-colors">
+                      Account
+                    </Link>
                     <span className="text-sm">
                       {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : user?.email || user?.phone}
                     </span>
@@ -111,13 +114,24 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               <span className="text-xs mt-1">Admin</span>
             </Link>
           )}
-          <Link 
-            to="/login" 
-            className={`flex flex-col items-center p-2 ${location.pathname === '/login' ? 'text-bullion-purple-600' : 'text-gray-500'}`}
-          >
-            <User size={20} />
-            <span className="text-xs mt-1">{isAuthenticated ? 'Account' : 'Login'}</span>
-          </Link>
+          {/* Mobile Account Icon */}
+          {isAuthenticated ? (
+            <Link 
+              to="/account"
+              className={`flex flex-col items-center p-2 ${location.pathname.startsWith('/account') ? 'text-bullion-purple-600' : 'text-gray-500'}`}
+            >
+              <Settings size={20} />
+              <span className="text-xs mt-1">Account</span>
+            </Link>
+          ) : (
+            <Link 
+              to="/login" 
+              className={`flex flex-col items-center p-2 ${location.pathname === '/login' ? 'text-bullion-purple-600' : 'text-gray-500'}`}
+            >
+              <User size={20} />
+              <span className="text-xs mt-1">Login</span>
+            </Link>
+          )}
         </div>
       </nav>
     </div>
@@ -125,4 +139,3 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default MainLayout;
-

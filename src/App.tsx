@@ -15,6 +15,7 @@ import Index from "./pages/Index";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import Dashboard from "./pages/Dashboard";
+import Account from "./pages/Account";
 import Login from "./pages/Login";
 import PasswordReset from "./pages/PasswordReset";
 import SetPassword from "./pages/SetPassword";
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/checkout/:product_id" element={<Checkout />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/account" element={<Account />} />
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<PasswordReset />} />
               <Route path="/set-password" element={<SetPassword />} />
