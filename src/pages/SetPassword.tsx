@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import MainLayout from '@/components/layout/MainLayout';
 import SetNewPasswordForm from '@/components/auth/SetNewPasswordForm';
@@ -11,24 +11,44 @@ import { supabase } from '@/integrations/supabase/client';
 const SetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [sessionEstablished, setSessionEstablished] = useState(false);
-  const [searchParams] = useSearchParams();
+  const [tokens, setTokens] = useState<{ accessToken: string; refreshToken: string } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { updatePassword, isAuthenticated } = useAuth();
 
-  const accessToken = searchParams.get('access_token');
-  const refreshToken = searchParams.get('refresh_token');
-  const type = searchParams.get('type');
+  // Helper function to parse tokens from URL
+  const parseTokensFromUrl = () => {
+    // Check URL search parameters first
+    const searchParams = new URLSearchParams(window.location.search);
+    let accessToken = searchParams.get('access_token');
+    let refreshToken = searchParams.get('refresh_token');
+    let type = searchParams.get('type');
 
-  console.log('SetPassword page loaded with params:', {
-    accessToken: accessToken ? 'present' : 'missing',
-    refreshToken: refreshToken ? 'present' : 'missing',
-    type,
-    allParams: Object.fromEntries(searchParams.entries())
-  });
+    // If not found in search params, check URL fragment (hash)
+    if (!accessToken || !refreshToken) {
+      const hash = window.location.hash.substring(1); // Remove the # symbol
+      const hashParams = new URLSearchParams(hash);
+      accessToken = hashParams.get('access_token');
+      refreshToken = hashParams.get('refresh_token');
+      type = hashParams.get('type');
+    }
+
+    console.log('Token parsing results:', {
+      accessToken: accessToken ? 'present' : 'missing',
+      refreshToken: refreshToken ? 'present' : 'missing',
+      type,
+      fullUrl: window.location.href,
+      search: window.location.search,
+      hash: window.location.hash
+    });
+
+    return { accessToken, refreshToken, type };
+  };
 
   useEffect(() => {
     const establishSession = async () => {
+      const { accessToken, refreshToken, type } = parseTokensFromUrl();
+
       // If no tokens in URL, redirect to login
       if (!accessToken || !refreshToken) {
         console.log('Missing tokens, redirecting to login');
@@ -40,6 +60,9 @@ const SetPassword = () => {
         navigate('/login');
         return;
       }
+
+      // Store tokens for later use
+      setTokens({ accessToken, refreshToken });
 
       try {
         console.log('Attempting to establish session with tokens...');
@@ -74,16 +97,16 @@ const SetPassword = () => {
     };
 
     establishSession();
-  }, [accessToken, refreshToken, navigate, toast]);
+  }, [navigate, toast]);
 
+  // Only redirect to dashboard if user is authenticated AND we don't have reset tokens
+  // This prevents redirecting during the password reset flow
   useEffect(() => {
-    // Only redirect if user is authenticated AND we don't have reset tokens
-    // This prevents redirecting during the password reset flow
-    if (isAuthenticated && !accessToken && !refreshToken) {
+    if (isAuthenticated && !tokens) {
       console.log('User is authenticated but no reset tokens, redirecting to dashboard');
       navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate, accessToken, refreshToken]);
+  }, [isAuthenticated, navigate, tokens]);
 
   const handlePasswordUpdate = async (password: string) => {
     if (!sessionEstablished) {
@@ -139,7 +162,7 @@ const SetPassword = () => {
   };
 
   // Don't render the form if we don't have the necessary tokens or session isn't established
-  if (!accessToken || !refreshToken || !sessionEstablished) {
+  if (!tokens || !sessionEstablished) {
     return (
       <MainLayout>
         <div className="max-w-md mx-auto">
