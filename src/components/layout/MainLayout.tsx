@@ -10,8 +10,11 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
 
-  // Show admin link only when we're sure about admin status
+  // Only show admin link when both auth and admin status are resolved
   const showAdminLink = !authLoading && !adminLoading && isAuthenticated && isAdmin;
+  
+  // Don't show any auth-dependent UI while auth is loading
+  const showAuthUI = !authLoading;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -25,7 +28,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           </Link>
           
           <div className="flex items-center gap-4">
-            {!authLoading && (
+            {showAuthUI && (
               <>
                 {isAuthenticated ? (
                   <div className="hidden sm:flex items-center gap-6">
@@ -86,13 +89,15 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             <Home size={20} />
             <span className="text-xs mt-1">Home</span>
           </Link>
-          <Link 
-            to="/dashboard"
-            className={`flex flex-col items-center p-2 ${location.pathname.startsWith('/dashboard') ? 'text-bullion-purple-600' : 'text-gray-500'}`}
-          >
-            <ShoppingCart size={20} />
-            <span className="text-xs mt-1">Orders</span>
-          </Link>
+          {showAuthUI && isAuthenticated && (
+            <Link 
+              to="/dashboard"
+              className={`flex flex-col items-center p-2 ${location.pathname.startsWith('/dashboard') ? 'text-bullion-purple-600' : 'text-gray-500'}`}
+            >
+              <ShoppingCart size={20} />
+              <span className="text-xs mt-1">Orders</span>
+            </Link>
+          )}
           {showAdminLink && (
             <Link 
               to="/admin"
@@ -102,22 +107,26 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               <span className="text-xs mt-1">Admin</span>
             </Link>
           )}
-          {isAuthenticated ? (
-            <Link 
-              to="/account"
-              className={`flex flex-col items-center p-2 ${location.pathname.startsWith('/account') ? 'text-bullion-purple-600' : 'text-gray-500'}`}
-            >
-              <Settings size={20} />
-              <span className="text-xs mt-1">Account</span>
-            </Link>
-          ) : (
-            <Link 
-              to="/login" 
-              className={`flex flex-col items-center p-2 ${location.pathname === '/login' ? 'text-bullion-purple-600' : 'text-gray-500'}`}
-            >
-              <User size={20} />
-              <span className="text-xs mt-1">Login</span>
-            </Link>
+          {showAuthUI && (
+            <>
+              {isAuthenticated ? (
+                <Link 
+                  to="/account"
+                  className={`flex flex-col items-center p-2 ${location.pathname.startsWith('/account') ? 'text-bullion-purple-600' : 'text-gray-500'}`}
+                >
+                  <Settings size={20} />
+                  <span className="text-xs mt-1">Account</span>
+                </Link>
+              ) : (
+                <Link 
+                  to="/login" 
+                  className={`flex flex-col items-center p-2 ${location.pathname === '/login' ? 'text-bullion-purple-600' : 'text-gray-500'}`}
+                >
+                  <User size={20} />
+                  <span className="text-xs mt-1">Login</span>
+                </Link>
+              )}
+            </>
           )}
         </div>
       </nav>

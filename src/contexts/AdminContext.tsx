@@ -39,10 +39,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
 
   const checkAdminStatus = useCallback(async () => {
-    if (!user || !isAuthenticated) {
+    // Don't check admin status if auth is still loading or user isn't authenticated
+    if (authLoading || !isAuthenticated || !user) {
       setIsAdmin(false);
       setAdminRole(null);
       setAdminUser(null);
@@ -53,7 +54,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       setLoading(true);
       
-      // Single query to get admin user data
       const { data: adminData, error } = await supabase
         .from('admin_users')
         .select('*')
@@ -81,7 +81,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } finally {
       setLoading(false);
     }
-  }, [user, isAuthenticated]);
+  }, [user, isAuthenticated, authLoading]);
 
   useEffect(() => {
     checkAdminStatus();
