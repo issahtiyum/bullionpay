@@ -21,7 +21,7 @@ const SetPassword = () => {
   const [tokens, setTokens] = useState<TokenInfo | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { updatePassword, isAuthenticated, isPasswordRecovery } = useAuth();
+  const { updatePassword, isAuthenticated, isPasswordRecovery, loading: authLoading } = useAuth();
 
   console.log('🔍 SetPassword: ===== COMPONENT MOUNT/RENDER =====');
   console.log('🔍 SetPassword: Component mounted/rendered');
@@ -31,6 +31,7 @@ const SetPassword = () => {
   console.log('🔍 SetPassword: Current hash:', window.location.hash);
   console.log('🔍 SetPassword: IsPasswordRecovery from context:', isPasswordRecovery);
   console.log('🔍 SetPassword: IsAuthenticated from context:', isAuthenticated);
+  console.log('🔍 SetPassword: AuthLoading from context:', authLoading);
   console.log('🔍 SetPassword: Tokens state:', tokens);
   console.log('🔍 SetPassword: SessionEstablished state:', sessionEstablished);
   console.log('🔍 SetPassword: ===== COMPONENT MOUNT/RENDER END =====');
@@ -54,14 +55,29 @@ const SetPassword = () => {
   useEffect(() => {
     console.log('🔍 SetPassword: REDIRECT CHECK EFFECT');
     console.log('🔍 SetPassword: isAuthenticated:', isAuthenticated);
+    console.log('🔍 SetPassword: authLoading:', authLoading);
     console.log('🔍 SetPassword: tokens:', tokens);
     console.log('🔍 SetPassword: isPasswordRecovery:', isPasswordRecovery);
+    console.log('🔍 SetPassword: sessionEstablished:', sessionEstablished);
     
-    if (isAuthenticated && !tokens && !isPasswordRecovery) {
+    // Don't redirect if auth is still loading
+    if (authLoading) {
+      console.log('🔍 SetPassword: Auth still loading, skipping redirect check');
+      return;
+    }
+    
+    // Don't redirect if we have tokens or are in password recovery mode
+    if (tokens || isPasswordRecovery || sessionEstablished) {
+      console.log('🔍 SetPassword: In password recovery mode, not redirecting');
+      return;
+    }
+    
+    // Only redirect regular authenticated users who aren't in password recovery
+    if (isAuthenticated && !isPasswordRecovery && !tokens) {
       console.log('🔍 SetPassword: 🚀 REDIRECTING TO DASHBOARD - Regular authenticated user');
       navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate, tokens, isPasswordRecovery]);
+  }, [isAuthenticated, authLoading, navigate, tokens, isPasswordRecovery, sessionEstablished]);
 
   const handlePasswordUpdate = async (password: string) => {
     console.log('🔍 SetPassword: 🔄 PASSWORD UPDATE INITIATED');
@@ -111,6 +127,23 @@ const SetPassword = () => {
       setLoading(false);
     }
   };
+
+  // Show loading state while auth is initializing
+  if (authLoading) {
+    return (
+      <MainLayout>
+        <div className="max-w-md mx-auto space-y-4">
+          <Card className="border-bullion-purple-100">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <p className="text-muted-foreground">Loading...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

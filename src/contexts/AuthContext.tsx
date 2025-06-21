@@ -50,11 +50,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🔍 AuthProvider: isPasswordRecovery state:', isPasswordRecovery);
         console.log('🔍 AuthProvider: isRecovery variable:', isRecovery);
         
-        // Update password recovery state based on event
-        if (event === 'PASSWORD_RECOVERY' || isRecovery) {
+        // Check if this is a recovery session
+        const currentRecoveryCheck = checkPasswordRecovery();
+        console.log('🔍 AuthProvider: Current recovery check during auth change:', currentRecoveryCheck);
+        
+        // Update password recovery state based on event and URL
+        if (event === 'PASSWORD_RECOVERY' || currentRecoveryCheck) {
           console.log('🔍 AuthProvider: 🟢 PASSWORD RECOVERY STATE DETECTED');
           setIsPasswordRecovery(true);
-        } else if (event === 'SIGNED_IN' && !isRecovery && window.location.pathname !== '/set-password') {
+        } else if (event === 'SIGNED_IN' && !currentRecoveryCheck && window.location.pathname !== '/set-password') {
           console.log('🔍 AuthProvider: 🔵 REGULAR SIGN IN DETECTED');
           setIsPasswordRecovery(false);
         }
@@ -62,9 +66,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user && !isRecovery && event !== 'PASSWORD_RECOVERY' && window.location.pathname !== '/set-password') {
+        // Only fetch profile for regular authenticated sessions (not password recovery)
+        if (session?.user && !currentRecoveryCheck && event !== 'PASSWORD_RECOVERY' && window.location.pathname !== '/set-password') {
           console.log('🔍 AuthProvider: 🟡 USER SESSION FOUND, fetching profile...');
-          // Fetch user profile
           setTimeout(async () => {
             const profileData = await authService.fetchProfile(session.user.id);
             console.log('🔍 AuthProvider: Profile fetched:', profileData);
@@ -73,9 +77,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (!session?.user) {
           console.log('🔍 AuthProvider: 🔴 NO USER SESSION, clearing profile');
           setProfile(null);
+          // Only clear password recovery state if not on set-password page
           if (window.location.pathname !== '/set-password') {
             setIsPasswordRecovery(false);
           }
+        } else if (currentRecoveryCheck || event === 'PASSWORD_RECOVERY') {
+          console.log('🔍 AuthProvider: 🟠 PASSWORD RECOVERY SESSION - not fetching profile');
+          setProfile(null);
         }
         
         setLoading(false);
