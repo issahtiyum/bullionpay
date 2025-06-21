@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +12,9 @@ import {
   Users, 
   LogOut,
   Home,
-  Package
+  Package,
+  Menu,
+  X
 } from 'lucide-react';
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
@@ -20,11 +22,14 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const { adminUser, adminRole } = useAdmin();
   const { logout } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
   };
+
+  const closeSidebar = () => setSidebarOpen(false);
 
   // Define navigation items based on roles
   const getNavigationItems = () => {
@@ -56,9 +61,40 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={closeSidebar}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg">
-        <div className="p-6 border-b">
+      <div className={`
+        fixed lg:static inset-y-0 left-0 z-50 lg:z-auto
+        w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Mobile header with close button */}
+        <div className="lg:hidden flex items-center justify-between p-4 border-b">
+          <Link to="/" className="flex items-center gap-2" onClick={closeSidebar}>
+            <div className="w-8 h-8 rounded-full bg-gradient-bullion flex items-center justify-center">
+              <span className="text-white font-bold text-lg">BP</span>
+            </div>
+            <span className="font-poppins font-semibold text-lg">Admin Panel</span>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={closeSidebar}
+            className="p-1"
+          >
+            <X size={20} />
+          </Button>
+        </div>
+
+        {/* Desktop header */}
+        <div className="hidden lg:block p-6 border-b">
           <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-gradient-bullion flex items-center justify-center">
               <span className="text-white font-bold text-lg">BP</span>
@@ -67,7 +103,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           </Link>
         </div>
         
-        <nav className="p-4">
+        <nav className="p-4 flex-1">
           <div className="space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
@@ -77,7 +113,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+                  onClick={closeSidebar}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors touch-target ${
                     isActive 
                       ? 'bg-bullion-purple text-white' 
                       : 'text-gray-700 hover:bg-gray-100'
@@ -93,7 +130,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           <div className="mt-8 pt-4 border-t">
             <Link
               to="/"
-              className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+              onClick={closeSidebar}
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors touch-target"
             >
               <Home size={20} />
               <span>Back to Site</span>
@@ -101,17 +139,17 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </nav>
         
-        <div className="absolute bottom-0 w-64 p-4 border-t bg-white">
+        <div className="p-4 border-t bg-white">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">{adminUser?.email}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{adminUser?.email}</p>
               <p className="text-xs text-gray-500 capitalize">{adminRole}</p>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleLogout}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 ml-2"
             >
               <LogOut size={16} />
             </Button>
@@ -120,8 +158,22 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
       
       {/* Main Content */}
-      <div className="flex-1">
-        <main className="p-8">
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile header */}
+        <div className="lg:hidden bg-white border-b px-4 py-3 flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarOpen(true)}
+            className="p-2"
+          >
+            <Menu size={20} />
+          </Button>
+          <h1 className="font-semibold text-lg">Admin Panel</h1>
+          <div className="w-10"></div> {/* Spacer for centering */}
+        </div>
+
+        <main className="flex-1 p-4 lg:p-8 overflow-auto">
           {children}
         </main>
       </div>
