@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Search } from 'lucide-react';
+import { Edit, Search, CheckCircle, Circle } from 'lucide-react';
 
 type Order = {
   id: string;
@@ -20,6 +20,7 @@ type Order = {
   created_at: string;
   delivery_info: string | null;
   admin_notes: string | null;
+  attended: boolean;
 };
 
 const AdminOrders = () => {
@@ -30,7 +31,8 @@ const AdminOrders = () => {
   const [editForm, setEditForm] = useState({
     status: '',
     delivery_info: '',
-    admin_notes: ''
+    admin_notes: '',
+    attended: false
   });
   const { toast } = useToast();
 
@@ -64,7 +66,8 @@ const AdminOrders = () => {
     setEditForm({
       status: order.status,
       delivery_info: order.delivery_info || '',
-      admin_notes: order.admin_notes || ''
+      admin_notes: order.admin_notes || '',
+      attended: order.attended
     });
   };
 
@@ -78,6 +81,7 @@ const AdminOrders = () => {
           status: editForm.status,
           delivery_info: editForm.delivery_info,
           admin_notes: editForm.admin_notes,
+          attended: editForm.attended,
           updated_at: new Date().toISOString()
         })
         .eq('id', editingOrder.id);
@@ -96,6 +100,34 @@ const AdminOrders = () => {
       toast({
         title: "Error",
         description: "Failed to update order",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleAttendedStatus = async (order: Order) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          attended: !order.attended,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', order.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Order marked as ${!order.attended ? 'attended' : 'unattended'}`,
+      });
+
+      fetchOrders();
+    } catch (error) {
+      console.error('Error updating attended status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update attended status",
         variant: "destructive",
       });
     }
@@ -162,6 +194,7 @@ const AdminOrders = () => {
                   <TableHead>Product</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Attended</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -175,6 +208,25 @@ const AdminOrders = () => {
                       <Badge variant={getStatusBadgeVariant(order.status)}>
                         {order.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleAttendedStatus(order)}
+                          className="p-1"
+                        >
+                          {order.attended ? (
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <Circle className="h-4 w-4 text-gray-400" />
+                          )}
+                        </Button>
+                        <span className="text-sm text-gray-600">
+                          {order.attended ? 'Attended' : 'Pending'}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
@@ -234,6 +286,17 @@ const AdminOrders = () => {
                     onChange={(e) => setEditForm({...editForm, admin_notes: e.target.value})}
                     placeholder="Internal notes..."
                   />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="attended"
+                    checked={editForm.attended}
+                    onChange={(e) => setEditForm({...editForm, attended: e.target.checked})}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="attended">Mark as attended</Label>
                 </div>
                 
                 <div className="flex space-x-2">

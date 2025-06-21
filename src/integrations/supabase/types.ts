@@ -93,6 +93,7 @@ export type Database = {
         Row: {
           admin_notes: string | null
           amount: number
+          attended: boolean
           created_at: string | null
           delivery_info: string | null
           id: string
@@ -109,6 +110,7 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           amount: number
+          attended?: boolean
           created_at?: string | null
           delivery_info?: string | null
           id?: string
@@ -125,6 +127,7 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           amount?: number
+          attended?: boolean
           created_at?: string | null
           delivery_info?: string | null
           id?: string
