@@ -14,14 +14,14 @@ export const usePasswordRecovery = () => {
     const searchParams = new URLSearchParams(search);
     const hashParams = hash ? new URLSearchParams(hash.substring(1)) : null;
     
-    const hasAccessToken = searchParams.get('access_token') || hashParams?.get('access_token');
-    const hasRefreshToken = searchParams.get('refresh_token') || hashParams?.get('refresh_token');
-    const hasType = searchParams.get('type') || hashParams?.get('type');
+    const hasAccessToken = !!(searchParams.get('access_token') || hashParams?.get('access_token'));
+    const hasRefreshToken = !!(searchParams.get('refresh_token') || hashParams?.get('refresh_token'));
+    const hasType = (searchParams.get('type') === 'recovery') || (hashParams?.get('type') === 'recovery');
     
-    const hasRecoveryTokens = (
+    const hasRecoveryTokens = Boolean(
       (hasAccessToken && hasRefreshToken) ||
-      (hasType === 'recovery') ||
-      pathname === '/set-password'
+      hasType ||
+      (pathname === '/set-password')
     );
     
     console.log('🔍 PasswordRecovery: DETAILED password recovery check:', { 
@@ -30,10 +30,10 @@ export const usePasswordRecovery = () => {
       pathname,
       search,
       hash,
-      hasAccessToken: !!hasAccessToken,
-      hasRefreshToken: !!hasRefreshToken,
-      hasType: !!hasType,
-      typeValue: hasType
+      hasAccessToken,
+      hasRefreshToken,
+      hasType,
+      typeValue: searchParams.get('type') || hashParams?.get('type')
     });
     
     setIsPasswordRecovery(hasRecoveryTokens);
