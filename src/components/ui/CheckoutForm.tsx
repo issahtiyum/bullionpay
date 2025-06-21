@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,13 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  
+  // Pre-fill email with user's email when component mounts
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email);
+    }
+  }, [user]);
   
   const generateReference = () => {
     const timestamp = Date.now();
@@ -255,6 +262,9 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
           required
           className="border-bullion-purple-200 focus:border-bullion-purple-500"
         />
+        <p className="text-sm text-gray-600">
+          A receipt and order confirmation will be sent to this email address.
+        </p>
       </div>
       
       <Button 
