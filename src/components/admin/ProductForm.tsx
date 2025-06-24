@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Link, Image } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
+import CustomFieldsManager, { CustomField } from './CustomFieldsManager';
 
 type Product = Database['public']['Tables']['products']['Row'];
 type ProductCategory = Database['public']['Enums']['product_category'];
@@ -31,6 +32,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
     image: product?.image || '/placeholder.svg',
     description: product?.description || '',
     is_active: product?.is_active ?? true,
+    custom_fields: (product?.custom_fields as CustomField[]) || [],
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -89,48 +91,52 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
         <CardTitle>{product ? 'Edit Product' : 'Add New Product'}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="name">Product Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="Enter product name"
-              required
-            />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Product Information */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="name">Product Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder="Enter product name"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="category">Category</Label>
+              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="price">Price (GHS)</Label>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.price}
+                onChange={(e) => handleInputChange('price', e.target.value)}
+                placeholder="0.00"
+                required
+              />
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="category">Category</Label>
-            <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="price">Price (GHS)</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.price}
-              onChange={(e) => handleInputChange('price', e.target.value)}
-              placeholder="0.00"
-              required
-            />
-          </div>
-
+          {/* Product Image Section */}
           <div>
             <Label>Product Image</Label>
             <Tabs value={imageMethod} onValueChange={(value) => setImageMethod(value as 'url' | 'upload')} className="w-full">
@@ -188,6 +194,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
             </div>
           </div>
 
+          {/* Product Description */}
           <div>
             <Label htmlFor="description">Description</Label>
             <Textarea
@@ -199,6 +206,15 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
             />
           </div>
 
+          {/* Custom Fields Manager */}
+          <div>
+            <CustomFieldsManager
+              fields={formData.custom_fields}
+              onChange={(fields) => handleInputChange('custom_fields', fields)}
+            />
+          </div>
+
+          {/* Active Status */}
           <div className="flex items-center space-x-2">
             <Switch
               id="is_active"
@@ -208,6 +224,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
             <Label htmlFor="is_active">Active</Label>
           </div>
 
+          {/* Form Actions */}
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Saving...' : product ? 'Update Product' : 'Create Product'}

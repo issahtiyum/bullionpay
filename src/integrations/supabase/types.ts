@@ -95,6 +95,7 @@ export type Database = {
           amount: number
           attended: boolean
           created_at: string | null
+          custom_field_data: Json | null
           delivery_info: string | null
           id: string
           is_subscription: boolean | null
@@ -112,6 +113,7 @@ export type Database = {
           amount: number
           attended?: boolean
           created_at?: string | null
+          custom_field_data?: Json | null
           delivery_info?: string | null
           id?: string
           is_subscription?: boolean | null
@@ -129,6 +131,7 @@ export type Database = {
           amount?: number
           attended?: boolean
           created_at?: string | null
+          custom_field_data?: Json | null
           delivery_info?: string | null
           id?: string
           is_subscription?: boolean | null
@@ -156,6 +159,7 @@ export type Database = {
           category: Database["public"]["Enums"]["product_category"]
           created_at: string
           created_by: string | null
+          custom_fields: Json | null
           description: string | null
           id: string
           image: string | null
@@ -168,6 +172,7 @@ export type Database = {
           category: Database["public"]["Enums"]["product_category"]
           created_at?: string
           created_by?: string | null
+          custom_fields?: Json | null
           description?: string | null
           id?: string
           image?: string | null
@@ -180,6 +185,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["product_category"]
           created_at?: string
           created_by?: string | null
+          custom_fields?: Json | null
           description?: string | null
           id?: string
           image?: string | null

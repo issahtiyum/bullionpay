@@ -11,7 +11,7 @@ export const usePaymentProcessing = (product: Product, onPaymentSuccess: () => v
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const processPayment = async (email: string) => {
+  const processPayment = async (email: string, customFieldData: Record<string, string> = {}) => {
     if (!email) {
       toast({
         title: "Email required",
@@ -59,7 +59,7 @@ export const usePaymentProcessing = (product: Product, onPaymentSuccess: () => v
           setLoading(false);
           
           if (response.status === 'success') {
-            await handleSuccessfulPayment(response, reference);
+            await handleSuccessfulPayment(response, reference, customFieldData);
           } else {
             console.log('Payment was not successful:', response);
             toast({
@@ -91,7 +91,7 @@ export const usePaymentProcessing = (product: Product, onPaymentSuccess: () => v
     }
   };
 
-  const handleSuccessfulPayment = async (response: any, reference: string) => {
+  const handleSuccessfulPayment = async (response: any, reference: string, customFieldData: Record<string, string>) => {
     try {
       console.log('Starting payment processing...');
       
@@ -162,6 +162,7 @@ export const usePaymentProcessing = (product: Product, onPaymentSuccess: () => v
           next_billing_date: product.category === 'Subscription' 
             ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
             : null,
+          custom_field_data: customFieldData,
         };
 
         console.log('Attempting to create order with data:', orderData);
