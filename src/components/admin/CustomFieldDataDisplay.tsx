@@ -4,16 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import type { Json } from '@/integrations/supabase/types';
 
 interface CustomFieldDataDisplayProps {
-  customFieldData: Record<string, string> | null;
+  customFieldData: Json | null;
 }
 
 const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customFieldData }) => {
   const [showSensitiveData, setShowSensitiveData] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
-  if (!customFieldData || Object.keys(customFieldData).length === 0) {
+  // Type guard to check if the data is a valid record
+  const isValidRecord = (data: Json): data is Record<string, string> => {
+    return data !== null && 
+           typeof data === 'object' && 
+           !Array.isArray(data) &&
+           Object.values(data).every(value => typeof value === 'string');
+  };
+
+  if (!customFieldData || !isValidRecord(customFieldData) || Object.keys(customFieldData).length === 0) {
     return <span className="text-sm text-gray-400">No custom data</span>;
   }
 

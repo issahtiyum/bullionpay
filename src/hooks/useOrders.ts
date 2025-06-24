@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Json } from '@/integrations/supabase/types';
 
 export type Order = {
   id: string;
@@ -13,7 +14,7 @@ export type Order = {
   delivery_info: string | null;
   admin_notes: string | null;
   attended: boolean;
-  custom_field_data: Record<string, string> | null;
+  custom_field_data: Json | null;
 };
 
 export const useOrders = () => {
