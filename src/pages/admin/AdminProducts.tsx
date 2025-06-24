@@ -118,13 +118,13 @@ const AdminProducts = () => {
 
   return (
     <AdminLayout>
-      <div className="p-4 lg:p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+      <div className="p-3 lg:p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 lg:mb-6 gap-3 lg:gap-4">
           <h1 className="text-lg sm:text-2xl font-semibold">
             <span className="hidden sm:inline">Product Management</span>
             <span className="sm:hidden">Products</span>
           </h1>
-          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto text-xs sm:text-sm">
+          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto text-xs sm:text-sm py-2">
             <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Add Product</span>
             <span className="sm:hidden">Add</span>
@@ -132,10 +132,10 @@ const AdminProducts = () => {
         </div>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3 lg:pb-6">
             <CardTitle className="text-base sm:text-xl">Products ({products?.length || 0})</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {/* Desktop Table - Hidden on mobile */}
             <div className="hidden lg:block overflow-x-auto">
               <Table>
@@ -211,19 +211,19 @@ const AdminProducts = () => {
             </div>
 
             {/* Mobile List - Visible only on mobile */}
-            <div className="lg:hidden">
+            <div className="lg:hidden space-y-4">
               {products?.map((product, index) => (
                 <div key={product.id}>
-                  <div className="py-3">
-                    <div className="flex gap-3 mb-2">
+                  <div className="py-4">
+                    <div className="flex gap-3 mb-3">
                       <img 
                         src={product.image || '/placeholder.svg'} 
                         alt={product.name}
-                        className="w-10 h-10 object-cover rounded flex-shrink-0"
+                        className="w-12 h-12 object-cover rounded flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-sm truncate">{product.name}</h3>
-                        <div className="flex items-center gap-2 mt-1">
+                        <h3 className="font-medium text-sm truncate mb-2">{product.name}</h3>
+                        <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-xs">{product.category}</Badge>
                           <Badge variant={product.is_active ? "default" : "secondary"} className="text-xs">
                             {product.is_active ? "Active" : "Hidden"}
@@ -232,12 +232,12 @@ const AdminProducts = () => {
                       </div>
                     </div>
                     
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex justify-between items-center mb-4">
                       <div>
                         <p className="text-base font-semibold text-bullion-purple">
                           GHS {product.price.toFixed(2)}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 mt-1">
                           {new Date(product.created_at).toLocaleDateString()}
                         </p>
                       </div>
@@ -249,7 +249,7 @@ const AdminProducts = () => {
                         variant="outline"
                         onClick={() => toggleProductStatus(product)}
                         disabled={updateProduct.isPending}
-                        className="flex-1 text-xs py-1"
+                        className="flex-1 text-xs py-2"
                       >
                         {product.is_active ? (
                           <>
@@ -270,7 +270,7 @@ const AdminProducts = () => {
                           setEditingProduct(product);
                           setShowForm(true);
                         }}
-                        className="flex-1 text-xs py-1"
+                        className="flex-1 text-xs py-2"
                       >
                         <Edit className="w-3 h-3 mr-1" />
                         Edit
@@ -280,7 +280,7 @@ const AdminProducts = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => setDeleteProductId(product.id)}
-                          className="px-2 py-1"
+                          className="px-3 py-2"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
