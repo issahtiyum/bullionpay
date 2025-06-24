@@ -19,18 +19,18 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
         />
       </div>
       
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-medium text-gray-900 line-clamp-1 mr-2">{product.name}</h3>
+      <CardContent className="p-2 sm:p-3">
+        <div className="flex justify-between items-start mb-1 sm:mb-2">
+          <h3 className="font-medium text-gray-900 line-clamp-1 mr-2 text-sm sm:text-base">{product.name}</h3>
           <CategoryBadge category={product.category} />
         </div>
-        <p className="text-lg font-semibold text-bullion-purple">
+        <p className="text-base sm:text-lg font-semibold text-bullion-purple">
           GHS {Number(product.price).toFixed(2)}
         </p>
       </CardContent>
       
-      <CardFooter className="p-4 pt-0">
-        <Button asChild className="w-full bg-gradient-bullion hover:opacity-90">
+      <CardFooter className="p-2 sm:p-3 pt-0">
+        <Button asChild className="w-full bg-gradient-bullion hover:opacity-90 text-xs sm:text-sm py-1 sm:py-2">
           <Link to={`/product/${product.id}`}>
             View Details
           </Link>
