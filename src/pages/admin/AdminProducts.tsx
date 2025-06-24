@@ -5,6 +5,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { 
   Table, 
   TableBody, 
@@ -119,12 +120,12 @@ const AdminProducts = () => {
     <AdminLayout>
       <div className="p-4 lg:p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h1 className="text-xl sm:text-2xl font-semibold">
+          <h1 className="text-lg sm:text-2xl font-semibold">
             <span className="hidden sm:inline">Product Management</span>
             <span className="sm:hidden">Products</span>
           </h1>
-          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto text-sm">
-            <Plus className="w-4 h-4 mr-2" />
+          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto text-xs sm:text-sm">
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Add Product</span>
             <span className="sm:hidden">Add</span>
           </Button>
@@ -132,7 +133,7 @@ const AdminProducts = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">Products ({products?.length || 0})</CardTitle>
+            <CardTitle className="text-base sm:text-xl">Products ({products?.length || 0})</CardTitle>
           </CardHeader>
           <CardContent>
             {/* Desktop Table - Hidden on mobile */}
@@ -209,87 +210,92 @@ const AdminProducts = () => {
               </Table>
             </div>
 
-            {/* Mobile Cards - Visible only on mobile */}
-            <div className="lg:hidden space-y-3">
-              {products?.map((product) => (
-                <div key={product.id} className="border rounded-lg p-3 bg-white">
-                  <div className="flex gap-3 mb-3">
-                    <img 
-                      src={product.image || '/placeholder.svg'} 
-                      alt={product.name}
-                      className="w-12 h-12 object-cover rounded flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm truncate">{product.name}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">{product.category}</Badge>
-                        <Badge variant={product.is_active ? "default" : "secondary"} className="text-xs">
-                          {product.is_active ? "Active" : "Hidden"}
-                        </Badge>
+            {/* Mobile List - Visible only on mobile */}
+            <div className="lg:hidden">
+              {products?.map((product, index) => (
+                <div key={product.id}>
+                  <div className="py-3">
+                    <div className="flex gap-3 mb-2">
+                      <img 
+                        src={product.image || '/placeholder.svg'} 
+                        alt={product.name}
+                        className="w-10 h-10 object-cover rounded flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm truncate">{product.name}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">{product.category}</Badge>
+                          <Badge variant={product.is_active ? "default" : "secondary"} className="text-xs">
+                            {product.is_active ? "Active" : "Hidden"}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center mb-3">
-                    <div>
-                      <p className="text-lg font-semibold text-bullion-purple">
-                        GHS {product.price.toFixed(2)}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(product.created_at).toLocaleDateString()}
-                      </p>
+                    
+                    <div className="flex justify-between items-center mb-2">
+                      <div>
+                        <p className="text-base font-semibold text-bullion-purple">
+                          GHS {product.price.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(product.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => toggleProductStatus(product)}
-                      disabled={updateProduct.isPending}
-                      className="flex-1 text-xs"
-                    >
-                      {product.is_active ? (
-                        <>
-                          <EyeOff className="w-3 h-3 mr-1" />
-                          Hide
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="w-3 h-3 mr-1" />
-                          Show
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setEditingProduct(product);
-                        setShowForm(true);
-                      }}
-                      className="flex-1 text-xs"
-                    >
-                      <Edit className="w-3 h-3 mr-1" />
-                      Edit
-                    </Button>
-                    {canDelete && (
+                    
+                    <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setDeleteProductId(product.id)}
-                        className="px-2"
+                        onClick={() => toggleProductStatus(product)}
+                        disabled={updateProduct.isPending}
+                        className="flex-1 text-xs py-1"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        {product.is_active ? (
+                          <>
+                            <EyeOff className="w-3 h-3 mr-1" />
+                            Hide
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-3 h-3 mr-1" />
+                            Show
+                          </>
+                        )}
                       </Button>
-                    )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingProduct(product);
+                          setShowForm(true);
+                        }}
+                        className="flex-1 text-xs py-1"
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                      {canDelete && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setDeleteProductId(product.id)}
+                          className="px-2 py-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
+                  {index < (products?.length || 0) - 1 && (
+                    <Separator className="bg-gray-200" />
+                  )}
                 </div>
               ))}
             </div>
             
             {!products?.length && (
-              <div className="text-center py-8 text-gray-500 text-sm">
+              <div className="text-center py-8 text-gray-500 text-xs sm:text-sm">
                 <span className="hidden sm:inline">No products found. Add your first product to get started.</span>
                 <span className="sm:hidden">No products found.</span>
               </div>
