@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Order } from '@/hooks/useOrders';
+import CustomFieldDataDisplay from './CustomFieldDataDisplay';
 
 interface OrderEditModalProps {
   order: Order | null;
@@ -44,11 +45,21 @@ const OrderEditModal: React.FC<OrderEditModalProps> = ({ order, onClose, onSave 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <CardHeader>
-          <CardTitle>Edit Order</CardTitle>
+          <CardTitle>Edit Order - {order.product_name}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Custom Field Data Display */}
+          {order.custom_field_data && Object.keys(order.custom_field_data).length > 0 && (
+            <div>
+              <Label className="font-medium">Customer Information</Label>
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <CustomFieldDataDisplay customFieldData={order.custom_field_data} />
+              </div>
+            </div>
+          )}
+
           <div>
             <Label htmlFor="status">Status</Label>
             <select

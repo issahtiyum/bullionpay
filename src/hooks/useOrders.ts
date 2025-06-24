@@ -13,6 +13,7 @@ export type Order = {
   delivery_info: string | null;
   admin_notes: string | null;
   attended: boolean;
+  custom_field_data: Record<string, string> | null;
 };
 
 export const useOrders = () => {

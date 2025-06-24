@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Edit, CheckCircle, Circle } from 'lucide-react';
+import { Edit, CheckCircle, Circle, Eye } from 'lucide-react';
 import { Order } from '@/hooks/useOrders';
+import CustomFieldDataDisplay from './CustomFieldDataDisplay';
 
 interface OrdersTableProps {
   orders: Order[];
@@ -37,6 +38,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders, onEditOrder, onToggle
                 <TableHead>Product</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Custom Fields</TableHead>
                 <TableHead>Attended</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Actions</TableHead>
@@ -51,6 +53,9 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders, onEditOrder, onToggle
                     <Badge variant={getStatusBadgeVariant(order.status)}>
                       {order.status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <CustomFieldDataDisplay customFieldData={order.custom_field_data} />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -102,6 +107,13 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders, onEditOrder, onToggle
                   {order.status}
                 </Badge>
               </div>
+              
+              {/* Custom Fields for Mobile */}
+              {order.custom_field_data && Object.keys(order.custom_field_data).length > 0 && (
+                <div className="mb-3">
+                  <CustomFieldDataDisplay customFieldData={order.custom_field_data} />
+                </div>
+              )}
               
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
