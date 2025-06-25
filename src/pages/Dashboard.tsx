@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -38,12 +37,13 @@ const Dashboard = () => {
         .from('orders')
         .select('*')
         .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
       const transformedOrders: Order[] = data.map(order => ({
         id: order.id,
+        productId: order.product_id,
         productName: order.product_name,
         orderDate: order.created_at,
         status: order.attended ? 'Delivered' : 

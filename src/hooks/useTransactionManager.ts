@@ -67,8 +67,60 @@ export const useTransactionManager = () => {
     transactionId: string,
     customFieldData: Record<string, string>
   ) => {
-    console.log('Payment verified successfully, creating order...');
+    console.log('Payment verified successfully, processing order...');
     
+    // Check if this is a subscription renewal
+    if (product.category === 'Subscription') {
+      console.log('Checking for existing subscription...');
+      
+      const { data: existingOrders, error: fetchError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user!.id)
+        .eq('product_id', product.id)
+        .eq('is_subscription', true)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (fetchError) {
+        console.error('Error fetching existing subscription:', fetchError);
+      } else if (existingOrders && existingOrders.length > 0) {
+        const existingOrder = existingOrders[0];
+        console.log('Found existing subscription, extending it...', existingOrder);
+        
+        // Calculate new billing date (extend by 30 days from current next_billing_date or now)
+        const currentBillingDate = existingOrder.next_billing_date 
+          ? new Date(existingOrder.next_billing_date)
+          : new Date();
+        const newBillingDate = new Date(currentBillingDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+        
+        // Update the existing subscription
+        const { data: updatedOrder, error: updateError } = await supabase
+          .from('orders')
+          .update({
+            next_billing_date: newBillingDate.toISOString(),
+            updated_at: new Date().toISOString(),
+            transaction_id: transactionId, // Link to the new transaction
+          })
+          .eq('id', existingOrder.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('Error extending subscription:', updateError);
+        } else {
+          console.log('Subscription extended successfully:', updatedOrder);
+          toast({
+            title: "Subscription renewed",
+            description: "Your subscription has been extended successfully!",
+          });
+          return updatedOrder;
+        }
+      }
+    }
+    
+    // Create new order (either not a subscription or no existing subscription found)
+    console.log('Creating new order...');
     const orderData = {
       user_id: user!.id,
       transaction_id: transactionId,

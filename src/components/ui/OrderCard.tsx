@@ -4,11 +4,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Copy, Eye, EyeOff, Clock, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Progress } from "@/components/ui/progress";
 
 export type Order = {
   id: string;
+  productId: string;
   productName: string;
   orderDate: string;
   status: 'Paid' | 'Delivered' | 'Pending';
@@ -20,6 +22,7 @@ export type Order = {
 
 const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [showDeliveryInfo, setShowDeliveryInfo] = useState(false);
   
   const handleCopy = () => {
@@ -61,10 +64,15 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   
   // Handle renewal for subscription
   const handleRenew = () => {
-    toast({
-      description: "Renewing your subscription...",
-    });
-    // In a real app, this would make an API call to process the renewal
+    if (order.productId) {
+      navigate(`/checkout/${order.productId}`);
+    } else {
+      toast({
+        title: "Unable to renew",
+        description: "Product information not available for renewal.",
+        variant: "destructive",
+      });
+    }
   };
   
   const daysRemaining = getDaysRemaining();
