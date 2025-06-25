@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Eye, EyeOff, Clock, RefreshCw } from 'lucide-react';
+import { Copy, Eye, EyeOff, Clock, RefreshCw, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -46,8 +46,15 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
     return diffDays;
   };
   
+  // Check if subscription is expired
+  const isSubscriptionExpired = () => {
+    const daysRemaining = getDaysRemaining();
+    return daysRemaining !== null && daysRemaining < 0;
+  };
+  
   // Get color based on days remaining
   const getTimeRemainingColor = (daysRemaining: number) => {
+    if (daysRemaining < 0) return "text-red-600";
     if (daysRemaining <= 3) return "text-red-600";
     if (daysRemaining <= 7) return "text-amber-600";
     if (daysRemaining <= 14) return "text-bullion-purple-600";
@@ -56,6 +63,7 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   
   // Get progress percentage for subscription time remaining
   const getTimeRemainingPercentage = (daysRemaining: number) => {
+    if (daysRemaining < 0) return 100; // Full bar for expired
     // Assume a standard 30-day billing cycle
     const billingCycle = 30;
     const daysUsed = billingCycle - daysRemaining;
@@ -76,7 +84,8 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   };
   
   const daysRemaining = getDaysRemaining();
-  const showRenewOption = daysRemaining !== null && daysRemaining <= 7;
+  const expired = isSubscriptionExpired();
+  const showRenewOption = daysRemaining !== null && (daysRemaining <= 7 || expired);
   
   return (
     <Card className="overflow-hidden">
@@ -104,14 +113,23 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
           <div className="mb-4">
             <div className="flex justify-between items-center mb-1">
               <div className="flex items-center">
-                <Clock size={16} className="mr-1 text-gray-500" />
-                <span className="text-sm font-medium">Subscription renewal:</span>
+                {expired ? (
+                  <XCircle size={16} className="mr-1 text-red-500" />
+                ) : (
+                  <Clock size={16} className="mr-1 text-gray-500" />
+                )}
+                <span className="text-sm font-medium">
+                  {expired ? 'Subscription status:' : 'Subscription renewal:'}
+                </span>
               </div>
               <span className={`text-sm font-medium ${getTimeRemainingColor(daysRemaining)}`}>
-                {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} left
+                {expired ? 'Expired' : `${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} left`}
               </span>
             </div>
-            <Progress value={getTimeRemainingPercentage(daysRemaining)} className="h-2" />
+            <Progress 
+              value={getTimeRemainingPercentage(daysRemaining)} 
+              className={`h-2 ${expired ? 'opacity-75' : ''}`}
+            />
             
             {showRenewOption && (
               <div className="mt-2 text-right">
@@ -122,7 +140,7 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
                   className="text-xs"
                 >
                   <RefreshCw size={14} className="mr-1" />
-                  Renew Now
+                  {expired ? 'Reactivate' : 'Renew Now'}
                 </Button>
               </div>
             )}

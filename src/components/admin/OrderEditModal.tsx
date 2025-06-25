@@ -1,120 +1,167 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Order } from '@/hooks/useOrders';
-import CustomFieldDataDisplay from './CustomFieldDataDisplay';
 
 interface OrderEditModalProps {
   order: Order | null;
   onClose: () => void;
-  onSave: (orderId: string, updates: Partial<Pick<Order, 'status' | 'delivery_info' | 'admin_notes' | 'attended'>>) => Promise<boolean>;
+  onSave: (orderId: string, updates: any) => Promise<boolean>;
 }
 
 const OrderEditModal: React.FC<OrderEditModalProps> = ({ order, onClose, onSave }) => {
-  const [editForm, setEditForm] = useState({
-    status: '',
-    delivery_info: '',
-    admin_notes: '',
-    attended: false
-  });
+  const [status, setStatus] = useState('');
+  const [deliveryInfo, setDeliveryInfo] = useState('');
+  const [adminNotes, setAdminNotes] = useState('');
+  const [attended, setAttended] = useState(false);
+  const [subscriptionDays, setSubscriptionDays] = useState(30);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (order) {
-      setEditForm({
-        status: order.status,
-        delivery_info: order.delivery_info || '',
-        admin_notes: order.admin_notes || '',
-        attended: order.attended
-      });
+      setStatus(order.status);
+      setDeliveryInfo(order.delivery_info || '');
+      setAdminNotes(order.admin_notes || '');
+      setAttended(order.attended);
+      
+      // Calculate current subscription days if it's a subscription
+      if (order.custom_field_data && typeof order.custom_field_data === 'object') {
+        const customData = order.custom_field_data as any;
+        setSubscriptionDays(customData.subscription_days || 30);
+      } else {
+        setSubscriptionDays(30);
+      }
     }
   }, [order]);
 
   const handleSave = async () => {
     if (!order) return;
+
+    setIsSubmitting(true);
     
-    const success = await onSave(order.id, editForm);
+    const updates: any = {
+      status,
+      delivery_info: deliveryInfo || null,
+      admin_notes: adminNotes || null,
+      attended,
+    };
+
+    // If it's a subscription and subscription days changed, update the billing date
+    if (order.is_subscription && subscriptionDays !== 30) {
+      const currentDate = new Date();
+      const newBillingDate = new Date(currentDate.getTime() + subscriptionDays * 24 * 60 * 60 * 1000);
+      updates.next_billing_date = newBillingDate.toISOString();
+      
+      // Store the custom subscription duration in custom_field_data
+      const existingCustomData = (order.custom_field_data as any) || {};
+      updates.custom_field_data = {
+        ...existingCustomData,
+        subscription_days: subscriptionDays
+      };
+    }
+
+    const success = await onSave(order.id, updates);
     if (success) {
       onClose();
     }
+    setIsSubmitting(false);
   };
 
   if (!order) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <CardHeader>
-          <CardTitle>Edit Order - {order.product_name}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Custom Field Data Display */}
-          {order.custom_field_data && Object.keys(order.custom_field_data).length > 0 && (
-            <div>
-              <Label className="font-medium">Customer Information</Label>
-              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                <CustomFieldDataDisplay customFieldData={order.custom_field_data} />
-              </div>
-            </div>
-          )}
-
+    <Dialog open={!!order} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Order</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div>
+            <Label>Product: {order.product_name}</Label>
+          </div>
+          
           <div>
             <Label htmlFor="status">Status</Label>
-            <select
-              id="status"
-              value={editForm.status}
-              onChange={(e) => setEditForm({...editForm, status: e.target.value})}
-              className="w-full mt-1 p-2 border rounded-md"
-            >
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-          
-          <div>
-            <Label htmlFor="delivery_info">Delivery Info</Label>
-            <Input
-              id="delivery_info"
-              value={editForm.delivery_info}
-              onChange={(e) => setEditForm({...editForm, delivery_info: e.target.value})}
-              placeholder="Enter delivery information..."
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="admin_notes">Admin Notes</Label>
-            <Input
-              id="admin_notes"
-              value={editForm.admin_notes}
-              onChange={(e) => setEditForm({...editForm, admin_notes: e.target.value})}
-              placeholder="Internal notes..."
-            />
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="delivered">Delivered</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="attended"
-              checked={editForm.attended}
-              onChange={(e) => setEditForm({...editForm, attended: e.target.checked})}
-              className="rounded border-gray-300"
+          {order.is_subscription && (
+            <div>
+              <Label htmlFor="subscriptionDays">Subscription Duration (Days)</Label>
+              <Input
+                id="subscriptionDays"
+                type="number"
+                min="1"
+                max="365"
+                value={subscriptionDays}
+                onChange={(e) => setSubscriptionDays(parseInt(e.target.value) || 30)}
+                placeholder="30"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Default is 30 days. This will update the billing date from today.
+              </p>
+            </div>
+          )}
+          
+          <div>
+            <Label htmlFor="deliveryInfo">Delivery Information</Label>
+            <Textarea
+              id="deliveryInfo"
+              value={deliveryInfo}
+              onChange={(e) => setDeliveryInfo(e.target.value)}
+              placeholder="Enter delivery details..."
+              rows={3}
             />
-            <Label htmlFor="attended">Mark as attended</Label>
           </div>
           
-          <div className="flex space-x-2">
-            <Button onClick={handleSave}>Save Changes</Button>
+          <div>
+            <Label htmlFor="adminNotes">Admin Notes</Label>
+            <Textarea
+              id="adminNotes"
+              value={adminNotes}
+              onChange={(e) => setAdminNotes(e.target.value)}
+              placeholder="Internal notes..."
+              rows={2}
+            />
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="attended"
+              checked={attended}
+              onCheckedChange={setAttended}
+            />
+            <Label htmlFor="attended">Mark as Attended/Delivered</Label>
+          </div>
+          
+          <div className="flex gap-2 pt-4">
+            <Button onClick={handleSave} disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </Button>
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

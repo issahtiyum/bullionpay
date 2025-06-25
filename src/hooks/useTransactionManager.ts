@@ -88,11 +88,15 @@ export const useTransactionManager = () => {
         const existingOrder = existingOrders[0];
         console.log('Found existing subscription, extending it...', existingOrder);
         
-        // Calculate new billing date (extend by 30 days from current next_billing_date or now)
+        // Get custom subscription duration or default to 30 days
+        const existingCustomData = (existingOrder.custom_field_data as any) || {};
+        const subscriptionDays = existingCustomData.subscription_days || 30;
+        
+        // Calculate new billing date (extend by specified days from current next_billing_date or now)
         const currentBillingDate = existingOrder.next_billing_date 
           ? new Date(existingOrder.next_billing_date)
           : new Date();
-        const newBillingDate = new Date(currentBillingDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const newBillingDate = new Date(currentBillingDate.getTime() + subscriptionDays * 24 * 60 * 60 * 1000);
         
         // Update the existing subscription
         const { data: updatedOrder, error: updateError } = await supabase
@@ -112,7 +116,7 @@ export const useTransactionManager = () => {
           console.log('Subscription extended successfully:', updatedOrder);
           toast({
             title: "Subscription renewed",
-            description: "Your subscription has been extended successfully!",
+            description: `Your subscription has been extended by ${subscriptionDays} days!`,
           });
           return updatedOrder;
         }
@@ -133,7 +137,9 @@ export const useTransactionManager = () => {
       next_billing_date: product.category === 'Subscription' 
         ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         : null,
-      custom_field_data: customFieldData,
+      custom_field_data: product.category === 'Subscription' 
+        ? { ...customFieldData, subscription_days: 30 }
+        : customFieldData,
     };
 
     console.log('Attempting to create order with data:', orderData);
