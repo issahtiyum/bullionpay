@@ -14,6 +14,8 @@ export type Order = {
   delivery_info: string | null;
   admin_notes: string | null;
   attended: boolean;
+  is_subscription: boolean | null;
+  next_billing_date: string | null;
   custom_field_data: Json | null;
 };
 
