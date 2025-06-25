@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Eye, EyeOff, Clock, RefreshCw, XCircle } from 'lucide-react';
+import { Copy, Eye, EyeOff, Clock, RefreshCw, XCircle, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -34,9 +34,16 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
     }
   };
 
+  // Check if service has been delivered
+  const isServiceDelivered = () => {
+    return order.status === 'Delivered';
+  };
+
   // Calculate days remaining for subscription
   const getDaysRemaining = () => {
-    if (!order.isSubscription || !order.nextBillingDate) return null;
+    if (!order.isSubscription || !order.nextBillingDate || !isServiceDelivered()) {
+      return null;
+    }
     
     const today = new Date();
     const nextBilling = new Date(order.nextBillingDate);
@@ -52,8 +59,28 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
     return daysRemaining !== null && daysRemaining < 0;
   };
   
+  // Get subscription status text
+  const getSubscriptionStatusText = () => {
+    if (!order.isSubscription) return null;
+    
+    if (!isServiceDelivered()) {
+      return "Awaiting delivery to start subscription";
+    }
+    
+    const daysRemaining = getDaysRemaining();
+    if (daysRemaining === null) return null;
+    
+    if (daysRemaining < 0) {
+      return "Expired";
+    }
+    
+    return `${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} left`;
+  };
+  
   // Get color based on days remaining
-  const getTimeRemainingColor = (daysRemaining: number) => {
+  const getTimeRemainingColor = (daysRemaining: number | null) => {
+    if (!isServiceDelivered()) return "text-amber-600";
+    if (daysRemaining === null) return "text-gray-600";
     if (daysRemaining < 0) return "text-red-600";
     if (daysRemaining <= 3) return "text-red-600";
     if (daysRemaining <= 7) return "text-amber-600";
@@ -62,7 +89,9 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   };
   
   // Get progress percentage for subscription time remaining
-  const getTimeRemainingPercentage = (daysRemaining: number) => {
+  const getTimeRemainingPercentage = (daysRemaining: number | null) => {
+    if (!isServiceDelivered()) return 0; // No progress until delivered
+    if (daysRemaining === null) return 0;
     if (daysRemaining < 0) return 100; // Full bar for expired
     // Assume a standard 30-day billing cycle
     const billingCycle = 30;
@@ -85,7 +114,8 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   
   const daysRemaining = getDaysRemaining();
   const expired = isSubscriptionExpired();
-  const showRenewOption = daysRemaining !== null && (daysRemaining <= 7 || expired);
+  const showRenewOption = order.isSubscription && isServiceDelivered() && (daysRemaining !== null && (daysRemaining <= 7 || expired));
+  const subscriptionStatusText = getSubscriptionStatusText();
   
   return (
     <Card className="overflow-hidden">
@@ -109,27 +139,33 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
           Ordered on {new Date(order.orderDate).toLocaleDateString()}
         </p>
         
-        {order.isSubscription && daysRemaining !== null && (
+        {order.isSubscription && (
           <div className="mb-4">
             <div className="flex justify-between items-center mb-1">
               <div className="flex items-center">
-                {expired ? (
+                {!isServiceDelivered() ? (
+                  <Package size={16} className="mr-1 text-amber-500" />
+                ) : expired ? (
                   <XCircle size={16} className="mr-1 text-red-500" />
                 ) : (
                   <Clock size={16} className="mr-1 text-gray-500" />
                 )}
                 <span className="text-sm font-medium">
-                  {expired ? 'Subscription status:' : 'Subscription renewal:'}
+                  {!isServiceDelivered() ? 'Subscription status:' : 
+                   expired ? 'Subscription status:' : 'Subscription renewal:'}
                 </span>
               </div>
               <span className={`text-sm font-medium ${getTimeRemainingColor(daysRemaining)}`}>
-                {expired ? 'Expired' : `${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} left`}
+                {subscriptionStatusText}
               </span>
             </div>
-            <Progress 
-              value={getTimeRemainingPercentage(daysRemaining)} 
-              className={`h-2 ${expired ? 'opacity-75' : ''}`}
-            />
+            
+            {isServiceDelivered() && (
+              <Progress 
+                value={getTimeRemainingPercentage(daysRemaining)} 
+                className={`h-2 ${expired ? 'opacity-75' : ''}`}
+              />
+            )}
             
             {showRenewOption && (
               <div className="mt-2 text-right">
