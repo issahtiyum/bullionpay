@@ -33,16 +33,18 @@ export const useAdminValidation = () => {
     if (!adminUser) return;
 
     try {
-      await supabase.rpc('log_audit_event', {
-        p_action: action,
-        p_table_name: 'admin_actions',
-        p_record_id: adminUser.id,
-        p_new_values: {
-          admin_email: adminUser.email,
-          admin_role: adminRole,
-          ...details
-        }
-      });
+      await supabase
+        .from('audit_logs')
+        .insert({
+          action: action,
+          table_name: 'admin_actions',
+          record_id: adminUser.id,
+          new_values: {
+            admin_email: adminUser.email,
+            admin_role: adminRole,
+            ...details
+          }
+        });
     } catch (error) {
       console.error('Failed to log admin action:', error);
     }

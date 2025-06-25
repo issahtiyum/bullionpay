@@ -30,6 +30,21 @@ export const useSecureTransactionManager = () => {
     return data.product;
   };
 
+  const logAuditEvent = async (action: string, tableName: string, recordId: string, newValues: any) => {
+    try {
+      await supabase
+        .from('audit_logs')
+        .insert({
+          action: action,
+          table_name: tableName,
+          record_id: recordId,
+          new_values: newValues
+        });
+    } catch (error) {
+      console.error('Failed to log audit event:', error);
+    }
+  };
+
   const createSecureTransaction = async (product: Product, reference: string, paystackReference: string) => {
     console.log('Creating secure transaction record...');
     
@@ -148,15 +163,10 @@ export const useSecureTransactionManager = () => {
           console.log('Subscription extended successfully:', updatedOrder);
           
           // Log the subscription extension
-          await supabase.rpc('log_audit_event', {
-            p_action: 'SUBSCRIPTION_EXTENDED',
-            p_table_name: 'orders',
-            p_record_id: existingOrder.id,
-            p_new_values: { 
-              new_billing_date: newBillingDate.toISOString(),
-              transaction_id: transactionId,
-              extension_days: subscriptionDays
-            }
+          await logAuditEvent('SUBSCRIPTION_EXTENDED', 'orders', existingOrder.id, { 
+            new_billing_date: newBillingDate.toISOString(),
+            transaction_id: transactionId,
+            extension_days: subscriptionDays
           });
 
           toast({
@@ -198,14 +208,9 @@ export const useSecureTransactionManager = () => {
       console.error('Order creation error:', orderError);
       
       // Log the order creation failure
-      await supabase.rpc('log_audit_event', {
-        p_action: 'ORDER_CREATION_FAILED',
-        p_table_name: 'orders',
-        p_record_id: 'N/A',
-        p_new_values: { 
-          error: orderError.message,
-          order_data: orderData
-        }
+      await logAuditEvent('ORDER_CREATION_FAILED', 'orders', 'N/A', { 
+        error: orderError.message,
+        order_data: orderData
       });
       
       toast({
@@ -220,12 +225,7 @@ export const useSecureTransactionManager = () => {
     console.log('Order created successfully:', orderResult);
     
     // Log successful order creation
-    await supabase.rpc('log_audit_event', {
-      p_action: 'ORDER_CREATED',
-      p_table_name: 'orders',
-      p_record_id: orderResult.id,
-      p_new_values: orderData
-    });
+    await logAuditEvent('ORDER_CREATED', 'orders', orderResult.id, orderData);
 
     return orderResult;
   };

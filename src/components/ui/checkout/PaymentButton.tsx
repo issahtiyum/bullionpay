@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { usePaystackIntegration } from '@/hooks/usePaystackIntegration';
@@ -21,7 +21,8 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   isValid,
   onSuccess
 }) => {
-  const { initializePayment, loading } = usePaystackIntegration();
+  const [loading, setLoading] = useState(false);
+  const { initializePaystackPayment } = usePaystackIntegration();
   const { 
     createSecureTransaction, 
     verifyPaymentSecure, 
@@ -32,26 +33,27 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   const handlePayment = async () => {
     if (!isValid) return;
 
+    setLoading(true);
     try {
       // Pre-validate payment before initializing
       await validatePayment(product, product.price);
       
-      await initializePayment({
+      await initializePaystackPayment(
+        product,
         email,
-        amount: product.price,
-        onSuccess: async (reference: any) => {
+        async (response: any, reference: string) => {
           try {
             console.log('Payment successful, processing securely...');
             
             // Create secure transaction record
             const transaction = await createSecureTransaction(
               product, 
-              reference.reference, 
-              reference.reference
+              reference, 
+              response.reference
             );
             
             // Verify payment securely
-            await verifyPaymentSecure(reference.reference);
+            await verifyPaymentSecure(response.reference);
             
             // Create secure order
             const order = await createSecureOrder(
@@ -66,14 +68,18 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
             }
           } catch (error) {
             console.error('Secure payment processing failed:', error);
+          } finally {
+            setLoading(false);
           }
         },
-        onClose: () => {
+        () => {
           console.log('Payment dialog closed');
+          setLoading(false);
         }
-      });
+      );
     } catch (error) {
       console.error('Payment initialization failed:', error);
+      setLoading(false);
     }
   };
 
