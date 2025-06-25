@@ -20,12 +20,15 @@ const Checkout = () => {
     console.log('Checkout page mounted:', { product_id, products, product });
   }, [product_id, products, product]);
   
+  // Show loading state while products are being fetched
   if (isLoading) {
     return (
       <ProtectedRoute>
         <MainLayout>
-          <div className="text-center py-12">
-            <p className="text-gray-500">Loading product...</p>
+          <div className="max-w-md mx-auto">
+            <div className="text-center py-12">
+              <p className="text-gray-500">Loading product...</p>
+            </div>
           </div>
         </MainLayout>
       </ProtectedRoute>
@@ -37,29 +40,49 @@ const Checkout = () => {
     return (
       <ProtectedRoute>
         <MainLayout>
-          <div className="text-center py-12">
-            <h1 className="text-2xl font-semibold mb-4">Error</h1>
-            <p className="mb-6 text-gray-600">There was an error loading the product.</p>
-            <Link to="/" className="text-bullion-purple-600 hover:underline">
-              Back to Home
-            </Link>
+          <div className="max-w-md mx-auto">
+            <div className="text-center py-12">
+              <h1 className="text-2xl font-semibold mb-4">Error</h1>
+              <p className="mb-6 text-gray-600">There was an error loading the product.</p>
+              <Link to="/" className="text-bullion-purple-600 hover:underline">
+                Back to Home
+              </Link>
+            </div>
           </div>
         </MainLayout>
       </ProtectedRoute>
     );
   }
   
-  if (!product) {
+  // Only show product not found after products have loaded (not loading and no error)
+  if (!isLoading && !error && !product) {
     console.error('Product not found:', { product_id, available_products: products?.map(p => p.id) });
     return (
       <ProtectedRoute>
         <MainLayout>
-          <div className="text-center py-12">
-            <h1 className="text-2xl font-semibold mb-4">Product Not Found</h1>
-            <p className="mb-6 text-gray-600">The product you're trying to checkout doesn't exist.</p>
-            <Link to="/" className="text-bullion-purple-600 hover:underline">
-              Back to Home
-            </Link>
+          <div className="max-w-md mx-auto">
+            <div className="text-center py-12">
+              <h1 className="text-2xl font-semibold mb-4">Product Not Found</h1>
+              <p className="mb-6 text-gray-600">The product you're trying to checkout doesn't exist.</p>
+              <Link to="/" className="text-bullion-purple-600 hover:underline">
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        </MainLayout>
+      </ProtectedRoute>
+    );
+  }
+  
+  // Don't render CheckoutForm until we have a valid product
+  if (!product) {
+    return (
+      <ProtectedRoute>
+        <MainLayout>
+          <div className="max-w-md mx-auto">
+            <div className="text-center py-12">
+              <p className="text-gray-500">Loading...</p>
+            </div>
           </div>
         </MainLayout>
       </ProtectedRoute>
