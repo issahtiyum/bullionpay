@@ -6,7 +6,6 @@ import MainLayout from '@/components/layout/MainLayout';
 import CheckoutForm from '@/components/ui/CheckoutForm';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useProducts } from '@/hooks/useProducts';
-import { useEffect } from 'react';
 
 const Checkout = () => {
   const { product_id } = useParams<{ product_id: string }>();
@@ -15,20 +14,12 @@ const Checkout = () => {
   
   const product = products?.find(p => p.id === product_id);
   
-  // Add logging to help debug issues
-  useEffect(() => {
-    console.log('Checkout page mounted:', { product_id, products, product });
-  }, [product_id, products, product]);
-  
-  // Show loading state while products are being fetched
   if (isLoading) {
     return (
       <ProtectedRoute>
         <MainLayout>
-          <div className="max-w-md mx-auto">
-            <div className="text-center py-12">
-              <p className="text-gray-500">Loading product...</p>
-            </div>
+          <div className="text-center py-12">
+            <p className="text-gray-500">Loading product...</p>
           </div>
         </MainLayout>
       </ProtectedRoute>
@@ -36,53 +27,31 @@ const Checkout = () => {
   }
   
   if (error) {
-    console.error('Error loading products:', error);
     return (
       <ProtectedRoute>
         <MainLayout>
-          <div className="max-w-md mx-auto">
-            <div className="text-center py-12">
-              <h1 className="text-2xl font-semibold mb-4">Error</h1>
-              <p className="mb-6 text-gray-600">There was an error loading the product.</p>
-              <Link to="/" className="text-bullion-purple-600 hover:underline">
-                Back to Home
-              </Link>
-            </div>
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-semibold mb-4">Error</h1>
+            <p className="mb-6 text-gray-600">There was an error loading the product.</p>
+            <Link to="/" className="text-bullion-purple-600 hover:underline">
+              Back to Home
+            </Link>
           </div>
         </MainLayout>
       </ProtectedRoute>
     );
   }
   
-  // Only show product not found after products have loaded (not loading and no error)
-  if (!isLoading && !error && !product) {
-    console.error('Product not found:', { product_id, available_products: products?.map(p => p.id) });
-    return (
-      <ProtectedRoute>
-        <MainLayout>
-          <div className="max-w-md mx-auto">
-            <div className="text-center py-12">
-              <h1 className="text-2xl font-semibold mb-4">Product Not Found</h1>
-              <p className="mb-6 text-gray-600">The product you're trying to checkout doesn't exist.</p>
-              <Link to="/" className="text-bullion-purple-600 hover:underline">
-                Back to Home
-              </Link>
-            </div>
-          </div>
-        </MainLayout>
-      </ProtectedRoute>
-    );
-  }
-  
-  // Don't render CheckoutForm until we have a valid product
   if (!product) {
     return (
       <ProtectedRoute>
         <MainLayout>
-          <div className="max-w-md mx-auto">
-            <div className="text-center py-12">
-              <p className="text-gray-500">Loading...</p>
-            </div>
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-semibold mb-4">Product Not Found</h1>
+            <p className="mb-6 text-gray-600">The product you're trying to checkout doesn't exist.</p>
+            <Link to="/" className="text-bullion-purple-600 hover:underline">
+              Back to Home
+            </Link>
           </div>
         </MainLayout>
       </ProtectedRoute>
@@ -90,7 +59,6 @@ const Checkout = () => {
   }
   
   const handlePaymentSuccess = () => {
-    console.log('Payment successful, navigating to dashboard');
     navigate('/dashboard');
   };
   

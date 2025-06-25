@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { type Product } from './ProductCard';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePaymentProcessing } from '@/hooks/usePaymentProcessing';
 import { CustomField } from '@/components/admin/CustomFieldsManager';
 import EmailInput from './checkout/EmailInput';
 import PaymentButton from './checkout/PaymentButton';
@@ -17,6 +18,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [customFieldErrors, setCustomFieldErrors] = useState<Record<string, string>>({});
   const { user } = useAuth();
+  const { loading, processPayment } = usePaymentProcessing(product, onPaymentSuccess);
   
   // Pre-fill email with user's email when component mounts
   useEffect(() => {
@@ -57,10 +59,16 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
     }
   };
 
-  // Fix the validation logic - separate email validation from custom fields validation
-  const isEmailValid = email.trim() !== '' && /\S+@\S+\.\S+/.test(email);
-  const areCustomFieldsValid = validateCustomFields();
-  const isValid = isEmailValid && areCustomFieldsValid;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate custom fields
+    if (!validateCustomFields()) {
+      return;
+    }
+    
+    await processPayment(email, customFieldValues);
+  };
   
   return (
     <div className="space-y-4">
@@ -80,10 +88,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
       
       <PaymentButton 
         product={product}
-        email={email}
-        customFieldData={customFieldValues}
-        isValid={isValid}
-        onSuccess={onPaymentSuccess}
+        loading={loading}
+        onSubmit={handleSubmit}
       />
     </div>
   );

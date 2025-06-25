@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAdminValidation } from './useAdminValidation';
 import type { Json } from '@/integrations/supabase/types';
 
 export type Order = {
@@ -24,7 +23,6 @@ export const useOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { secureUpdateOrder, logAdminAction } = useAdminValidation();
 
   const fetchOrders = async () => {
     try {
@@ -51,23 +49,37 @@ export const useOrders = () => {
     orderId: string, 
     updates: Partial<Pick<Order, 'status' | 'delivery_info' | 'admin_notes' | 'attended'>>
   ) => {
-    const success = await secureUpdateOrder(orderId, updates);
-    if (success) {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Order updated successfully",
+      });
+
       fetchOrders();
+      return true;
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update order",
+        variant: "destructive",
+      });
+      return false;
     }
-    return success;
   };
 
   const toggleAttendedStatus = async (order: Order) => {
-    const success = await secureUpdateOrder(order.id, { attended: !order.attended });
-    if (success) {
-      await logAdminAction('ORDER_ATTENDANCE_TOGGLED', {
-        order_id: order.id,
-        new_status: !order.attended,
-        product_name: order.product_name
-      });
-    }
-    return success;
+    return updateOrder(order.id, { attended: !order.attended });
   };
 
   useEffect(() => {
