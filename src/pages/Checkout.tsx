@@ -6,6 +6,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import CheckoutForm from '@/components/ui/CheckoutForm';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useProducts } from '@/hooks/useProducts';
+import { useEffect } from 'react';
 
 const Checkout = () => {
   const { product_id } = useParams<{ product_id: string }>();
@@ -13,6 +14,11 @@ const Checkout = () => {
   const { data: products, isLoading, error } = useProducts();
   
   const product = products?.find(p => p.id === product_id);
+  
+  // Add logging to help debug issues
+  useEffect(() => {
+    console.log('Checkout page mounted:', { product_id, products, product });
+  }, [product_id, products, product]);
   
   if (isLoading) {
     return (
@@ -27,6 +33,7 @@ const Checkout = () => {
   }
   
   if (error) {
+    console.error('Error loading products:', error);
     return (
       <ProtectedRoute>
         <MainLayout>
@@ -43,6 +50,7 @@ const Checkout = () => {
   }
   
   if (!product) {
+    console.error('Product not found:', { product_id, available_products: products?.map(p => p.id) });
     return (
       <ProtectedRoute>
         <MainLayout>
@@ -59,6 +67,7 @@ const Checkout = () => {
   }
   
   const handlePaymentSuccess = () => {
+    console.log('Payment successful, navigating to dashboard');
     navigate('/dashboard');
   };
   

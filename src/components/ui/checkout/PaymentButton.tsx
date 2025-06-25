@@ -31,10 +31,16 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   } = useSecureTransactionManager();
 
   const handlePayment = async () => {
-    if (!isValid) return;
+    if (!isValid) {
+      console.log('Payment validation failed:', { isValid, email, customFieldData });
+      return;
+    }
 
     setLoading(true);
+    
     try {
+      console.log('Starting payment process...');
+      
       // Pre-validate payment before initializing
       await validatePayment(product, product.price);
       
@@ -43,7 +49,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
         email,
         async (response: any, reference: string) => {
           try {
-            console.log('Payment successful, processing securely...');
+            console.log('Payment successful, processing securely...', { response, reference });
             
             // Create secure transaction record
             const transaction = await createSecureTransaction(
@@ -68,7 +74,6 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
             }
           } catch (error) {
             console.error('Secure payment processing failed:', error);
-          } finally {
             setLoading(false);
           }
         },
@@ -83,6 +88,16 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     }
   };
 
+  // Add safety check for product data
+  if (!product || !product.price) {
+    console.error('Invalid product data:', product);
+    return (
+      <Button disabled className="w-full" size="lg">
+        Invalid Product
+      </Button>
+    );
+  }
+
   return (
     <Button 
       onClick={handlePayment}
@@ -96,7 +111,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
           Processing...
         </>
       ) : (
-        `Pay GH₵${product.price}`
+        `Pay GH₵${Number(product.price).toFixed(2)}`
       )}
     </Button>
   );

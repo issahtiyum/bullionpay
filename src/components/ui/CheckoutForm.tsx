@@ -57,7 +57,10 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
     }
   };
 
-  const isValid = email.trim() !== '' && validateCustomFields();
+  // Fix the validation logic - separate email validation from custom fields validation
+  const isEmailValid = email.trim() !== '' && /\S+@\S+\.\S+/.test(email);
+  const areCustomFieldsValid = validateCustomFields();
+  const isValid = isEmailValid && areCustomFieldsValid;
   
   return (
     <div className="space-y-4">
