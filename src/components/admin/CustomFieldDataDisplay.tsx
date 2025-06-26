@@ -14,6 +14,9 @@ const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customF
   const [showSensitiveData, setShowSensitiveData] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
+  // Add debugging information
+  console.log('CustomFieldDataDisplay received data:', customFieldData);
+
   // Type guard to check if the data is a valid record
   const isValidRecord = (data: Json): data is Record<string, string> => {
     return data !== null && 
@@ -22,9 +25,23 @@ const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customF
            Object.values(data).every(value => typeof value === 'string');
   };
 
-  if (!customFieldData || !isValidRecord(customFieldData) || Object.keys(customFieldData).length === 0) {
+  if (!customFieldData) {
+    console.log('No custom field data provided');
     return <span className="text-sm text-gray-400">No custom data</span>;
   }
+
+  if (!isValidRecord(customFieldData)) {
+    console.log('Invalid custom field data format:', customFieldData);
+    return <span className="text-sm text-red-400">Invalid data format</span>;
+  }
+
+  const dataEntries = Object.entries(customFieldData);
+  if (dataEntries.length === 0) {
+    console.log('Custom field data is empty object');
+    return <span className="text-sm text-gray-400">No custom data</span>;
+  }
+
+  console.log('Displaying custom field data entries:', dataEntries);
 
   const handleCopyField = (key: string, value: string) => {
     navigator.clipboard.writeText(value);
@@ -54,7 +71,7 @@ const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customF
 
   return (
     <div className="space-y-2">
-      {Object.entries(customFieldData).map(([key, value]) => {
+      {dataEntries.map(([key, value]) => {
         const isSensitive = isSensitiveField(key);
         const shouldHide = isSensitive && !showSensitiveData[key];
         
