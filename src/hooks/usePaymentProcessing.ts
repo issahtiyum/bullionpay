@@ -34,8 +34,8 @@ export const usePaymentProcessing = (product: Product, onSuccess: () => void) =>
           amount: product.price,
           status: 'pending',
           custom_field_data: customFieldValues, // Store custom field data
-          is_subscription: product.category === 'subscriptions',
-          next_billing_date: product.category === 'subscriptions' 
+          is_subscription: product.category === 'Subscription',
+          next_billing_date: product.category === 'Subscription' 
             ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
             : null
         })
