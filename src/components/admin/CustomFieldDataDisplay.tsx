@@ -18,9 +18,6 @@ const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customF
   const [showSensitiveData, setShowSensitiveData] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
-  // Add debugging information
-  console.log('CustomFieldDataDisplay received data:', customFieldData);
-
   // Updated type guard to check if the data is a valid record with mixed value types
   const isValidRecord = (data: Json): data is CustomFieldRecord => {
     return data !== null && 
@@ -34,31 +31,17 @@ const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customF
   };
 
   if (!customFieldData) {
-    console.log('No custom field data provided');
     return <span className="text-sm text-gray-400">No custom data</span>;
   }
 
   if (!isValidRecord(customFieldData)) {
-    console.log('Invalid custom field data format:', customFieldData);
-    console.log('Data type:', typeof customFieldData);
-    console.log('Is array:', Array.isArray(customFieldData));
-    if (typeof customFieldData === 'object' && customFieldData !== null) {
-      console.log('Object values and types:', Object.entries(customFieldData).map(([key, value]) => ({
-        key,
-        value,
-        type: typeof value
-      })));
-    }
     return <span className="text-sm text-red-400">Invalid data format</span>;
   }
 
   const dataEntries = Object.entries(customFieldData);
   if (dataEntries.length === 0) {
-    console.log('Custom field data is empty object');
     return <span className="text-sm text-gray-400">No custom data</span>;
   }
-
-  console.log('Displaying custom field data entries:', dataEntries);
 
   const handleCopyField = (key: string, value: CustomFieldValue) => {
     const stringValue = String(value);

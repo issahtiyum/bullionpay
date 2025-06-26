@@ -26,8 +26,6 @@ export const useOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      console.log('Fetching orders with custom field data...');
-      
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -47,24 +45,11 @@ export const useOrders = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching orders:', error);
         throw error;
       }
-
-      console.log('Fetched orders:', data);
-      
-      // Log orders with custom field data for debugging
-      const ordersWithCustomData = data?.filter(order => 
-        order.custom_field_data && 
-        typeof order.custom_field_data === 'object' && 
-        Object.keys(order.custom_field_data).length > 0
-      );
-      
-      console.log('Orders with custom field data:', ordersWithCustomData);
       
       setOrders(data || []);
     } catch (error) {
-      console.error('Error fetching orders:', error);
       toast({
         title: "Error",
         description: "Failed to load orders",
@@ -80,8 +65,6 @@ export const useOrders = () => {
     updates: Partial<Pick<Order, 'status' | 'delivery_info' | 'admin_notes' | 'attended'>>
   ) => {
     try {
-      console.log('Updating order:', orderId, updates);
-      
       const { error } = await supabase
         .from('orders')
         .update({
@@ -91,7 +74,6 @@ export const useOrders = () => {
         .eq('id', orderId);
 
       if (error) {
-        console.error('Error updating order:', error);
         throw error;
       }
 
@@ -103,7 +85,6 @@ export const useOrders = () => {
       fetchOrders();
       return true;
     } catch (error) {
-      console.error('Error updating order:', error);
       toast({
         title: "Error",
         description: "Failed to update order",
@@ -114,7 +95,6 @@ export const useOrders = () => {
   };
 
   const toggleAttendedStatus = async (order: Order) => {
-    console.log('Toggling attended status for order:', order.id);
     return updateOrder(order.id, { attended: !order.attended });
   };
 

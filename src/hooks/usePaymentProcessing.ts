@@ -43,11 +43,8 @@ export const usePaymentProcessing = (product: Product, onSuccess: () => void) =>
         .single();
 
       if (orderError) {
-        console.error('Error creating order:', orderError);
         throw orderError;
       }
-
-      console.log('Order created with custom field data:', order);
 
       // For now, simulate payment success
       // In a real implementation, you would integrate with Paystack here
@@ -60,7 +57,6 @@ export const usePaymentProcessing = (product: Product, onSuccess: () => void) =>
         .eq('id', order.id);
 
       if (updateError) {
-        console.error('Error updating order status:', updateError);
         throw updateError;
       }
 
@@ -71,7 +67,6 @@ export const usePaymentProcessing = (product: Product, onSuccess: () => void) =>
 
       onSuccess();
     } catch (error) {
-      console.error('Payment processing error:', error);
       toast({
         title: "Payment Failed",
         description: "There was an error processing your payment. Please try again.",

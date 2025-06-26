@@ -9,7 +9,6 @@ export const useTransactionManager = () => {
   const { toast } = useToast();
 
   const createTransaction = async (product: Product, reference: string, paystackReference: string) => {
-    console.log('Creating transaction record...');
     const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
       .insert({
@@ -23,16 +22,13 @@ export const useTransactionManager = () => {
       .single();
 
     if (transactionError) {
-      console.error('Transaction creation error:', transactionError);
       throw new Error(`Failed to create transaction record: ${transactionError.message}`);
     }
 
-    console.log('Transaction created successfully:', transaction);
     return transaction;
   };
 
   const verifyPayment = async (paystackReference: string) => {
-    console.log('Verifying payment...');
     const { data: verificationResponse, error: verificationError } = await supabase.functions.invoke('verify-payment', {
       body: {
         reference: paystackReference,
@@ -41,11 +37,8 @@ export const useTransactionManager = () => {
     });
 
     if (verificationError) {
-      console.error('Verification error:', verificationError);
       throw new Error(`Payment verification failed: ${verificationError.message}`);
     }
-
-    console.log('Raw verification response:', verificationResponse);
 
     // Parse the response if it's a string
     let verificationData;
@@ -54,11 +47,9 @@ export const useTransactionManager = () => {
         ? JSON.parse(verificationResponse) 
         : verificationResponse;
     } catch (parseError) {
-      console.error('Failed to parse verification response:', parseError);
       throw new Error('Invalid verification response format');
     }
 
-    console.log('Parsed verification data:', verificationData);
     return verificationData;
   };
 
@@ -67,12 +58,8 @@ export const useTransactionManager = () => {
     transactionId: string,
     customFieldData: Record<string, string>
   ) => {
-    console.log('Payment verified successfully, processing order...');
-    
     // Check if this is a subscription renewal
     if (product.category === 'Subscription') {
-      console.log('Checking for existing subscription...');
-      
       const { data: existingOrders, error: fetchError } = await supabase
         .from('orders')
         .select('*')
@@ -83,10 +70,9 @@ export const useTransactionManager = () => {
         .limit(1);
 
       if (fetchError) {
-        console.error('Error fetching existing subscription:', fetchError);
+        // Continue with new order creation
       } else if (existingOrders && existingOrders.length > 0) {
         const existingOrder = existingOrders[0];
-        console.log('Found existing subscription, extending it...', existingOrder);
         
         // Get custom subscription duration or default to 30 days
         const existingCustomData = (existingOrder.custom_field_data as any) || {};
@@ -111,9 +97,8 @@ export const useTransactionManager = () => {
           .single();
 
         if (updateError) {
-          console.error('Error extending subscription:', updateError);
+          // Continue with new order creation
         } else {
-          console.log('Subscription extended successfully:', updatedOrder);
           toast({
             title: "Subscription renewed",
             description: `Your subscription has been extended by ${subscriptionDays} days!`,
@@ -124,7 +109,6 @@ export const useTransactionManager = () => {
     }
     
     // Create new order (either not a subscription or no existing subscription found)
-    console.log('Creating new order...');
     const orderData = {
       user_id: user!.id,
       transaction_id: transactionId,
@@ -142,8 +126,6 @@ export const useTransactionManager = () => {
         : customFieldData,
     };
 
-    console.log('Attempting to create order with data:', orderData);
-
     const { data: orderResult, error: orderError } = await supabase
       .from('orders')
       .insert(orderData)
@@ -151,14 +133,6 @@ export const useTransactionManager = () => {
       .single();
 
     if (orderError) {
-      console.error('Order creation error:', orderError);
-      console.error('Order error details:', {
-        message: orderError.message,
-        details: orderError.details,
-        hint: orderError.hint,
-        code: orderError.code
-      });
-      
       toast({
         title: "Payment successful",
         description: `Payment completed but order creation had an issue: ${orderError.message}. Please contact support with your reference: ${orderData.transaction_id}`,
@@ -168,7 +142,6 @@ export const useTransactionManager = () => {
       return null;
     }
 
-    console.log('Order created successfully:', orderResult);
     return orderResult;
   };
 
