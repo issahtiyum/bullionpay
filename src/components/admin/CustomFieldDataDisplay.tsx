@@ -10,6 +10,10 @@ interface CustomFieldDataDisplayProps {
   customFieldData: Json | null;
 }
 
+// Define acceptable value types for custom field data
+type CustomFieldValue = string | number | boolean;
+type CustomFieldRecord = Record<string, CustomFieldValue>;
+
 const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customFieldData }) => {
   const [showSensitiveData, setShowSensitiveData] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
@@ -17,12 +21,16 @@ const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customF
   // Add debugging information
   console.log('CustomFieldDataDisplay received data:', customFieldData);
 
-  // Type guard to check if the data is a valid record
-  const isValidRecord = (data: Json): data is Record<string, string> => {
+  // Updated type guard to check if the data is a valid record with mixed value types
+  const isValidRecord = (data: Json): data is CustomFieldRecord => {
     return data !== null && 
            typeof data === 'object' && 
            !Array.isArray(data) &&
-           Object.values(data).every(value => typeof value === 'string');
+           Object.values(data).every(value => 
+             typeof value === 'string' || 
+             typeof value === 'number' || 
+             typeof value === 'boolean'
+           );
   };
 
   if (!customFieldData) {
@@ -32,6 +40,15 @@ const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customF
 
   if (!isValidRecord(customFieldData)) {
     console.log('Invalid custom field data format:', customFieldData);
+    console.log('Data type:', typeof customFieldData);
+    console.log('Is array:', Array.isArray(customFieldData));
+    if (typeof customFieldData === 'object' && customFieldData !== null) {
+      console.log('Object values and types:', Object.entries(customFieldData).map(([key, value]) => ({
+        key,
+        value,
+        type: typeof value
+      })));
+    }
     return <span className="text-sm text-red-400">Invalid data format</span>;
   }
 
@@ -43,8 +60,9 @@ const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customF
 
   console.log('Displaying custom field data entries:', dataEntries);
 
-  const handleCopyField = (key: string, value: string) => {
-    navigator.clipboard.writeText(value);
+  const handleCopyField = (key: string, value: CustomFieldValue) => {
+    const stringValue = String(value);
+    navigator.clipboard.writeText(stringValue);
     toast({
       description: `${key} copied to clipboard`,
     });
@@ -69,11 +87,19 @@ const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customF
       .join(' ');
   };
 
+  const formatValue = (value: CustomFieldValue): string => {
+    if (typeof value === 'boolean') {
+      return value ? 'Yes' : 'No';
+    }
+    return String(value);
+  };
+
   return (
     <div className="space-y-2">
       {dataEntries.map(([key, value]) => {
         const isSensitive = isSensitiveField(key);
         const shouldHide = isSensitive && !showSensitiveData[key];
+        const displayValue = formatValue(value);
         
         return (
           <div key={key} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
@@ -87,9 +113,19 @@ const CustomFieldDataDisplay: React.FC<CustomFieldDataDisplayProps> = ({ customF
                     Sensitive
                   </Badge>
                 )}
+                {typeof value === 'number' && (
+                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
+                    Number
+                  </Badge>
+                )}
+                {typeof value === 'boolean' && (
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+                    Yes/No
+                  </Badge>
+                )}
               </div>
               <p className="text-sm font-mono break-all">
-                {shouldHide ? '••••••••' : value}
+                {shouldHide ? '••••••••' : displayValue}
               </p>
             </div>
             
