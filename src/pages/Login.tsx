@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -188,10 +187,34 @@ const Login = () => {
                 
                 <TabsContent value="login" className="space-y-4 mt-4">
                   <LoginForm onSubmit={handleLoginSubmit} loading={loading} />
+                  <div className="text-center pt-2">
+                    <p className="text-sm text-gray-600">
+                      New to BullionPay?{' '}
+                      <button
+                        type="button"
+                        onClick={() => handleTabChange('signup')}
+                        className="font-poppins font-semibold text-bullion-purple hover:text-bullion-purple-800 hover:underline transition-colors"
+                      >
+                        Create an account
+                      </button>
+                    </p>
+                  </div>
                 </TabsContent>
                 
                 <TabsContent value="signup" className="space-y-4 mt-4">
                   <SignupForm onSubmit={handleSignupSubmit} loading={loading} />
+                  <div className="text-center pt-2">
+                    <p className="text-sm text-gray-600">
+                      Already have an account?{' '}
+                      <button
+                        type="button"
+                        onClick={() => handleTabChange('login')}
+                        className="font-poppins font-semibold text-bullion-purple hover:text-bullion-purple-800 hover:underline transition-colors"
+                      >
+                        Sign in here
+                      </button>
+                    </p>
+                  </div>
                 </TabsContent>
               </Tabs>
             ) : (
