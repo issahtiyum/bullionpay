@@ -53,6 +53,15 @@ const HomePage = () => {
         <p className="text-gray-600">Browse our collection of digital goods and services</p>
       </div>
       
+      <div className="mb-6 overflow-x-auto pb-2">
+        <TabGroup 
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={(value) => setActiveTab(value as FilterTab)}
+          className="min-w-max"
+        />
+      </div>
+      
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative max-w-md">
@@ -65,15 +74,6 @@ const HomePage = () => {
             className="pl-10"
           />
         </div>
-      </div>
-      
-      <div className="mb-6 overflow-x-auto pb-2">
-        <TabGroup 
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={(value) => setActiveTab(value as FilterTab)}
-          className="min-w-max"
-        />
       </div>
       
       {isLoading ? (
