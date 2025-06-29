@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import MainLayout from '@/components/layout/MainLayout';
@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 const EmailConfirmation = () => {
-  const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
@@ -18,31 +17,18 @@ const EmailConfirmation = () => {
   useEffect(() => {
     const handleEmailConfirmation = async () => {
       try {
-        // Extract tokens from URL
-        const accessToken = searchParams.get('access_token');
-        const refreshToken = searchParams.get('refresh_token');
-        const type = searchParams.get('type');
-
-        if (!accessToken || !refreshToken || type !== 'signup') {
-          setStatus('error');
-          setMessage('Invalid confirmation link. Please try signing up again.');
-          return;
-        }
-
-        // Exchange tokens for session
-        const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
+        // Let Supabase handle the confirmation automatically
+        // The URL contains the necessary tokens that Supabase will process
+        const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
           console.error('Email confirmation error:', error);
           setStatus('error');
-          setMessage(error.message || 'Failed to confirm email. Please try again.');
+          setMessage('Failed to confirm email. The link may be invalid or expired.');
           return;
         }
 
-        if (data.user) {
+        if (session?.user) {
           setStatus('success');
           setMessage('Email confirmed successfully! You are now logged in.');
           
@@ -55,6 +41,28 @@ const EmailConfirmation = () => {
           setTimeout(() => {
             navigate('/dashboard', { replace: true });
           }, 2000);
+        } else {
+          // If no session yet, wait a moment for Supabase to process
+          setTimeout(() => {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+              if (session?.user) {
+                setStatus('success');
+                setMessage('Email confirmed successfully! You are now logged in.');
+                
+                toast({
+                  title: "Email Confirmed",
+                  description: "Your account has been activated successfully!",
+                });
+
+                setTimeout(() => {
+                  navigate('/dashboard', { replace: true });
+                }, 2000);
+              } else {
+                setStatus('error');
+                setMessage('Email confirmation failed. Please try signing up again.');
+              }
+            });
+          }, 1000);
         }
       } catch (error: any) {
         console.error('Unexpected error during email confirmation:', error);
@@ -64,7 +72,7 @@ const EmailConfirmation = () => {
     };
 
     handleEmailConfirmation();
-  }, [searchParams, navigate, toast]);
+  }, [navigate, toast]);
 
   const handleRetry = () => {
     navigate('/login?tab=signup', { replace: true });

@@ -4,7 +4,6 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, AuthContextType } from '@/types/auth';
 import { authService } from '@/services/authService';
-import { usePasswordRecovery } from '@/hooks/usePasswordRecovery';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -27,11 +26,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const { isPasswordRecovery, setIsPasswordRecovery, checkPasswordRecovery } = usePasswordRecovery();
-
-  // Memoize the password recovery check to prevent unnecessary re-renders
-  const memoizedCheckPasswordRecovery = useCallback(checkPasswordRecovery, []);
 
   // Stable function to fetch profile data
   const fetchProfileData = useCallback(async (userId: string) => {
@@ -47,56 +41,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
     
-    // Check initial password recovery state
-    const isRecovery = memoizedCheckPasswordRecovery();
-    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
         
-        const currentRecoveryCheck = memoizedCheckPasswordRecovery();
-        
-        // Update session and user synchronously
+        // Update session and user
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Handle password recovery state
-        if (event === 'PASSWORD_RECOVERY' || currentRecoveryCheck) {
-          setIsPasswordRecovery(true);
+        // Handle profile fetching
+        if (session?.user) {
+          // Defer profile fetching to avoid blocking auth state
+          setTimeout(() => {
+            if (mounted) {
+              fetchProfileData(session.user.id);
+            }
+          }, 0);
+        } else {
           setProfile(null);
-        } else if (session?.user && !currentRecoveryCheck && window.location.pathname !== '/set-password') {
-          setIsPasswordRecovery(false);
-          // Fetch profile data without blocking the auth state update
-          fetchProfileData(session.user.id);
-        } else if (!session?.user) {
-          setProfile(null);
-          if (window.location.pathname !== '/set-password') {
-            setIsPasswordRecovery(false);
-          }
         }
         
-        // Only set loading to false after initial load is complete
-        if (!initialLoadComplete) {
-          setInitialLoadComplete(true);
-          setLoading(false);
-        }
+        // Set loading to false after auth state is established
+        setLoading(false);
       }
     );
 
-    // Get initial session - only do this once
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       
       setSession(session);
       setUser(session?.user ?? null);
       
-      if (session?.user && !memoizedCheckPasswordRecovery() && window.location.pathname !== '/set-password') {
+      if (session?.user) {
         fetchProfileData(session.user.id);
       }
       
-      // Complete initial load
-      setInitialLoadComplete(true);
       setLoading(false);
     });
 
@@ -104,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [memoizedCheckPasswordRecovery, setIsPasswordRecovery, fetchProfileData]);
+  }, [fetchProfileData]);
 
   return (
     <AuthContext.Provider value={{ 
@@ -118,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout: authService.logout,
       isAuthenticated: !!user,
       loading,
-      isPasswordRecovery,
+      isPasswordRecovery: false, // Simplified - no longer needed
     }}>
       {children}
     </AuthContext.Provider>

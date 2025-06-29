@@ -48,4 +48,4 @@ site_url = "https://preview--bullion-bay-front.lovable.app"
 additional_redirect_urls = ["https://preview--bullion-bay-front.lovable.app", "http://127.0.0.1:3000"]
 jwt_expiry = 3600
 enable_signup = true
-enable_confirmations = false
+enable_confirmations = true
