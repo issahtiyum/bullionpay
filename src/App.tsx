@@ -19,6 +19,7 @@ import Account from "./pages/Account";
 import Login from "./pages/Login";
 import PasswordReset from "./pages/PasswordReset";
 import SetPassword from "./pages/SetPassword";
+import EmailConfirmation from "./pages/EmailConfirmation";
 import NotFound from "./pages/NotFound";
 
 // Admin Pages
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<PasswordReset />} />
               <Route path="/set-password" element={<SetPassword />} />
+              <Route path="/email-confirmation" element={<EmailConfirmation />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={

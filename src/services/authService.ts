@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const authService = {
   signUp: async (email: string, password: string, firstName?: string, lastName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    // Use the email confirmation page as the redirect URL
+    const redirectUrl = `${window.location.origin}/email-confirmation`;
     
     const { error } = await supabase.auth.signUp({
       email,

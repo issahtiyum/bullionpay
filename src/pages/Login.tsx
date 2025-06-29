@@ -140,7 +140,7 @@ const Login = () => {
         setIsEmailConfirmationSent(true);
         toast({
           title: "Check your email",
-          description: "A confirmation link has been sent to your email address",
+          description: "A confirmation link has been sent to your email address. Click the link to activate your account.",
         });
       } else {
         toast({
@@ -172,7 +172,7 @@ const Login = () => {
               {from.includes('/checkout') 
                 ? "Please sign in or create an account to complete your purchase"
                 : isEmailConfirmationSent
-                  ? "Check your email for a confirmation link to complete your account setup"
+                  ? "Check your email and click the confirmation link to activate your account"
                   : "Sign in to your account or create a new one"
               }
             </CardDescription>
@@ -224,7 +224,10 @@ const Login = () => {
                     We've sent a confirmation link to <strong>{contactValue}</strong>
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Click the link in your email to complete your account setup and sign in.
+                    Click the link in your email to activate your account and sign in automatically.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    Don't see the email? Check your spam folder or try signing up again.
                   </p>
                 </div>
                 <Button
