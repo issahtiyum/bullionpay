@@ -15,64 +15,75 @@ const EmailConfirmation = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const handleEmailConfirmation = async () => {
-      try {
-        // Let Supabase handle the confirmation automatically
-        // The URL contains the necessary tokens that Supabase will process
-        const { data: { session }, error } = await supabase.auth.getSession();
+    let timeoutId: NodeJS.Timeout;
+    let mounted = true;
 
-        if (error) {
-          console.error('Email confirmation error:', error);
-          setStatus('error');
-          setMessage('Failed to confirm email. The link may be invalid or expired.');
-          return;
-        }
-
-        if (session?.user) {
-          setStatus('success');
-          setMessage('Email confirmed successfully! You are now logged in.');
+    const handleEmailConfirmation = () => {
+      console.log('Setting up email confirmation listener');
+      
+      // Listen for auth state changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          console.log('Auth state change in email confirmation:', event, session?.user?.email);
           
-          toast({
-            title: "Email Confirmed",
-            description: "Your account has been activated successfully!",
-          });
+          if (!mounted) return;
 
-          // Redirect to dashboard after a short delay
-          setTimeout(() => {
-            navigate('/dashboard', { replace: true });
-          }, 2000);
-        } else {
-          // If no session yet, wait a moment for Supabase to process
-          setTimeout(() => {
-            supabase.auth.getSession().then(({ data: { session } }) => {
-              if (session?.user) {
-                setStatus('success');
-                setMessage('Email confirmed successfully! You are now logged in.');
-                
-                toast({
-                  title: "Email Confirmed",
-                  description: "Your account has been activated successfully!",
-                });
-
-                setTimeout(() => {
-                  navigate('/dashboard', { replace: true });
-                }, 2000);
-              } else {
-                setStatus('error');
-                setMessage('Email confirmation failed. Please try signing up again.');
-              }
+          if (event === 'SIGNED_IN' && session?.user) {
+            // Email confirmation successful
+            setStatus('success');
+            setMessage('Email confirmed successfully! You are now logged in.');
+            
+            toast({
+              title: "Email Confirmed",
+              description: "Your account has been activated successfully!",
             });
-          }, 1000);
+
+            // Redirect to dashboard after a short delay
+            setTimeout(() => {
+              if (mounted) {
+                navigate('/dashboard', { replace: true });
+              }
+            }, 2000);
+          } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+            // Sometimes confirmation comes through as token refresh
+            setStatus('success');
+            setMessage('Email confirmed successfully! You are now logged in.');
+            
+            toast({
+              title: "Email Confirmed",
+              description: "Your account has been activated successfully!",
+            });
+
+            setTimeout(() => {
+              if (mounted) {
+                navigate('/dashboard', { replace: true });
+              }
+            }, 2000);
+          }
         }
-      } catch (error: any) {
-        console.error('Unexpected error during email confirmation:', error);
-        setStatus('error');
-        setMessage('An unexpected error occurred. Please try again.');
-      }
+      );
+
+      // Set a timeout to show error if no confirmation happens within 10 seconds
+      timeoutId = setTimeout(() => {
+        if (mounted && status === 'loading') {
+          setStatus('error');
+          setMessage('Email confirmation failed. The link may be invalid or expired.');
+        }
+      }, 10000);
+
+      return subscription;
     };
 
-    handleEmailConfirmation();
-  }, [navigate, toast]);
+    const subscription = handleEmailConfirmation();
+
+    return () => {
+      mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      subscription.unsubscribe();
+    };
+  }, [navigate, toast, status]);
 
   const handleRetry = () => {
     navigate('/login?tab=signup', { replace: true });
@@ -104,6 +115,7 @@ const EmailConfirmation = () => {
               {status === 'error' && 'Confirmation Failed'}
             </CardTitle>
             <CardDescription>
+              {status === 'loading' && 'Please wait while we confirm your email address...'}
               {message}
             </CardDescription>
           </CardHeader>
