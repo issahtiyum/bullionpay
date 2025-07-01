@@ -18,8 +18,28 @@ const EmailConfirmation = () => {
     let timeoutId: NodeJS.Timeout;
     let mounted = true;
 
-    const handleEmailConfirmation = () => {
+    const handleEmailConfirmation = async () => {
       console.log('Setting up email confirmation listener');
+      
+      // First check if user is already logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user && mounted) {
+        console.log('User already logged in, confirmation successful');
+        setStatus('success');
+        setMessage('Email confirmed successfully! You are now logged in.');
+        
+        toast({
+          title: "Email Confirmed",
+          description: "Your account has been activated successfully!",
+        });
+
+        setTimeout(() => {
+          if (mounted) {
+            navigate('/dashboard', { replace: true });
+          }
+        }, 2000);
+        return;
+      }
       
       // Listen for auth state changes
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -28,8 +48,9 @@ const EmailConfirmation = () => {
           
           if (!mounted) return;
 
-          if (event === 'SIGNED_IN' && session?.user) {
+          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
             // Email confirmation successful
+            console.log('Email confirmation detected via auth state change');
             setStatus('success');
             setMessage('Email confirmed successfully! You are now logged in.');
             
@@ -44,32 +65,38 @@ const EmailConfirmation = () => {
                 navigate('/dashboard', { replace: true });
               }
             }, 2000);
-          } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-            // Sometimes confirmation comes through as token refresh
-            setStatus('success');
-            setMessage('Email confirmed successfully! You are now logged in.');
-            
-            toast({
-              title: "Email Confirmed",
-              description: "Your account has been activated successfully!",
-            });
-
-            setTimeout(() => {
-              if (mounted) {
-                navigate('/dashboard', { replace: true });
-              }
-            }, 2000);
           }
         }
       );
 
-      // Set a timeout to show error if no confirmation happens within 10 seconds
+      // Set a timeout to show error if no confirmation happens within 15 seconds
       timeoutId = setTimeout(() => {
-        if (mounted && status === 'loading') {
-          setStatus('error');
-          setMessage('Email confirmation failed. The link may be invalid or expired.');
+        if (mounted) {
+          // Double-check session one more time before showing error
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) {
+              console.log('User found in final check, confirmation successful');
+              setStatus('success');
+              setMessage('Email confirmed successfully! You are now logged in.');
+              
+              toast({
+                title: "Email Confirmed",
+                description: "Your account has been activated successfully!",
+              });
+
+              setTimeout(() => {
+                if (mounted) {
+                  navigate('/dashboard', { replace: true });
+                }
+              }, 2000);
+            } else {
+              console.log('No session found after timeout, showing error');
+              setStatus('error');
+              setMessage('Email confirmation failed. The link may be invalid or expired.');
+            }
+          });
         }
-      }, 10000);
+      }, 15000);
 
       return subscription;
     };
@@ -81,9 +108,11 @@ const EmailConfirmation = () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.then(sub => sub.unsubscribe());
+      }
     };
-  }, [navigate, toast, status]);
+  }, [navigate, toast]); // Removed status from dependencies to prevent infinite loops
 
   const handleRetry = () => {
     navigate('/login?tab=signup', { replace: true });
