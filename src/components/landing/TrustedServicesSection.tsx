@@ -4,13 +4,13 @@ import CompanyLogo from './CompanyLogo';
 
 const TrustedServicesSection = () => {
   const logos = [
-    { name: 'Amazon' },
     { name: 'Netflix' },
     { name: 'YouTube' },
     { name: 'Spotify' },
-    { name: 'Xbox' },
     { name: 'Steam' },
     { name: 'Apple' },
+    { name: 'Amazon' }, // Will show as fallback
+    { name: 'Xbox' }, // Will show as fallback
   ];
 
   return (

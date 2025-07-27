@@ -1,11 +1,9 @@
 
 import React from 'react';
 import {
-  siAmazonaws,
   siNetflix,
   siYoutube,
   siSpotify,
-  siMicrosoft,
   siSteam,
   siApple,
 } from 'simple-icons';
@@ -16,11 +14,9 @@ interface CompanyLogoProps {
 }
 
 const iconMap = {
-  'Amazon': siAmazonaws,
   'Netflix': siNetflix,
   'YouTube': siYoutube,
   'Spotify': siSpotify,
-  'Xbox': siMicrosoft,
   'Steam': siSteam,
   'Apple': siApple,
 };
