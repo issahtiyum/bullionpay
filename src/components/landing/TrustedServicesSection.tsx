@@ -1,5 +1,6 @@
 
 import React from 'react';
+import Marquee from 'react-fast-marquee';
 import CompanyLogo from './CompanyLogo';
 
 const TrustedServicesSection = () => {
@@ -20,22 +21,18 @@ const TrustedServicesSection = () => {
           Working with the best companies in the world
         </h2>
         
-        <div className="overflow-hidden">
-          <div className="flex animate-scroll whitespace-nowrap">
-            {/* First set of logos */}
-            {logos.map((logo, index) => (
-              <div key={index} className="flex-shrink-0 mx-12 flex items-center justify-center">
-                <CompanyLogo name={logo.name} />
-              </div>
-            ))}
-            {/* Duplicate set for seamless loop */}
-            {logos.map((logo, index) => (
-              <div key={`duplicate-${index}`} className="flex-shrink-0 mx-12 flex items-center justify-center">
-                <CompanyLogo name={logo.name} />
-              </div>
-            ))}
-          </div>
-        </div>
+        <Marquee
+          speed={50}
+          gradient={false}
+          pauseOnHover={true}
+          direction="left"
+        >
+          {logos.map((logo, index) => (
+            <div key={index} className="mx-12 flex items-center justify-center">
+              <CompanyLogo name={logo.name} />
+            </div>
+          ))}
+        </Marquee>
       </div>
     </section>
   );
