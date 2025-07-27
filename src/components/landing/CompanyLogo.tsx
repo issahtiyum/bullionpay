@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   siNetflix,
@@ -29,8 +30,8 @@ const CompanyLogo: React.FC<CompanyLogoProps> = ({ name, className = '' }) => {
   
   if (!icon) {
     return (
-      <div className={`w-24 h-12 bg-gray-400 rounded flex items-center justify-center ${className}`}>
-        <span className="text-white font-medium text-sm">{name}</span>
+      <div className={`w-24 h-12 bg-gray-300 rounded flex items-center justify-center ${className}`}>
+        <span className="text-gray-600 font-medium text-sm">{name}</span>
       </div>
     );
   }
@@ -41,7 +42,7 @@ const CompanyLogo: React.FC<CompanyLogoProps> = ({ name, className = '' }) => {
       dangerouslySetInnerHTML={{ 
         __html: icon.svg.replace(
           '<svg',
-          `<svg fill="#6B7280" style="height: 48px; width: auto;"`
+          `<svg fill="#9CA3AF" style="height: 48px; width: auto;"`
         )
       }}
     />

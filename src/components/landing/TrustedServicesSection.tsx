@@ -16,21 +16,21 @@ const TrustedServicesSection = () => {
   return (
     <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-lg md:text-xl font-inter font-light text-center mb-16 text-bullion-purple tracking-wide uppercase">
+        <h2 className="text-sm md:text-base font-inter font-light text-center mb-16 text-gray-600 tracking-wide uppercase">
           Working with the best companies in the world
         </h2>
         
         <div className="overflow-hidden">
-          <div className="flex animate-scroll">
+          <div className="flex animate-scroll whitespace-nowrap">
             {/* First set of logos */}
             {logos.map((logo, index) => (
-              <div key={index} className="flex-shrink-0 mx-8 flex items-center justify-center">
+              <div key={index} className="flex-shrink-0 mx-12 flex items-center justify-center">
                 <CompanyLogo name={logo.name} />
               </div>
             ))}
             {/* Duplicate set for seamless loop */}
             {logos.map((logo, index) => (
-              <div key={`duplicate-${index}`} className="flex-shrink-0 mx-8 flex items-center justify-center">
+              <div key={`duplicate-${index}`} className="flex-shrink-0 mx-12 flex items-center justify-center">
                 <CompanyLogo name={logo.name} />
               </div>
             ))}
