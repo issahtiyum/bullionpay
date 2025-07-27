@@ -34,15 +34,15 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-white/30"></div>
       
       <div className="relative z-10 container mx-auto max-w-4xl">
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-4 sm:mb-6">
           <div className="text-3xl sm:text-4xl md:text-6xl font-bold text-center">
             {/* First line: "Pay for" */}
-            <div className="leading-tight mb-3 sm:mb-4">
+            <div className="leading-tight mb-2 sm:mb-3">
               <span className="font-inter text-black">Pay for</span>
             </div>
             
             {/* Second line: rotating words */}
-            <div className="leading-tight mb-3 sm:mb-4">
+            <div className="leading-tight mb-2 sm:mb-3">
               <span className="relative inline-block overflow-hidden min-w-[180px] sm:min-w-[250px] md:min-w-[400px] h-[2.5rem] sm:h-[4rem] md:h-[6rem] py-1 sm:py-2">
                 <div className="relative w-full h-full flex items-center justify-center">
                   {rotatingItems.map((item, index) => {
@@ -79,12 +79,12 @@ const HeroSection = () => {
             {/* Third line: "using Mobile Money" - ensuring Mobile Money stays together */}
             <div className="leading-tight">
               <span className="font-inter text-black">using </span>
-              <span className="font-playfair text-bullion-purple italic whitespace-nowrap text-4xl sm:text-5xl md:text-7xl mx-2">Mobile&nbsp;Money</span>
+              <span className="font-playfair text-bullion-purple italic whitespace-nowrap text-4xl sm:text-5xl md:text-7xl my-2">Mobile&nbsp;Money</span>
             </div>
           </div>
         </div>
         
-        <p className="text-sm sm:text-lg md:text-xl text-gray-700 mb-6 sm:mb-8 max-w-2xl mx-auto font-inter px-2 sm:px-4">
+        <p className="text-sm sm:text-lg md:text-xl text-gray-700 mb-4 sm:mb-6 max-w-2xl mx-auto font-inter px-2 sm:px-4">
           No card? No problem. Use Bullion Pay to access digital services and products using just your Ghanaian mobile money.
         </p>
         
