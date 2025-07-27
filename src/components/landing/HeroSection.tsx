@@ -42,12 +42,12 @@ const HeroSection = () => {
         <div className="mb-8">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
             <span className="font-inter text-black">Pay for </span>
-            <span className="relative inline-block h-16 md:h-20 overflow-hidden">
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="relative inline-block h-16 md:h-20 overflow-hidden align-middle">
+              <div className="absolute inset-0 flex items-center justify-center">
                 {rotatingItems.map((item, index) => (
                   <span
                     key={index}
-                    className={`font-poppins text-black relative z-10 absolute transition-all duration-600 ease-in-out ${
+                    className={`font-poppins text-black absolute whitespace-nowrap transition-all duration-600 ease-in-out ${
                       index === currentItem
                         ? isAnimating
                           ? 'transform -translate-y-full opacity-0'
