@@ -79,7 +79,7 @@ const HeroSection = () => {
             {/* Third line: "using Mobile Money" - ensuring Mobile Money stays together */}
             <div className="leading-tight">
               <span className="font-inter text-black">using </span>
-              <span className="font-playfair text-bullion-purple italic whitespace-nowrap">Mobile&nbsp;Money</span>
+              <span className="font-playfair text-bullion-purple italic whitespace-nowrap text-4xl sm:text-5xl md:text-7xl mx-2">Mobile&nbsp;Money</span>
             </div>
           </div>
         </div>
