@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -36,11 +37,10 @@ const HeroSection = () => {
         <div className="mb-8">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
             <span className="font-inter text-black">Pay for </span>
-            <span className="relative inline-block h-16 md:h-20 w-80 overflow-hidden align-middle">
+            <span className="relative inline-block h-16 md:h-20 min-w-fit overflow-hidden align-middle">
               <div className="absolute inset-0 flex items-center justify-center">
                 {rotatingItems.map((item, index) => {
                   const isActive = index === currentItem;
-                  const isPrevious = index === (currentItem - 1 + rotatingItems.length) % rotatingItems.length;
                   const isNext = index === (currentItem + 1) % rotatingItems.length;
                   
                   let transformClass = '';
