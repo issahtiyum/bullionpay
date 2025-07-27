@@ -43,8 +43,8 @@ const HeroSection = () => {
             
             {/* Second line: rotating words */}
             <div className="leading-none">
-              <span className="relative inline-block overflow-hidden min-w-[250px] md:min-w-[400px]">
-                <div className="relative w-full">
+              <span className="relative inline-block overflow-hidden min-w-[250px] md:min-w-[400px] h-[1.2em]">
+                <div className="relative w-full h-full">
                   {rotatingItems.map((item, index) => {
                     const isActive = index === currentItem;
                     const isPrevious = index === (currentItem - 1 + rotatingItems.length) % rotatingItems.length;
