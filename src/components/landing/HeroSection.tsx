@@ -84,7 +84,7 @@ const HeroSection = () => {
           </div>
         </div>
         
-        <p className="text-sm sm:text-lg md:text-xl text-gray-700 mb-12 sm:mb-16 max-w-2xl mx-auto font-inter px-2 sm:px-4">
+        <p className="text-lg sm:text-xl md:text-2xl text-gray-700 mb-12 sm:mb-16 max-w-2xl mx-auto font-inter px-2 sm:px-4">
           No card? No problem. Use <span className="font-poppins font-bold">BullionPay</span> to access digital services and products using just your Ghanaian mobile money.
         </p>
         
