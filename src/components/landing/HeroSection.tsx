@@ -4,17 +4,12 @@ import { Button } from '@/components/ui/button';
 
 const HeroSection = () => {
   const [currentItem, setCurrentItem] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
   const rotatingItems = ['Netflix', 'Spotify', 'Amazon', 'Shein', 'Apple Music', 'PlayStation'];
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentItem((prev) => (prev + 1) % rotatingItems.length);
-        setIsAnimating(false);
-      }, 300); // Half of the animation duration
-    }, 2500); // 2.5 seconds between switches
+      setCurrentItem((prev) => (prev + 1) % rotatingItems.length);
+    }, 3000); // 3 seconds between switches
 
     return () => clearInterval(interval);
   }, []);
@@ -28,7 +23,7 @@ const HeroSection = () => {
 
   return (
     <section 
-      className="relative min-h-screen flex items-center justify-center px-4 text-center"
+      className="relative h-screen flex items-center justify-center px-4 text-center"
       style={{
         backgroundImage: `url('/lovable-uploads/e28a8a0f-6dd3-4fef-aba7-aaaf6a6f34a7.png')`,
         backgroundSize: 'cover',
@@ -42,26 +37,36 @@ const HeroSection = () => {
         <div className="mb-8">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
             <span className="font-inter text-black">Pay for </span>
-            <span className="relative inline-block h-16 md:h-20 overflow-hidden align-middle">
+            <span className="relative inline-block h-16 md:h-20 w-80 overflow-hidden align-middle">
               <div className="absolute inset-0 flex items-center justify-center">
-                {rotatingItems.map((item, index) => (
-                  <span
-                    key={index}
-                    className={`font-poppins text-black absolute whitespace-nowrap transition-all duration-600 ease-in-out ${
-                      index === currentItem
-                        ? isAnimating
-                          ? 'transform -translate-y-full opacity-0'
-                          : 'transform translate-y-0 opacity-100'
-                        : index === (currentItem + 1) % rotatingItems.length
-                        ? isAnimating
-                          ? 'transform translate-y-0 opacity-100'
-                          : 'transform translate-y-full opacity-0'
-                        : 'transform translate-y-full opacity-0'
-                    }`}
-                  >
-                    {item}
-                  </span>
-                ))}
+                {rotatingItems.map((item, index) => {
+                  const isActive = index === currentItem;
+                  const isPrevious = index === (currentItem - 1 + rotatingItems.length) % rotatingItems.length;
+                  const isNext = index === (currentItem + 1) % rotatingItems.length;
+                  
+                  let transformClass = '';
+                  let opacityClass = '';
+                  
+                  if (isActive) {
+                    transformClass = 'translate-y-0';
+                    opacityClass = 'opacity-100';
+                  } else if (isNext) {
+                    transformClass = 'translate-y-full';
+                    opacityClass = 'opacity-0';
+                  } else {
+                    transformClass = '-translate-y-full';
+                    opacityClass = 'opacity-0';
+                  }
+                  
+                  return (
+                    <span
+                      key={index}
+                      className={`font-poppins text-black absolute whitespace-nowrap transition-all duration-1000 ease-in-out transform ${transformClass} ${opacityClass}`}
+                    >
+                      {item}
+                    </span>
+                  );
+                })}
               </div>
               <div className="absolute inset-0 -z-10 bg-bullion-purple/30 rounded-full transform -rotate-1 scale-110"></div>
             </span>
