@@ -94,7 +94,8 @@ export default {
 			},
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
-				poppins: ['Poppins', 'sans-serif']
+				poppins: ['Poppins', 'sans-serif'],
+				playfair: ['Playfair Display', 'serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -131,13 +132,18 @@ export default {
 				'gradient-flow': {
 					'0%, 100%': { backgroundPosition: '0% 50%' },
 					'50%': { backgroundPosition: '100% 50%' }
+				},
+				'scroll': {
+					'0%': { transform: 'translateX(0)' },
+					'100%': { transform: 'translateX(-50%)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
-				'gradient-flow': 'gradient-flow 3s ease infinite'
+				'gradient-flow': 'gradient-flow 3s ease infinite',
+				'scroll': 'scroll 20s linear infinite'
 			},
 			backgroundImage: {
 				'gradient-bullion': 'linear-gradient(135deg, #5E17EB 0%, #3A0CA3 100%)',

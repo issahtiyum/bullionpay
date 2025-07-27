@@ -1,5 +1,8 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import LandingPage from '@/components/landing/LandingPage';
 import ProductCard, { type Product } from '@/components/ui/ProductCard';
 import MainLayout from '@/components/layout/MainLayout';
 import TabGroup from '@/components/ui/TabGroup';
@@ -10,18 +13,43 @@ import { Search } from 'lucide-react';
 type FilterTab = 'all' | 'subscription' | 'giftcard' | 'gamecredit';
 
 const HomePage = () => {
+  const { isAuthenticated, loading } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const { data: products, isLoading, error } = useProducts(); // Only fetch active products
-  
+  const { data: products, isLoading, error } = useProducts();
+
+  // If user is authenticated, redirect to dashboard
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, loading, navigate]);
+
+  // Show loading while checking auth status
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bullion-purple mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show landing page for non-authenticated users
+  if (!isAuthenticated) {
+    return <LandingPage />;
+  }
+
+  // Original marketplace for authenticated users (fallback, shouldn't reach here due to redirect)
   const filteredProducts = products?.filter((product) => {
-    // First filter by category
     let categoryMatch = true;
     if (activeTab === 'subscription') categoryMatch = product.category === 'Subscription';
     else if (activeTab === 'giftcard') categoryMatch = product.category === 'Gift Card';
     else if (activeTab === 'gamecredit') categoryMatch = product.category === 'Game Credit';
     
-    // Then filter by search query
     const searchMatch = searchQuery === '' || 
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -62,7 +90,6 @@ const HomePage = () => {
         />
       </div>
       
-      {/* Search Bar */}
       <div className="mb-6">
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />

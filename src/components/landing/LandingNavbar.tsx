@@ -1,0 +1,38 @@
+
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+
+const LandingNavbar = () => {
+  return (
+    <nav className="bg-bullion-purple text-white shadow-md">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+            <span className="text-bullion-purple font-bold text-lg">BP</span>
+          </div>
+          <span className="font-poppins font-semibold text-lg">BullionPay</span>
+        </Link>
+        
+        <div className="flex items-center gap-4">
+          <Link 
+            to="/login?tab=login" 
+            className="hover:text-bullion-purple-100 transition-colors px-3 py-1 rounded font-poppins"
+          >
+            Login
+          </Link>
+          <Button 
+            asChild
+            className="bg-white text-bullion-purple hover:bg-gray-100 font-poppins font-medium"
+          >
+            <Link to="/login?tab=signup">
+              Get Started Now
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default LandingNavbar;
