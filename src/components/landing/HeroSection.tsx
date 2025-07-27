@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -68,7 +67,6 @@ const HeroSection = () => {
                   );
                 })}
               </div>
-              <div className="absolute inset-0 -z-10 bg-bullion-purple/30 rounded-full transform -rotate-1 scale-110"></div>
             </span>
             <br />
             <span className="font-inter text-black">using </span>
