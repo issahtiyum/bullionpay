@@ -22,9 +22,9 @@ const HowItWorksSection = () => {
   ];
 
   return (
-    <section id="how-it-works" className="py-16 bg-white">
+    <section id="how-it-works" className="py-20 bg-white">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-bullion-purple font-poppins">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-bullion-purple font-poppins">
           How It Works
         </h2>
         

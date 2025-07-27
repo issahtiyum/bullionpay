@@ -13,9 +13,9 @@ const TrustedServicesSection = () => {
   ];
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-12 text-bullion-purple uppercase tracking-wide">
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-16 text-bullion-purple uppercase tracking-wide">
           Trusted by leading teams
         </h2>
         
