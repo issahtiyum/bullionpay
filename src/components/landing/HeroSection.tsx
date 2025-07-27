@@ -39,7 +39,7 @@ const HeroSection = () => {
             {/* First line: "Pay for (rotating word)" */}
             <div className="flex items-center justify-center gap-x-4 mb-2">
               <span className="font-inter text-black">Pay for</span>
-              <span className="relative inline-block h-[1.2em] overflow-hidden min-w-[200px] md:min-w-[300px]">
+              <span className="relative inline-block h-[1.2em] overflow-hidden min-w-[250px] md:min-w-[400px]">
                 <div className="relative w-full h-full">
                   {rotatingItems.map((item, index) => {
                     const isActive = index === currentItem;
