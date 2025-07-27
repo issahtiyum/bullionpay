@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -36,29 +37,18 @@ const HeroSection = () => {
         <div className="mb-8">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
             <span className="font-inter text-black">Pay for </span>
-            <span className="relative inline-block h-16 md:h-20 min-w-fit overflow-hidden align-middle">
+            <span className="relative inline-block h-16 md:h-20 min-w-fit align-middle">
               {rotatingItems.map((item, index) => {
                 const isActive = index === currentItem;
-                const isNext = index === (currentItem + 1) % rotatingItems.length;
-                
-                let translateY = '';
-                let opacity = '';
-                
-                if (isActive) {
-                  translateY = 'translate-y-0';
-                  opacity = 'opacity-100';
-                } else if (isNext) {
-                  translateY = 'translate-y-full';
-                  opacity = 'opacity-0';
-                } else {
-                  translateY = '-translate-y-full';
-                  opacity = 'opacity-0';
-                }
                 
                 return (
                   <span
                     key={index}
-                    className={`font-poppins text-black absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap transition-all duration-1000 ease-in-out ${translateY} ${opacity}`}
+                    className={`font-poppins text-black absolute top-0 left-0 whitespace-nowrap transition-all duration-1000 ease-in-out transform ${
+                      isActive 
+                        ? 'translate-y-0 opacity-100' 
+                        : 'translate-y-4 opacity-0'
+                    }`}
                   >
                     {item}
                   </span>
