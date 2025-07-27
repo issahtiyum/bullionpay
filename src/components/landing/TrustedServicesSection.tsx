@@ -14,6 +14,9 @@ const TrustedServicesSection = () => {
     { name: 'PlayStation' },
   ];
 
+  // Double the logos to fill the space
+  const doubledLogos = [...logos, ...logos];
+
   return (
     <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
@@ -27,7 +30,7 @@ const TrustedServicesSection = () => {
           pauseOnHover={true}
           direction="left"
         >
-          {logos.map((logo, index) => (
+          {doubledLogos.map((logo, index) => (
             <div key={index} className="mx-12 flex items-center justify-center">
               <CompanyLogo name={logo.name} />
             </div>
