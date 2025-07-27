@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -38,35 +37,33 @@ const HeroSection = () => {
           <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
             <span className="font-inter text-black">Pay for </span>
             <span className="relative inline-block h-16 md:h-20 min-w-fit overflow-hidden align-middle">
-              <div className="absolute inset-0 flex items-center justify-center">
-                {rotatingItems.map((item, index) => {
-                  const isActive = index === currentItem;
-                  const isNext = index === (currentItem + 1) % rotatingItems.length;
-                  
-                  let transformClass = '';
-                  let opacityClass = '';
-                  
-                  if (isActive) {
-                    transformClass = 'translate-y-0';
-                    opacityClass = 'opacity-100';
-                  } else if (isNext) {
-                    transformClass = 'translate-y-full';
-                    opacityClass = 'opacity-0';
-                  } else {
-                    transformClass = '-translate-y-full';
-                    opacityClass = 'opacity-0';
-                  }
-                  
-                  return (
-                    <span
-                      key={index}
-                      className={`font-poppins text-black absolute whitespace-nowrap transition-all duration-1000 ease-in-out transform ${transformClass} ${opacityClass}`}
-                    >
-                      {item}
-                    </span>
-                  );
-                })}
-              </div>
+              {rotatingItems.map((item, index) => {
+                const isActive = index === currentItem;
+                const isNext = index === (currentItem + 1) % rotatingItems.length;
+                
+                let translateY = '';
+                let opacity = '';
+                
+                if (isActive) {
+                  translateY = 'translate-y-0';
+                  opacity = 'opacity-100';
+                } else if (isNext) {
+                  translateY = 'translate-y-full';
+                  opacity = 'opacity-0';
+                } else {
+                  translateY = '-translate-y-full';
+                  opacity = 'opacity-0';
+                }
+                
+                return (
+                  <span
+                    key={index}
+                    className={`font-poppins text-black absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap transition-all duration-1000 ease-in-out ${translateY} ${opacity}`}
+                  >
+                    {item}
+                  </span>
+                );
+              })}
             </span>
             <br />
             <span className="font-inter text-black">using </span>
