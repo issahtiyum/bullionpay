@@ -35,16 +35,16 @@ const HeroSection = () => {
       
       <div className="relative z-10 container mx-auto max-w-4xl">
         <div className="mb-8">
-          <div className="text-4xl md:text-6xl font-bold text-center space-y-4">
+          <div className="text-4xl md:text-6xl font-bold text-center">
             {/* First line: "Pay for" */}
-            <div className="leading-none">
+            <div className="leading-none mb-4">
               <span className="font-inter text-black">Pay for</span>
             </div>
             
             {/* Second line: rotating words */}
-            <div className="leading-none">
-              <span className="relative inline-block overflow-hidden min-w-[250px] md:min-w-[400px] h-[1.2em]">
-                <div className="relative w-full h-full">
+            <div className="leading-none mb-4">
+              <span className="relative inline-block overflow-hidden min-w-[250px] md:min-w-[400px] h-[4rem] md:h-[6rem] py-2">
+                <div className="relative w-full h-full flex items-center justify-center">
                   {rotatingItems.map((item, index) => {
                     const isActive = index === currentItem;
                     const isPrevious = index === (currentItem - 1 + rotatingItems.length) % rotatingItems.length;
@@ -66,7 +66,7 @@ const HeroSection = () => {
                     return (
                       <span
                         key={index}
-                        className={`font-poppins text-bullion-purple absolute top-0 left-0 w-full text-center whitespace-nowrap transition-all duration-1000 ease-in-out ${transformClass} ${opacityClass}`}
+                        className={`font-poppins text-bullion-purple absolute inset-0 flex items-center justify-center whitespace-nowrap transition-all duration-1000 ease-in-out ${transformClass} ${opacityClass}`}
                       >
                         {item}
                       </span>
