@@ -9,12 +9,11 @@ const LandingNavbar = () => {
   
   return (
     <nav className="bg-bullion-purple text-white shadow-md">
-      <div className="container mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
             <span className="text-bullion-purple font-bold text-lg">BP</span>
           </div>
-          <span className="font-poppins font-semibold text-lg">BullionPay</span>
         </Link>
         
         <div className="flex items-center gap-2 sm:gap-4">
