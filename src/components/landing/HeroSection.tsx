@@ -35,40 +35,41 @@ const HeroSection = () => {
       
       <div className="relative z-10 container mx-auto max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
-            <span className="font-inter text-black">Pay for </span>
-            <span className="relative inline-block min-w-[200px] md:min-w-[300px] text-center">
-              {rotatingItems.map((item, index) => {
-                const isActive = index === currentItem;
-                const isPrevious = index === (currentItem - 1 + rotatingItems.length) % rotatingItems.length;
-                const isNext = index === (currentItem + 1) % rotatingItems.length;
-                
-                let transformClass = '';
-                let opacityClass = '';
-                
-                if (isActive) {
-                  transformClass = 'translate-y-0';
-                  opacityClass = 'opacity-100';
-                } else if (isNext) {
-                  transformClass = 'translate-y-full';
-                  opacityClass = 'opacity-0';
-                } else {
-                  transformClass = '-translate-y-full';
-                  opacityClass = 'opacity-0';
-                }
-                
-                return (
-                  <span
-                    key={index}
-                    className={`font-poppins text-bullion-purple absolute inset-0 flex items-center justify-center transition-all duration-1000 ease-in-out transform ${transformClass} ${opacityClass}`}
-                  >
-                    {item}
-                  </span>
-                );
-              })}
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight flex flex-wrap items-center justify-center gap-x-4">
+            <span className="font-inter text-black">Pay for</span>
+            <span className="relative inline-block h-[1.2em] overflow-hidden">
+              <div className="relative w-full h-full">
+                {rotatingItems.map((item, index) => {
+                  const isActive = index === currentItem;
+                  const isNext = index === (currentItem + 1) % rotatingItems.length;
+                  
+                  let transformClass = '';
+                  let opacityClass = '';
+                  
+                  if (isActive) {
+                    transformClass = 'translate-y-0';
+                    opacityClass = 'opacity-100';
+                  } else if (isNext) {
+                    transformClass = 'translate-y-full';
+                    opacityClass = 'opacity-0';
+                  } else {
+                    transformClass = '-translate-y-full';
+                    opacityClass = 'opacity-0';
+                  }
+                  
+                  return (
+                    <span
+                      key={index}
+                      className={`font-poppins text-bullion-purple absolute top-0 left-0 whitespace-nowrap transition-all duration-1000 ease-in-out transform ${transformClass} ${opacityClass}`}
+                      style={{ minWidth: 'max-content' }}
+                    >
+                      {item}
+                    </span>
+                  );
+                })}
+              </div>
             </span>
-            <br />
-            <span className="font-inter text-black">using </span>
+            <span className="font-inter text-black">using</span>
             <span className="font-playfair text-bullion-purple italic">Mobile Money</span>
           </h1>
         </div>
