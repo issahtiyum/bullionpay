@@ -65,7 +65,7 @@ const HeroSection = () => {
                     return (
                       <span
                         key={index}
-                        className={`font-poppins text-bullion-purple absolute top-0 left-0 whitespace-nowrap transition-all duration-1000 ease-in-out ${transformClass} ${opacityClass}`}
+                        className={`font-poppins text-bullion-purple absolute top-0 left-0 w-full text-center whitespace-nowrap transition-all duration-1000 ease-in-out ${transformClass} ${opacityClass}`}
                       >
                         {item}
                       </span>
