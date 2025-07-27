@@ -1,15 +1,16 @@
 
 import React from 'react';
+import CompanyLogo from './CompanyLogo';
 
 const TrustedServicesSection = () => {
   const logos = [
-    { name: 'Amazon', width: 100 },
-    { name: 'Netflix', width: 100 },
-    { name: 'YouTube', width: 100 },
-    { name: 'Spotify', width: 100 },
-    { name: 'Xbox', width: 80 },
-    { name: 'Steam', width: 100 },
-    { name: 'Apple', width: 80 },
+    { name: 'Amazon' },
+    { name: 'Netflix' },
+    { name: 'YouTube' },
+    { name: 'Spotify' },
+    { name: 'Xbox' },
+    { name: 'Steam' },
+    { name: 'Apple' },
   ];
 
   return (
@@ -24,17 +25,13 @@ const TrustedServicesSection = () => {
             {/* First set of logos */}
             {logos.map((logo, index) => (
               <div key={index} className="flex-shrink-0 mx-8 flex items-center justify-center">
-                <div className="w-24 h-12 bg-gray-400 rounded flex items-center justify-center">
-                  <span className="text-white font-medium text-sm">{logo.name}</span>
-                </div>
+                <CompanyLogo name={logo.name} />
               </div>
             ))}
             {/* Duplicate set for seamless loop */}
             {logos.map((logo, index) => (
               <div key={`duplicate-${index}`} className="flex-shrink-0 mx-8 flex items-center justify-center">
-                <div className="w-24 h-12 bg-gray-400 rounded flex items-center justify-center">
-                  <span className="text-white font-medium text-sm">{logo.name}</span>
-                </div>
+                <CompanyLogo name={logo.name} />
               </div>
             ))}
           </div>
