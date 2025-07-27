@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   siNetflix,
@@ -6,6 +5,8 @@ import {
   siSpotify,
   siSteam,
   siApple,
+  siSnapchat,
+  siPlaystation,
 } from 'simple-icons';
 
 interface CompanyLogoProps {
@@ -19,6 +20,8 @@ const iconMap = {
   'Spotify': siSpotify,
   'Steam': siSteam,
   'Apple': siApple,
+  'Snapchat': siSnapchat,
+  'PlayStation': siPlaystation,
 };
 
 const CompanyLogo: React.FC<CompanyLogoProps> = ({ name, className = '' }) => {

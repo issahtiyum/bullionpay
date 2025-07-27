@@ -9,8 +9,8 @@ const TrustedServicesSection = () => {
     { name: 'Spotify' },
     { name: 'Steam' },
     { name: 'Apple' },
-    { name: 'Amazon' }, // Will show as fallback
-    { name: 'Xbox' }, // Will show as fallback
+    { name: 'Snapchat' },
+    { name: 'PlayStation' },
   ];
 
   return (
