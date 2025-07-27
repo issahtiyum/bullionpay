@@ -14,6 +14,7 @@ const LandingNavbar = () => {
           <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
             <span className="text-bullion-purple font-bold text-lg">BP</span>
           </div>
+          <span className="font-poppins font-semibold text-lg hidden sm:block">BullionPay</span>
         </Link>
         
         <div className="flex items-center gap-2 sm:gap-4">
