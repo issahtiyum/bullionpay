@@ -28,9 +28,9 @@ const HowItWorksSection = () => {
           How It Works
         </h2>
         
-        <div className="grid md:grid-cols-3 gap-12 max-w-4xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-stretch gap-8 max-w-6xl mx-auto">
           {steps.map((step, index) => (
-            <div key={index} className="text-center">
+            <div key={index} className="flex-1 text-center p-8 border-2 border-purple-200 rounded-lg">
               <div className="flex justify-center mb-8">
                 <div className="w-16 h-16 bg-bullion-purple/10 rounded-full flex items-center justify-center">
                   {step.icon}
