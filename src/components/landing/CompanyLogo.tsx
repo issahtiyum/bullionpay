@@ -1,11 +1,11 @@
 
 import React from 'react';
 import {
-  siAmazon,
+  siAmazonaws,
   siNetflix,
   siYoutube,
   siSpotify,
-  siMicrosoftxbox,
+  siMicrosoft,
   siSteam,
   siApple,
 } from 'simple-icons';
@@ -16,11 +16,11 @@ interface CompanyLogoProps {
 }
 
 const iconMap = {
-  'Amazon': siAmazon,
+  'Amazon': siAmazonaws,
   'Netflix': siNetflix,
   'YouTube': siYoutube,
   'Spotify': siSpotify,
-  'Xbox': siMicrosoftxbox,
+  'Xbox': siMicrosoft,
   'Steam': siSteam,
   'Apple': siApple,
 };
