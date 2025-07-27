@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -37,11 +36,11 @@ const HeroSection = () => {
         <div className="mb-8">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight flex flex-wrap items-center justify-center gap-x-4">
             <span className="font-inter text-black">Pay for</span>
-            <span className="relative inline-block h-[1.2em] overflow-hidden">
+            <span className="relative inline-block h-[1.2em] overflow-hidden min-w-[200px] md:min-w-[300px]">
               <div className="relative w-full h-full">
                 {rotatingItems.map((item, index) => {
                   const isActive = index === currentItem;
-                  const isNext = index === (currentItem + 1) % rotatingItems.length;
+                  const isPrevious = index === (currentItem - 1 + rotatingItems.length) % rotatingItems.length;
                   
                   let transformClass = '';
                   let opacityClass = '';
@@ -49,19 +48,18 @@ const HeroSection = () => {
                   if (isActive) {
                     transformClass = 'translate-y-0';
                     opacityClass = 'opacity-100';
-                  } else if (isNext) {
-                    transformClass = 'translate-y-full';
+                  } else if (isPrevious) {
+                    transformClass = '-translate-y-full';
                     opacityClass = 'opacity-0';
                   } else {
-                    transformClass = '-translate-y-full';
+                    transformClass = 'translate-y-full';
                     opacityClass = 'opacity-0';
                   }
                   
                   return (
                     <span
                       key={index}
-                      className={`font-poppins text-bullion-purple absolute top-0 left-0 whitespace-nowrap transition-all duration-1000 ease-in-out transform ${transformClass} ${opacityClass}`}
-                      style={{ minWidth: 'max-content' }}
+                      className={`font-poppins text-bullion-purple absolute top-0 left-1/2 transform -translate-x-1/2 whitespace-nowrap transition-all duration-1000 ease-in-out ${transformClass} ${opacityClass}`}
                     >
                       {item}
                     </span>
