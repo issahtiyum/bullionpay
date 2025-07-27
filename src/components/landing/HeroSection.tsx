@@ -36,9 +36,12 @@ const HeroSection = () => {
       <div className="relative z-10 container mx-auto max-w-4xl">
         <div className="mb-8">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
-            {/* First line: "Pay for (rotating word)" */}
-            <div className="flex items-center justify-center gap-x-4 mb-2">
+            {/* First line: "Pay for" */}
+            <div className="text-center mb-2">
               <span className="font-inter text-black">Pay for</span>
+            </div>
+            {/* Second line: rotating words */}
+            <div className="text-center mb-4">
               <span className="relative inline-block h-[1.2em] overflow-hidden min-w-[250px] md:min-w-[400px]">
                 <div className="relative w-full h-full">
                   {rotatingItems.map((item, index) => {
@@ -71,9 +74,9 @@ const HeroSection = () => {
                 </div>
               </span>
             </div>
-            {/* Second line: "using Mobile Money" */}
-            <div className="flex items-center justify-center gap-x-4">
-              <span className="font-inter text-black">using</span>
+            {/* Third line: "using Mobile Money" */}
+            <div className="text-center">
+              <span className="font-inter text-black">using </span>
               <span className="font-playfair text-bullion-purple italic">Mobile Money</span>
             </div>
           </h1>
