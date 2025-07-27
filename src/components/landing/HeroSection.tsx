@@ -85,7 +85,7 @@ const HeroSection = () => {
         
         <Button 
           onClick={scrollToHowItWorks}
-          className="bg-bullion-purple hover:bg-bullion-purple/90 text-white font-poppins font-medium text-lg px-12 py-4 rounded-lg"
+          className="bg-bullion-purple hover:bg-bullion-purple/90 text-white font-poppins font-medium text-lg px-12 py-6 rounded-lg"
         >
           Start Now
         </Button>
