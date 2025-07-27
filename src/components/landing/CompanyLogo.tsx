@@ -5,7 +5,7 @@ import {
   siNetflix,
   siYoutube,
   siSpotify,
-  siXbox,
+  siMicrosoftxbox,
   siSteam,
   siApple,
 } from 'simple-icons';
@@ -20,7 +20,7 @@ const iconMap = {
   'Netflix': siNetflix,
   'YouTube': siYoutube,
   'Spotify': siSpotify,
-  'Xbox': siXbox,
+  'Xbox': siMicrosoftxbox,
   'Steam': siSteam,
   'Apple': siApple,
 };
