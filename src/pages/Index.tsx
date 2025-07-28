@@ -6,15 +6,15 @@ import { hasLoginHistory } from '@/utils/authUtils';
 import LandingPage from '@/components/landing/LandingPage';
 
 const HomePage = () => {
-  const { loading, isAuthenticated } = useAuth();
+  const { loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Only redirect if user is authenticated AND has login history
-    if (!loading && isAuthenticated && hasLoginHistory()) {
+    // Only redirect after auth is loaded to avoid race conditions
+    if (!loading && hasLoginHistory()) {
       navigate('/all-products', { replace: true });
     }
-  }, [loading, isAuthenticated, navigate]);
+  }, [loading, navigate]);
 
   // Show loading while checking auth status
   if (loading) {
@@ -28,7 +28,7 @@ const HomePage = () => {
     );
   }
 
-  // Show landing page to unauthenticated users or authenticated users without login history
+  // Show landing page only to users without login history
   return <LandingPage />;
 };
 
