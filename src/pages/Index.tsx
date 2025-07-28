@@ -1,10 +1,20 @@
 
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { hasLoginHistory } from '@/utils/authUtils';
 import LandingPage from '@/components/landing/LandingPage';
 
 const HomePage = () => {
   const { loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Only redirect after auth is loaded to avoid race conditions
+    if (!loading && hasLoginHistory()) {
+      navigate('/all-products', { replace: true });
+    }
+  }, [loading, navigate]);
 
   // Show loading while checking auth status
   if (loading) {
@@ -18,7 +28,7 @@ const HomePage = () => {
     );
   }
 
-  // Always show landing page
+  // Show landing page only to users without login history
   return <LandingPage />;
 };
 

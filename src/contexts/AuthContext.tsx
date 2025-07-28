@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, AuthContextType } from '@/types/auth';
 import { authService } from '@/services/authService';
+import { setLoginHistory } from '@/utils/authUtils';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -58,6 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session?.user) {
           fetchProfileData(session.user.id);
+          // Set login history when we have a valid session
+          setLoginHistory();
         }
         
         setLoading(false);
@@ -82,6 +85,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Handle profile fetching for authenticated users
         if (session?.user) {
+          // Set login history on successful authentication
+          setLoginHistory();
+          
           // Use setTimeout to avoid blocking auth state changes
           setTimeout(() => {
             if (mounted) {

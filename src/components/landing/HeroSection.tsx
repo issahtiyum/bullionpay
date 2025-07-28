@@ -86,7 +86,7 @@ const HeroSection = () => {
           asChild
           className="bg-bullion-purple hover:bg-bullion-purple/90 text-white font-poppins font-medium text-sm sm:text-lg px-6 sm:px-12 py-3 sm:py-6 rounded-lg"
         >
-          <Link to="/all-products">
+          <Link to="/login?tab=signup">
             Start Now
           </Link>
         </Button>

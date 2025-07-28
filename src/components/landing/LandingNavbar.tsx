@@ -28,7 +28,7 @@ const LandingNavbar = () => {
             asChild
             className="bg-white text-bullion-purple hover:bg-gray-100 font-poppins font-medium text-sm sm:text-base px-3 py-1 sm:px-4 sm:py-2"
           >
-            <Link to="/all-products">
+            <Link to="/login?tab=signup">
               Get Started
             </Link>
           </Button>
