@@ -35,7 +35,7 @@ const EmailConfirmation = () => {
 
         setTimeout(() => {
           if (mounted) {
-            navigate('/dashboard', { replace: true });
+            navigate('/all-products', { replace: true });
           }
         }, 2000);
         return;
@@ -59,10 +59,10 @@ const EmailConfirmation = () => {
               description: "Your account has been activated successfully!",
             });
 
-            // Redirect to dashboard after a short delay
+            // Redirect to all-products after a short delay
             setTimeout(() => {
               if (mounted) {
-                navigate('/dashboard', { replace: true });
+                navigate('/all-products', { replace: true });
               }
             }, 2000);
           }
@@ -86,7 +86,7 @@ const EmailConfirmation = () => {
 
               setTimeout(() => {
                 if (mounted) {
-                  navigate('/dashboard', { replace: true });
+                  navigate('/all-products', { replace: true });
                 }
               }, 2000);
             } else {
@@ -112,14 +112,14 @@ const EmailConfirmation = () => {
         subscription.then(sub => sub.unsubscribe());
       }
     };
-  }, [navigate, toast]); // Removed status from dependencies to prevent infinite loops
+  }, [navigate, toast]);
 
   const handleRetry = () => {
     navigate('/login?tab=signup', { replace: true });
   };
 
-  const handleGoToDashboard = () => {
-    navigate('/dashboard', { replace: true });
+  const handleGoToProducts = () => {
+    navigate('/all-products', { replace: true });
   };
 
   return (
@@ -152,13 +152,13 @@ const EmailConfirmation = () => {
             {status === 'success' && (
               <div className="space-y-2">
                 <p className="text-sm text-gray-600">
-                  You will be redirected to your dashboard shortly.
+                  You will be redirected to products shortly.
                 </p>
                 <Button
-                  onClick={handleGoToDashboard}
+                  onClick={handleGoToProducts}
                   className="w-full bg-gradient-bullion hover:opacity-90"
                 >
-                  Go to Dashboard
+                  Go to Products
                 </Button>
               </div>
             )}

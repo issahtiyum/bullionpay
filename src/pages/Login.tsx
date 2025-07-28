@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +32,7 @@ const Login = () => {
     signInWithEmail 
   } = useAuth();
   
-  const from = (location.state as LocationState)?.from?.pathname || "/dashboard";
+  const from = (location.state as LocationState)?.from?.pathname || "/all-products";
   
   useEffect(() => {
     if (isAuthenticated) {

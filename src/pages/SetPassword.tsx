@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,7 +60,7 @@ const SetPassword = () => {
           title: "Password updated",
           description: "Your password has been updated successfully",
         });
-        navigate('/dashboard', { replace: true });
+        navigate('/all-products', { replace: true });
       }
     } catch (error: any) {
       toast({
