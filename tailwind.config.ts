@@ -95,7 +95,8 @@ export default {
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
 				poppins: ['Poppins', 'sans-serif'],
-				playfair: ['Playfair Display', 'serif']
+				playfair: ['Playfair Display', 'serif'],
+				instrument: ['Instrument Serif', 'serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
