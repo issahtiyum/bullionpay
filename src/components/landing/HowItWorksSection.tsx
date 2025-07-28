@@ -17,7 +17,7 @@ const HowItWorksSection = () => {
     {
       icon: <Zap className="w-8 h-8 text-bullion-purple" />,
       title: 'Get instant access',
-      description: 'Receive your login or code immediately.'
+      description: 'Receive your login or code in a jiffy.'
     }
   ];
 
