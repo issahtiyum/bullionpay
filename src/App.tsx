@@ -13,6 +13,7 @@ import AdminRoute from "./components/admin/AdminRoute";
 
 // Pages
 import Index from "./pages/Index";
+import AllProducts from "./pages/AllProducts";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import Dashboard from "./pages/Dashboard";
@@ -41,6 +42,7 @@ const AppContent = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/all-products" element={<AllProducts />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/checkout/:product_id" element={<Checkout />} />
               <Route path="/dashboard" element={<Dashboard />} />

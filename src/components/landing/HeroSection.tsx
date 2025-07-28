@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const HeroSection = () => {
   const [currentItem, setCurrentItem] = useState(0);
@@ -13,13 +14,6 @@ const HeroSection = () => {
 
     return () => clearInterval(interval);
   }, []);
-
-  const scrollToHowItWorks = () => {
-    const element = document.getElementById('how-it-works');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
 
   return (
     <section 
@@ -89,10 +83,12 @@ const HeroSection = () => {
         </p>
         
         <Button 
-          onClick={scrollToHowItWorks}
+          asChild
           className="bg-bullion-purple hover:bg-bullion-purple/90 text-white font-poppins font-medium text-sm sm:text-lg px-6 sm:px-12 py-3 sm:py-6 rounded-lg"
         >
-          Start Now
+          <Link to="/all-products">
+            Start Now
+          </Link>
         </Button>
       </div>
     </section>

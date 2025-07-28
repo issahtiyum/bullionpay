@@ -18,7 +18,7 @@ const FinalCTASection = () => {
           size="lg"
           className="bg-white text-bullion-purple hover:bg-gray-100 font-poppins font-bold text-lg px-10 py-4 rounded-lg"
         >
-          <Link to="/login?tab=signup">
+          <Link to="/all-products">
             GET STARTED TODAY
           </Link>
         </Button>
