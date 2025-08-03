@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
@@ -6,6 +5,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import CheckoutForm from '@/components/ui/CheckoutForm';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useProducts } from '@/hooks/useProducts';
+import { sanitizeHtml } from '@/utils/sanitizer';
 
 const Checkout = () => {
   const { product_id } = useParams<{ product_id: string }>();
@@ -83,12 +83,10 @@ const Checkout = () => {
             </CardHeader>
             <CardContent>
               <div className="flex justify-between mb-2">
-                <span className="font-medium">{product.name}</span>
+                <span className="font-medium" dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.name) }} />
                 <span>GHS {Number(product.price).toFixed(2)}</span>
               </div>
-              <div className="text-sm text-gray-500 mb-4">
-                {product.category}
-              </div>
+              <div className="text-sm text-gray-500 mb-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.category) }} />
               
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between font-semibold">

@@ -1,14 +1,20 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import MainLayout from '@/components/layout/MainLayout';
-import SetNewPasswordForm from '@/components/auth/SetNewPasswordForm';
+import SecurePasswordField from '@/components/auth/SecurePasswordField';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
 const SetPassword = () => {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [canShowForm, setCanShowForm] = useState(false);
+  const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   const { updatePassword, isAuthenticated, loading: authLoading } = useAuth();
@@ -34,7 +40,30 @@ const SetPassword = () => {
     checkSession();
   }, [isAuthenticated, authLoading, navigate, toast]);
 
-  const handlePasswordUpdate = async (password: string) => {
+  const validatePasswords = (): boolean => {
+    const newErrors: { password?: string; confirmPassword?: string } = {};
+    
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long';
+    }
+    
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePasswordUpdate = async () => {
+    if (!validatePasswords()) {
+      return;
+    }
+
     if (!isAuthenticated) {
       toast({
         title: "Session error",
@@ -109,7 +138,34 @@ const SetPassword = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <SetNewPasswordForm onSubmit={handlePasswordUpdate} loading={loading} />
+                <form onSubmit={(e) => { e.preventDefault(); handlePasswordUpdate(); }} className="space-y-4">
+                  <SecurePasswordField
+                    label="New Password"
+                    value={password}
+                    onChange={setPassword}
+                    error={errors.password}
+                    placeholder="Enter your new password"
+                    required
+                    showStrengthIndicator
+                  />
+                  
+                  <SecurePasswordField
+                    label="Confirm New Password"
+                    value={confirmPassword}
+                    onChange={setConfirmPassword}
+                    error={errors.confirmPassword}
+                    placeholder="Confirm your new password"
+                    required
+                  />
+                  
+                  <Button 
+                    type="submit"
+                    className="w-full bg-bullion-purple hover:bg-bullion-purple-700"
+                    disabled={loading}
+                  >
+                    {loading ? 'Updating...' : 'Update Password'}
+                  </Button>
+                </form>
               </CardContent>
             </>
           )}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,8 @@ import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { sanitizeText, validateInput } from '@/utils/sanitizer';
+import { useSecureState } from '@/hooks/useSecureStorage';
 
 type LocationState = {
   from?: {
@@ -21,7 +22,7 @@ const Login = () => {
   const initialTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login';
   const [isSignUp, setIsSignUp] = useState(initialTab === 'signup');
   const [isEmailConfirmationSent, setIsEmailConfirmationSent] = useState(false);
-  const [contactValue, setContactValue] = useState('');
+  const [contactValue, setContactValue] = useSecureState('login_contact', '');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,29 +52,33 @@ const Login = () => {
   };
   
   const handleLoginSubmit = async (contactMethod: 'email', contactValue: string, password: string) => {
-    if (!password || password.length < 6) {
+    // Sanitize inputs
+    const sanitizedContact = sanitizeText(contactValue.trim());
+    const sanitizedPassword = sanitizeText(password);
+
+    if (!sanitizedPassword || sanitizedPassword.length < 6) {
       toast({
         title: "Invalid password",
-        description: "Please enter your password",
+        description: "Please enter your password (minimum 6 characters)",
         variant: "destructive",
       });
       return;
     }
 
-    if (!contactValue || !contactValue.includes('@')) {
+    if (!validateInput.email(sanitizedContact)) {
       toast({
         title: "Invalid email",
-        description: "Please enter a valid email",
+        description: "Please enter a valid email address",
         variant: "destructive",
       });
       return;
     }
     
     setLoading(true);
-    setContactValue(contactValue);
+    setContactValue(sanitizedContact);
     
     try {
-      const result = await signInWithEmail(contactValue, password);
+      const result = await signInWithEmail(sanitizedContact, sanitizedPassword);
       if (!result.error) {
         toast({
           title: "Login successful",
@@ -83,14 +88,15 @@ const Login = () => {
       } else {
         toast({
           title: "Authentication Error",
-          description: result.error.message || "Something went wrong",
+          description: result.error.message || "Invalid credentials",
           variant: "destructive",
         });
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Error",
-        description: error.message || "Something went wrong",
+        description: "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -105,25 +111,31 @@ const Login = () => {
     lastName: string, 
     password: string
   ) => {
-    if (!firstName.trim() || !lastName.trim()) {
+    // Sanitize inputs
+    const sanitizedContact = sanitizeText(contactValue.trim());
+    const sanitizedFirstName = sanitizeText(firstName.trim());
+    const sanitizedLastName = sanitizeText(lastName.trim());
+    const sanitizedPassword = sanitizeText(password);
+
+    if (!validateInput.name(sanitizedFirstName) || !validateInput.name(sanitizedLastName)) {
       toast({
-        title: "Missing information",
-        description: "Please enter your first and last name",
+        title: "Invalid name",
+        description: "Please enter valid first and last names (1-100 characters)",
         variant: "destructive",
       });
       return;
     }
 
-    if (!contactValue || !contactValue.includes('@')) {
+    if (!validateInput.email(sanitizedContact)) {
       toast({
         title: "Invalid email",
-        description: "Please enter a valid email",
+        description: "Please enter a valid email address",
         variant: "destructive",
       });
       return;
     }
 
-    if (!password || password.length < 6) {
+    if (!sanitizedPassword || sanitizedPassword.length < 6) {
       toast({
         title: "Invalid password",
         description: "Password must be at least 6 characters long",
@@ -133,10 +145,10 @@ const Login = () => {
     }
     
     setLoading(true);
-    setContactValue(contactValue);
+    setContactValue(sanitizedContact);
     
     try {
-      const result = await signUp(contactValue, password, firstName, lastName);
+      const result = await signUp(sanitizedContact, sanitizedPassword, sanitizedFirstName, sanitizedLastName);
       if (!result.error) {
         setIsEmailConfirmationSent(true);
         toast({
@@ -146,14 +158,15 @@ const Login = () => {
       } else {
         toast({
           title: "Authentication Error",
-          description: result.error.message || "Something went wrong",
+          description: result.error.message || "Failed to create account",
           variant: "destructive",
         });
       }
     } catch (error: any) {
+      console.error('Signup error:', error);
       toast({
         title: "Error",
-        description: error.message || "Something went wrong",
+        description: "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {
