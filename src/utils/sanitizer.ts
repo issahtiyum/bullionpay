@@ -15,11 +15,16 @@ const createDOMPurify = () => {
 const purify = createDOMPurify();
 
 export const sanitizeHtml = (dirty: string): string => {
-  return purify.sanitize(dirty, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li'],
-    ALLOWED_ATTR: [],
-    KEEP_CONTENT: true
-  });
+  if (typeof window !== 'undefined') {
+    // Configure DOMPurify with allowed tags and attributes
+    return DOMPurify.sanitize(dirty, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li'],
+      ALLOWED_ATTR: [],
+      KEEP_CONTENT: true
+    });
+  }
+  // For server-side, strip all HTML
+  return dirty.replace(/<[^>]*>/g, '');
 };
 
 export const sanitizeText = (text: string): string => {
