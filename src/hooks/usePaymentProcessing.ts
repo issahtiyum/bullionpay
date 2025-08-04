@@ -6,6 +6,7 @@ import { usePaystackIntegration } from '@/hooks/usePaystackIntegration';
 import { useTransactionManager } from '@/hooks/useTransactionManager';
 import { usePaymentValidation } from '@/hooks/usePaymentValidation';
 import { sanitizeText } from '@/utils/sanitizer';
+import { supabase } from '@/integrations/supabase/client';
 import { type Product } from '@/components/ui/ProductCard';
 
 export const usePaymentProcessing = (product: Product, onSuccess: () => void) => {
