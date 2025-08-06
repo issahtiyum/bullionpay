@@ -14,7 +14,7 @@ interface RateLimitAttempt {
 
 class RateLimiter {
   private attempts: Map<string, RateLimitAttempt> = new Map();
-  private readonly cleanupInterval: number;
+  private readonly cleanupInterval: ReturnType<typeof setInterval>;
 
   constructor() {
     this.cleanupInterval = setInterval(() => {

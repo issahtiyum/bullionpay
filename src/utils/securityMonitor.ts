@@ -13,7 +13,7 @@ interface SuspiciousActivity {
 
 class SecurityMonitor {
   private suspiciousActivities: Map<string, SuspiciousActivity> = new Map();
-  private readonly cleanupInterval: number;
+  private readonly cleanupInterval: ReturnType<typeof setInterval>;
   private readonly riskThresholds = {
     LOW: 25,
     MEDIUM: 50,
