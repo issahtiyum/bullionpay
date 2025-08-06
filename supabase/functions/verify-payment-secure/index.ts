@@ -2,11 +2,52 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+// Enhanced security headers
+const getSecurityHeaders = (additionalHeaders: Record<string, string> = {}) => {
+  return {
+    // CORS headers
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    
+    // Security headers
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Cache-Control': 'no-store, no-cache, must-revalidate',
+    'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none';",
+    
+    // Custom headers
+    ...additionalHeaders
+  };
+};
+
+const corsHeaders = getSecurityHeaders();
+
+// Rate limiting in-memory store (in production, use Redis or similar)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+const checkRateLimit = (identifier: string, maxRequests = 10, windowMs = 60000): boolean => {
+  const now = Date.now();
+  const key = identifier;
+  
+  let rateData = rateLimitStore.get(key);
+  
+  if (!rateData || now > rateData.resetTime) {
+    rateData = { count: 1, resetTime: now + windowMs };
+    rateLimitStore.set(key, rateData);
+    return true;
+  }
+  
+  if (rateData.count >= maxRequests) {
+    return false;
+  }
+  
+  rateData.count++;
+  rateLimitStore.set(key, rateData);
+  return true;
+};
 
 interface PaymentVerificationRequest {
   reference: string;
@@ -54,6 +95,25 @@ serve(async (req) => {
   }
 
   try {
+    // Get client IP for rate limiting
+    const clientIP = req.headers.get('x-forwarded-for') || 
+                    req.headers.get('x-real-ip') || 
+                    'unknown';
+
+    // Rate limiting check
+    if (!checkRateLimit(`verify-payment:${clientIP}`, 5, 60000)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Rate limit exceeded. Please try again later.'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 429,
+        }
+      )
+    }
+
     // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -136,7 +196,7 @@ serve(async (req) => {
       throw new Error('Payment verification unsuccessful')
     }
 
-    // Log audit event
+    // Log audit event with enhanced details
     await supabaseClient.rpc('log_audit_event', {
       p_action: 'PAYMENT_VERIFICATION',
       p_resource_type: 'transaction',
@@ -144,7 +204,12 @@ serve(async (req) => {
       p_details: {
         paystack_status: paystackData.data.status,
         amount: paystackData.data.amount,
-        currency: paystackData.data.currency
+        currency: paystackData.data.currency,
+        channel: paystackData.data.channel,
+        customer_email: paystackData.data.customer.email,
+        verified_by: user.id,
+        client_ip: clientIP,
+        user_agent: req.headers.get('user-agent')
       }
     })
 

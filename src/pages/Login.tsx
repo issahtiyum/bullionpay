@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { sanitizeText, validateInput } from '@/utils/sanitizer';
 import { useSecureState } from '@/hooks/useSecureStorage';
+import { securityMonitor } from '@/utils/securityMonitor';
+import { auditLogger, AuditAction } from '@/utils/auditLogger';
 
 type LocationState = {
   from?: {
@@ -73,6 +75,22 @@ const Login = () => {
       });
       return;
     }
+
+    // Security monitoring check
+    const userAgent = navigator.userAgent;
+    const securityCheck = await securityMonitor.checkAuthenticationAttempt(
+      sanitizedContact,
+      userAgent
+    );
+
+    if (!securityCheck.allowed) {
+      toast({
+        title: "Security Alert",
+        description: securityCheck.reason || "Account temporarily locked due to suspicious activity",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setLoading(true);
     setContactValue(sanitizedContact);
@@ -80,12 +98,25 @@ const Login = () => {
     try {
       const result = await signInWithEmail(sanitizedContact, sanitizedPassword);
       if (!result.error) {
+        // Log successful authentication
+        await auditLogger.logAuthAttempt(sanitizedContact, true, {
+          userAgent,
+          timestamp: new Date().toISOString()
+        });
+
         toast({
           title: "Login successful",
           description: "Welcome back!",
         });
         navigate(from, { replace: true });
       } else {
+        // Log failed authentication
+        await auditLogger.logAuthAttempt(sanitizedContact, false, {
+          error: result.error.message,
+          userAgent,
+          timestamp: new Date().toISOString()
+        });
+
         toast({
           title: "Authentication Error",
           description: result.error.message || "Invalid credentials",
@@ -94,6 +125,14 @@ const Login = () => {
       }
     } catch (error: any) {
       console.error('Login error:', error);
+      
+      // Log authentication error
+      await auditLogger.logAuthAttempt(sanitizedContact, false, {
+        error: error.message || 'Unknown error',
+        userAgent,
+        timestamp: new Date().toISOString()
+      });
+
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",

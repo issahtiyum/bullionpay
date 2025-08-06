@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,6 +7,8 @@ import { usePaymentValidation } from '@/hooks/usePaymentValidation';
 import { sanitizeText } from '@/utils/sanitizer';
 import { supabase } from '@/integrations/supabase/client';
 import { type Product } from '@/components/ui/ProductCard';
+import { securityMonitor } from '@/utils/securityMonitor';
+import { auditLogger, AuditAction } from '@/utils/auditLogger';
 
 export const usePaymentProcessing = (product: Product, onSuccess: () => void) => {
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,31 @@ export const usePaymentProcessing = (product: Product, onSuccess: () => void) =>
 
     // Sanitize email input
     const sanitizedEmail = sanitizeText(email.trim());
+
+    // Security monitoring check
+    const userAgent = navigator.userAgent;
+    const securityCheck = await securityMonitor.checkPaymentAttempt(
+      user.id, 
+      product.price, 
+      userAgent
+    );
+
+    if (!securityCheck.allowed) {
+      toast({
+        title: "Security Alert",
+        description: securityCheck.reason || "Payment blocked for security reasons",
+        variant: "destructive",
+      });
+      
+      await auditLogger.logSecurityEvent(AuditAction.PAYMENT_FAILED, {
+        userId: user.id,
+        reason: 'security_block',
+        productId: product.id,
+        amount: product.price
+      });
+      
+      return;
+    }
 
     // Validate payment inputs
     if (!validatePaymentInputs(sanitizedEmail)) {
@@ -53,6 +79,18 @@ export const usePaymentProcessing = (product: Product, onSuccess: () => void) =>
 
     try {
       console.log('Starting payment process for product:', product.name);
+      
+      // Log payment initiation
+      await auditLogger.logPaymentEvent(
+        AuditAction.PAYMENT_INITIATED,
+        `pending_${Date.now()}`,
+        product.price,
+        {
+          productId: product.id,
+          productName: product.name,
+          email: sanitizedEmail
+        }
+      );
 
       // Sanitize custom field values
       const sanitizedCustomFields = Object.entries(customFieldValues).reduce((acc, [key, value]) => {
@@ -86,6 +124,15 @@ export const usePaymentProcessing = (product: Product, onSuccess: () => void) =>
             });
 
             if (verificationError) {
+              await auditLogger.logPaymentEvent(
+                AuditAction.PAYMENT_FAILED,
+                transaction.id,
+                product.price,
+                { 
+                  error: verificationError.message,
+                  reference: response.reference 
+                }
+              );
               throw new Error(`Payment verification failed: ${verificationError.message}`);
             }
 
@@ -96,6 +143,17 @@ export const usePaymentProcessing = (product: Product, onSuccess: () => void) =>
               const order = await createOrder(product, transaction.id, sanitizedCustomFields);
               console.log('Order created:', order);
 
+              // Log successful payment
+              await auditLogger.logPaymentEvent(
+                AuditAction.PAYMENT_SUCCESS,
+                transaction.id,
+                product.price,
+                {
+                  orderId: order?.id,
+                  reference: response.reference
+                }
+              );
+
               toast({
                 title: "Payment Successful",
                 description: "Your order has been processed successfully",
@@ -103,6 +161,15 @@ export const usePaymentProcessing = (product: Product, onSuccess: () => void) =>
 
               onSuccess();
             } else {
+              await auditLogger.logPaymentEvent(
+                AuditAction.PAYMENT_FAILED,
+                transaction.id,
+                product.price,
+                { 
+                  reason: 'verification_failed',
+                  reference: response.reference 
+                }
+              );
               throw new Error('Payment verification failed');
             }
           } catch (error) {
@@ -123,6 +190,17 @@ export const usePaymentProcessing = (product: Product, onSuccess: () => void) =>
       );
     } catch (error) {
       console.error('Payment initialization error:', error);
+      
+      await auditLogger.logPaymentEvent(
+        AuditAction.PAYMENT_FAILED,
+        `failed_${Date.now()}`,
+        product.price,
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          productId: product.id
+        }
+      );
+      
       toast({
         title: "Payment Failed",
         description: "Failed to initialize payment. Please try again.",
