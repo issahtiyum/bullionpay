@@ -195,6 +195,33 @@ export type Database = {
           },
         ]
       }
+      processed_webhooks: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          processed_at: string
+          success: boolean
+          webhook_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          processed_at?: string
+          success?: boolean
+          webhook_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          processed_at?: string
+          success?: boolean
+          webhook_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: Database["public"]["Enums"]["product_category"]
