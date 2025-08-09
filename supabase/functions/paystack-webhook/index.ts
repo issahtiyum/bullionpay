@@ -35,16 +35,15 @@ serve(async (req) => {
 
     // Get request body
     const body = await req.text()
-    const paystackSecret = Deno.env.get('PAYSTACK_SECRET_KEY')
-    
-    if (!paystackSecret) {
-      console.error('Paystack secret key not configured')
-      return new Response('Configuration error', { status: 500, headers: corsHeaders })
-    }
 
-    // Verify webhook signature
-    const hash = createHmac('sha512', paystackSecret).update(body).digest('hex')
-    if (hash !== signature) {
+    const testSecret = Deno.env.get('PAYSTACK_SECRET_KEY_TEST') || ''
+    const liveSecret = Deno.env.get('PAYSTACK_SECRET_KEY_LIVE') || Deno.env.get('PAYSTACK_SECRET_KEY') || ''
+
+    // Verify webhook signature against TEST then LIVE secrets
+    const testHash = testSecret ? createHmac('sha512', testSecret).update(body).digest('hex') : null
+    const liveHash = liveSecret ? createHmac('sha512', liveSecret).update(body).digest('hex') : null
+
+    if (testHash !== signature && liveHash !== signature) {
       console.error('Invalid webhook signature')
       return new Response('Unauthorized', { status: 401, headers: corsHeaders })
     }

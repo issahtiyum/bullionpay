@@ -195,6 +195,27 @@ export type Database = {
           },
         ]
       }
+      payment_config: {
+        Row: {
+          active_mode: string
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active_mode?: string
+          id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active_mode?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       processed_webhooks: {
         Row: {
           created_at: string

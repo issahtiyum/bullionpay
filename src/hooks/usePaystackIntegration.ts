@@ -26,7 +26,7 @@ export const usePaystackIntegration = () => {
       throw new Error('Invalid product data');
     }
 
-    // Get the Paystack public key
+    // Get the Paystack public key and current mode
     const { data: keyData, error: keyError } = await supabase.functions.invoke('get-paystack-key');
     
     if (keyError || !keyData?.publicKey) {
@@ -34,7 +34,8 @@ export const usePaystackIntegration = () => {
       throw new Error('Failed to get payment configuration');
     }
 
-    const reference = generatePaymentReference();
+    const mode = (keyData.mode === 'test' || keyData.mode === 'live') ? keyData.mode : 'live';
+    const reference = generatePaymentReference(mode);
     const amountInKobo = convertToKobo(product.price);
 
     // Validate amount

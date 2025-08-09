@@ -1,8 +1,9 @@
 
-export const generatePaymentReference = (): string => {
+export const generatePaymentReference = (mode: 'live' | 'test' = 'live'): string => {
+  const prefix = mode === 'test' ? 'ps_test' : 'ps_live';
   const timestamp = Date.now();
   const random = Math.floor(Math.random() * 1000000);
-  return `bullion_${timestamp}_${random}`;
+  return `${prefix}_${timestamp}_${random}`;
 };
 
 export const convertToKobo = (amount: number): number => {

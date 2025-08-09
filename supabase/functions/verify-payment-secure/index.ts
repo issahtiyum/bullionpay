@@ -88,6 +88,12 @@ interface PaystackVerifyResponse {
   };
 }
 
+const inferModeFromReference = (reference: string): 'live' | 'test' | null => {
+  if (reference.startsWith('ps_test_')) return 'test';
+  if (reference.startsWith('ps_live_')) return 'live';
+  return null;
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -96,22 +102,14 @@ serve(async (req) => {
 
   try {
     // Get client IP for rate limiting
-    const clientIP = req.headers.get('x-forwarded-for') || 
-                    req.headers.get('x-real-ip') || 
-                    'unknown';
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
 
     // Rate limiting check
     if (!checkRateLimit(`verify-payment:${clientIP}`, 5, 60000)) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Rate limit exceeded. Please try again later.'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 429,
-        }
-      )
+      return new Response(JSON.stringify({ success: false, error: 'Rate limit exceeded. Please try again later.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 429,
+      })
     }
 
     // Initialize Supabase client
@@ -128,15 +126,11 @@ serve(async (req) => {
 
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
-    
-    if (authError || !user) {
-      throw new Error('Invalid authentication')
-    }
+    if (authError || !user) throw new Error('Invalid authentication')
 
     // Parse and validate request body
     const { reference, user_id }: PaymentVerificationRequest = await req.json()
-    
-    if (!reference || typeof reference !== 'string' || reference.length > 100) {
+    if (!reference || typeof reference !== 'string' || reference.length > 200) {
       throw new Error('Invalid payment reference')
     }
 
@@ -150,10 +144,7 @@ serve(async (req) => {
 
     const isAdmin = adminCheck?.role === 'admin' || adminCheck?.role === 'super_admin'
     const targetUserId = user_id || user.id
-
-    if (!isAdmin && targetUserId !== user.id) {
-      throw new Error('Unauthorized: Can only verify own payments')
-    }
+    if (!isAdmin && targetUserId !== user.id) throw new Error('Unauthorized: Can only verify own payments')
 
     // Check if transaction already exists and belongs to the authenticated user
     const { data: existingTransaction } = await supabaseClient
@@ -166,11 +157,22 @@ serve(async (req) => {
       throw new Error('Unauthorized: Transaction belongs to different user')
     }
 
-    // Get Paystack secret key
-    const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY')
-    if (!paystackSecretKey) {
-      throw new Error('Paystack secret key not configured')
+    // Determine mode based on reference prefix first, fallback to config
+    let mode = inferModeFromReference(reference);
+    if (!mode) {
+      const { data: configRow } = await supabaseClient
+        .from('payment_config')
+        .select('active_mode')
+        .eq('id', 'paystack')
+        .single();
+      mode = (configRow?.active_mode === 'test') ? 'test' : 'live';
     }
+
+    // Get Paystack secret key based on mode
+    const liveSecret = Deno.env.get('PAYSTACK_SECRET_KEY_LIVE') || Deno.env.get('PAYSTACK_SECRET_KEY') || '';
+    const testSecret = Deno.env.get('PAYSTACK_SECRET_KEY_TEST') || '';
+    const paystackSecretKey = mode === 'test' ? testSecret : liveSecret;
+    if (!paystackSecretKey) throw new Error('Paystack secret key not configured')
 
     // Verify payment with Paystack
     const paystackResponse = await fetch(
@@ -191,10 +193,7 @@ serve(async (req) => {
     }
 
     const paystackData: PaystackVerifyResponse = await paystackResponse.json()
-
-    if (!paystackData.status) {
-      throw new Error('Payment verification unsuccessful')
-    }
+    if (!paystackData.status) throw new Error('Payment verification unsuccessful')
 
     // Log audit event with enhanced details
     await supabaseClient.rpc('log_audit_event', {
@@ -209,42 +208,35 @@ serve(async (req) => {
         customer_email: paystackData.data.customer.email,
         verified_by: user.id,
         client_ip: clientIP,
-        user_agent: req.headers.get('user-agent')
+        user_agent: req.headers.get('user-agent'),
+        mode
       }
     })
 
     // Return sanitized response
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          reference: paystackData.data.reference,
-          status: paystackData.data.status,
-          amount: paystackData.data.amount,
-          currency: paystackData.data.currency,
-          paid_at: paystackData.data.paid_at,
-          customer_email: paystackData.data.customer.email,
-        }
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        reference: paystackData.data.reference,
+        status: paystackData.data.status,
+        amount: paystackData.data.amount,
+        currency: paystackData.data.currency,
+        paid_at: paystackData.data.paid_at,
+        customer_email: paystackData.data.customer.email,
       }
-    )
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    })
 
   } catch (error) {
     console.error('Payment verification error:', error)
-    
-    // Return generic error message to prevent information disclosure
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'Payment verification failed. Please try again or contact support.'
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      }
-    )
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Payment verification failed. Please try again or contact support.'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400,
+    })
   }
 })
