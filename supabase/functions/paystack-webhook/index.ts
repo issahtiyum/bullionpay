@@ -14,11 +14,6 @@ interface PaystackWebhookEvent {
   data: any;
 }
 
-interface ProcessedWebhook {
-  id: string;
-  processed_at: string;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -143,6 +138,18 @@ async function handleChargeSuccess(supabase: any, data: any) {
     const reference = data.reference
     console.log('Processing successful charge:', reference)
 
+    // Lookup transaction by reference to get its UUID id
+    const { data: transaction, error: txError } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('reference', reference)
+      .single()
+
+    if (txError || !transaction) {
+      console.error('Transaction not found for reference:', reference, txError)
+      return { success: false, message: 'Transaction not found' }
+    }
+
     // Update transaction status
     const { error: transactionError } = await supabase
       .from('transactions')
@@ -159,14 +166,14 @@ async function handleChargeSuccess(supabase: any, data: any) {
       return { success: false, message: 'Failed to update transaction' }
     }
 
-    // Update related order status
+    // Update related order status using transaction UUID
     const { error: orderError } = await supabase
       .from('orders')
       .update({
         status: 'paid',
         updated_at: new Date().toISOString(),
       })
-      .eq('transaction_id', reference)
+      .eq('transaction_id', transaction.id)
 
     if (orderError) {
       console.error('Error updating order:', orderError)
@@ -185,6 +192,18 @@ async function handleChargeFailed(supabase: any, data: any) {
     const reference = data.reference
     console.log('Processing failed charge:', reference)
 
+    // Lookup transaction by reference to get its UUID id
+    const { data: transaction, error: txError } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('reference', reference)
+      .single()
+
+    if (txError || !transaction) {
+      console.error('Transaction not found for reference:', reference, txError)
+      return { success: false, message: 'Transaction not found' }
+    }
+
     // Update transaction status
     const { error: transactionError } = await supabase
       .from('transactions')
@@ -200,14 +219,14 @@ async function handleChargeFailed(supabase: any, data: any) {
       return { success: false, message: 'Failed to update transaction' }
     }
 
-    // Update related order status
+    // Update related order status using transaction UUID
     const { error: orderError } = await supabase
       .from('orders')
       .update({
         status: 'failed',
         updated_at: new Date().toISOString(),
       })
-      .eq('transaction_id', reference)
+      .eq('transaction_id', transaction.id)
 
     if (orderError) {
       console.error('Error updating order:', orderError)
@@ -225,7 +244,19 @@ async function handleRefundProcessed(supabase: any, data: any) {
   try {
     console.log('Processing refund:', data.reference)
 
-    // Update order to refunded status
+    // Lookup transaction by reference to get its UUID id
+    const { data: transaction, error: txError } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('reference', data.transaction.reference)
+      .single()
+
+    if (txError || !transaction) {
+      console.error('Transaction not found for refund:', data.transaction.reference, txError)
+      return { success: false, message: 'Transaction not found' }
+    }
+
+    // Update order to refunded status using transaction UUID
     const { error: orderError } = await supabase
       .from('orders')
       .update({
@@ -233,7 +264,7 @@ async function handleRefundProcessed(supabase: any, data: any) {
         admin_notes: `Refund processed: ${data.amount / 100} ${data.currency}`,
         updated_at: new Date().toISOString(),
       })
-      .eq('transaction_id', data.transaction.reference)
+      .eq('transaction_id', transaction.id)
 
     if (orderError) {
       console.error('Error updating order for refund:', orderError)
@@ -274,11 +305,23 @@ async function handleDisputeCreate(supabase: any, data: any) {
   try {
     console.log('Processing dispute creation:', data.id)
 
+    // Lookup transaction by reference to get its UUID id
+    const { data: transaction, error: txError } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('reference', data.transaction.reference)
+      .single()
+
+    if (txError || !transaction) {
+      console.error('Transaction not found for dispute:', data.transaction.reference, txError)
+      return { success: false, message: 'Transaction not found' }
+    }
+
     // Find the order related to this transaction
     const { data: order, error: findError } = await supabase
       .from('orders')
       .select('*')
-      .eq('transaction_id', data.transaction.reference)
+      .eq('transaction_id', transaction.id)
       .single()
 
     if (findError || !order) {
@@ -327,6 +370,45 @@ async function handleDisputeResolve(supabase: any, data: any) {
   try {
     console.log('Processing dispute resolution:', data.id)
 
+    // Lookup transaction by reference to get its UUID id
+    const { data: transaction, error: txError } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('reference', data.transaction.reference)
+      .single()
+
+    if (txError || !transaction) {
+      console.error('Transaction not found for dispute resolution:', data.transaction.reference, txError)
+      return { success: false, message: 'Transaction not found' }
+    }
+
+    // Find the order related to this transaction
+    const { data: order, error: findOrderError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('transaction_id', transaction.id)
+      .single()
+
+    if (findOrderError || !order) {
+      console.error('Could not find order for dispute resolution:', findOrderError)
+      return { success: false, message: 'Order not found for dispute resolution' }
+    }
+
+    // Find the most recent pending dispute for this order
+    const { data: dispute, error: findDisputeError } = await supabase
+      .from('disputes')
+      .select('*')
+      .eq('order_id', order.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (findDisputeError || !dispute) {
+      console.error('Could not find pending dispute for order:', findDisputeError)
+      return { success: false, message: 'Pending dispute not found' }
+    }
+
     // Update dispute status based on resolution
     const { error: disputeError } = await supabase
       .from('disputes')
@@ -335,7 +417,7 @@ async function handleDisputeResolve(supabase: any, data: any) {
         admin_notes: `Dispute ${data.status}: ${data.message || ''}`,
         updated_at: new Date().toISOString(),
       })
-      .eq('resource_id', data.id)
+      .eq('id', dispute.id)
 
     if (disputeError) {
       console.error('Error updating dispute:', disputeError)
@@ -350,7 +432,7 @@ async function handleDisputeResolve(supabase: any, data: any) {
         admin_notes: `Dispute ${data.status}`,
         updated_at: new Date().toISOString(),
       })
-      .eq('transaction_id', data.transaction.reference)
+      .eq('id', order.id)
 
     if (orderError) {
       console.error('Error updating order for dispute resolution:', orderError)

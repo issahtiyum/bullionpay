@@ -3,16 +3,27 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface WebhookEvent {
+  event_type: string;
+  processed_at: string;
+  success: boolean;
+  webhook_id: string;
+}
+
 interface WebhookStats {
   total_processed: number;
   successful: number;
   failed: number;
-  recent_events: Array<{
-    event_type: string;
-    processed_at: string;
-    success: boolean;
-    webhook_id: string;
-  }>;
+  recent_events: WebhookEvent[];
+}
+
+interface ProcessedWebhook {
+  id: string;
+  webhook_id: string;
+  event_type: string;
+  processed_at: string;
+  success: boolean;
+  created_at: string;
 }
 
 export const useWebhookMonitoring = () => {
@@ -33,11 +44,12 @@ export const useWebhookMonitoring = () => {
         throw error;
       }
 
-      const total_processed = webhooks?.length || 0;
-      const successful = webhooks?.filter(w => w.success).length || 0;
+      const typedWebhooks = webhooks as ProcessedWebhook[];
+      const total_processed = typedWebhooks?.length || 0;
+      const successful = typedWebhooks?.filter(w => w.success).length || 0;
       const failed = total_processed - successful;
 
-      const recent_events = webhooks?.slice(0, 10).map(w => ({
+      const recent_events: WebhookEvent[] = typedWebhooks?.slice(0, 10).map(w => ({
         event_type: w.event_type,
         processed_at: w.processed_at,
         success: w.success,

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { type Product } from './ProductCard';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePaymentProcessing } from '@/hooks/usePaymentProcessing';
+import { useWebhookPaymentProcessing } from '@/hooks/useWebhookPaymentProcessing';
 import { CustomField } from '@/components/admin/CustomFieldsManager';
 import EmailInput from './checkout/EmailInput';
 import PaymentButton from './checkout/PaymentButton';
@@ -18,7 +18,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [customFieldErrors, setCustomFieldErrors] = useState<Record<string, string>>({});
   const { user } = useAuth();
-  const { loading, processPayment } = usePaymentProcessing(product, onPaymentSuccess);
+  const { loading, processPayment } = useWebhookPaymentProcessing(product, onPaymentSuccess);
   
   // Pre-fill email with user's email when component mounts
   useEffect(() => {
@@ -67,7 +67,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
       return;
     }
     
-    await processPayment(email, customFieldValues);
+    await processPayment(email, customFieldValues, customFields);
   };
   
   return (
