@@ -34,74 +34,66 @@ import AdminProducts from "./pages/admin/AdminProducts";
 
 const queryClient = new QueryClient();
 
-const AppContent = () => {
-  return (
-    <TooltipProvider>
-      <AuthProvider>
-        <AdminProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/all-products" element={<AllProducts />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/checkout/:product_id" element={<Checkout />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/reset-password" element={<PasswordReset />} />
-              <Route path="/set-password" element={<SetPassword />} />
-              <Route path="/email-confirmation" element={<EmailConfirmation />} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin" element={
-                <AdminRoute>
-                  <AdminDashboard />
-                </AdminRoute>
-              } />
-              <Route path="/admin/orders" element={
-                <AdminRoute>
-                  <AdminOrders />
-                </AdminRoute>
-              } />
-              <Route path="/admin/products" element={
-                <AdminRoute>
-                  <AdminProducts />
-                </AdminRoute>
-              } />
-              <Route path="/admin/revenue" element={
-                <AdminRoute>
-                  <AdminRevenue />
-                </AdminRoute>
-              } />
-              <Route path="/admin/disputes" element={
-                <AdminRoute>
-                  <AdminDisputes />
-                </AdminRoute>
-              } />
-              <Route path="/admin/admins" element={
-                <AdminRoute requireRole="super_admin">
-                  <AdminAdmins />
-                </AdminRoute>
-              } />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </BrowserRouter>
-        </AdminProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  );
-};
-
 const App = () => {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <AppContent />
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <AdminProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/all-products" element={<AllProducts />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/checkout/:product_id" element={<Checkout />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/reset-password" element={<PasswordReset />} />
+                <Route path="/set-password" element={<SetPassword />} />
+                <Route path="/email-confirmation" element={<EmailConfirmation />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={
+                  <AdminRoute>
+                    <AdminDashboard />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/orders" element={
+                  <AdminRoute>
+                    <AdminOrders />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/products" element={
+                  <AdminRoute>
+                    <AdminProducts />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/revenue" element={
+                  <AdminRoute>
+                    <AdminRevenue />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/disputes" element={
+                  <AdminRoute>
+                    <AdminDisputes />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/admins" element={
+                  <AdminRoute requireRole="super_admin">
+                    <AdminAdmins />
+                  </AdminRoute>
+                } />
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+              <Sonner />
+            </BrowserRouter>
+          </AdminProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 
