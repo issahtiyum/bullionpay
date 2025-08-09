@@ -32,9 +32,16 @@ import AdminDisputes from "./pages/admin/AdminDisputes";
 import AdminAdmins from "./pages/admin/AdminAdmins";
 import AdminProducts from "./pages/admin/AdminProducts";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
-const App = () => {
+const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
