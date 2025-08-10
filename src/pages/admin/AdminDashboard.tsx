@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import WebhookMonitoring from '@/components/admin/WebhookMonitoring';
+import PaymentSettings from '@/components/admin/PaymentSettings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
@@ -98,6 +99,7 @@ const AdminDashboard = () => {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="webhooks">Webhook Monitoring</TabsTrigger>
+            <TabsTrigger value="payments">Payment Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -181,6 +183,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="webhooks">
             <WebhookMonitoring />
+          </TabsContent>
+
+          <TabsContent value="payments">
+            <PaymentSettings />
           </TabsContent>
         </Tabs>
       </div>
