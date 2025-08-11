@@ -12,7 +12,8 @@ export const usePaystackIntegration = () => {
     product: Product,
     email: string,
     onSuccess: (response: any, reference: string) => Promise<void>,
-    onClose: () => void
+    onClose: () => void,
+    preGeneratedReference?: string
   ) => {
     // Sanitize inputs
     const sanitizedEmail = sanitizeText(email.trim());
@@ -35,7 +36,7 @@ export const usePaystackIntegration = () => {
     }
 
     const mode = (keyData.mode === 'test' || keyData.mode === 'live') ? keyData.mode : 'live';
-    const reference = generatePaymentReference(mode);
+    const reference = preGeneratedReference || generatePaymentReference(mode);
     const amountInKobo = convertToKobo(product.price);
 
     // Validate amount

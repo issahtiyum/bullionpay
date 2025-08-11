@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { createHmac } from "https://deno.land/std@0.168.0/node/crypto.ts"
@@ -49,19 +48,19 @@ serve(async (req) => {
     }
 
     const event: PaystackWebhookEvent = JSON.parse(body)
-    console.log('Received webhook event:', event.event)
+    console.log('Received webhook event:', event.event, 'Reference:', event.data.reference)
 
     // Check for idempotency - prevent duplicate processing
     const webhookId = event.data.id || event.data.reference
     const { data: existingWebhook } = await supabase
       .from('processed_webhooks')
-      .select('id')
+      .select('id, success')
       .eq('webhook_id', webhookId)
       .eq('event_type', event.event)
       .single()
 
-    if (existingWebhook) {
-      console.log('Webhook already processed:', webhookId)
+    if (existingWebhook && existingWebhook.success) {
+      console.log('Webhook already processed successfully:', webhookId)
       return new Response('Already processed', { status: 200, headers: corsHeaders })
     }
 
@@ -96,15 +95,19 @@ serve(async (req) => {
         result = { success: true, message: 'Event logged but not processed' }
     }
 
-    // Mark webhook as processed
-    await supabase
-      .from('processed_webhooks')
-      .insert({
-        webhook_id: webhookId,
-        event_type: event.event,
-        processed_at: new Date().toISOString(),
-        success: result.success
-      })
+    // Only mark webhook as processed if it was successful
+    if (result.success) {
+      await supabase
+        .from('processed_webhooks')
+        .upsert({
+          webhook_id: webhookId,
+          event_type: event.event,
+          processed_at: new Date().toISOString(),
+          success: true
+        }, { onConflict: 'webhook_id,event_type' })
+    } else {
+      console.error('Webhook processing failed:', result.message)
+    }
 
     // Log the webhook event for audit purposes
     await supabase.rpc('log_audit_event', {
@@ -137,16 +140,33 @@ async function handleChargeSuccess(supabase: any, data: any) {
     const reference = data.reference
     console.log('Processing successful charge:', reference)
 
-    // Lookup transaction by reference to get its UUID id
-    const { data: transaction, error: txError } = await supabase
-      .from('transactions')
-      .select('id')
-      .eq('reference', reference)
-      .single()
+    // Try to find transaction by reference first, then by paystack_reference
+    let transaction = await findTransactionByReference(supabase, reference)
+    
+    if (!transaction) {
+      console.log('Transaction not found by reference, trying paystack_reference:', reference)
+      const { data: txByPaystack, error: txError } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('paystack_reference', reference)
+        .single()
+      
+      if (!txError && txByPaystack) {
+        transaction = txByPaystack
+        console.log('Found transaction by paystack_reference:', transaction.id)
+      }
+    }
 
-    if (txError || !transaction) {
-      console.error('Transaction not found for reference:', reference, txError)
-      return { success: false, message: 'Transaction not found' }
+    if (!transaction) {
+      console.error('Transaction not found for reference:', reference)
+      // Add retry logic for race conditions
+      console.log('Waiting 2 seconds and retrying...')
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      transaction = await findTransactionByReference(supabase, reference)
+      if (!transaction) {
+        return { success: false, message: 'Transaction not found after retry' }
+      }
     }
 
     // Update transaction status
@@ -158,7 +178,7 @@ async function handleChargeSuccess(supabase: any, data: any) {
         payment_method: data.channel,
         updated_at: new Date().toISOString(),
       })
-      .eq('reference', reference)
+      .eq('id', transaction.id)
 
     if (transactionError) {
       console.error('Error updating transaction:', transactionError)
@@ -179,6 +199,7 @@ async function handleChargeSuccess(supabase: any, data: any) {
       return { success: false, message: 'Failed to update order' }
     }
 
+    console.log('Successfully processed charge for transaction:', transaction.id)
     return { success: true, message: 'Charge success processed' }
   } catch (error) {
     console.error('Error in handleChargeSuccess:', error)
@@ -191,15 +212,23 @@ async function handleChargeFailed(supabase: any, data: any) {
     const reference = data.reference
     console.log('Processing failed charge:', reference)
 
-    // Lookup transaction by reference to get its UUID id
-    const { data: transaction, error: txError } = await supabase
-      .from('transactions')
-      .select('id')
-      .eq('reference', reference)
-      .single()
+    // Try to find transaction by reference first, then by paystack_reference
+    let transaction = await findTransactionByReference(supabase, reference)
+    
+    if (!transaction) {
+      const { data: txByPaystack, error: txError } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('paystack_reference', reference)
+        .single()
+      
+      if (!txError && txByPaystack) {
+        transaction = txByPaystack
+      }
+    }
 
-    if (txError || !transaction) {
-      console.error('Transaction not found for reference:', reference, txError)
+    if (!transaction) {
+      console.error('Transaction not found for reference:', reference)
       return { success: false, message: 'Transaction not found' }
     }
 
@@ -211,7 +240,7 @@ async function handleChargeFailed(supabase: any, data: any) {
         paystack_reference: data.reference,
         updated_at: new Date().toISOString(),
       })
-      .eq('reference', reference)
+      .eq('id', transaction.id)
 
     if (transactionError) {
       console.error('Error updating transaction:', transactionError)
@@ -237,6 +266,20 @@ async function handleChargeFailed(supabase: any, data: any) {
     console.error('Error in handleChargeFailed:', error)
     return { success: false, message: 'Processing error' }
   }
+}
+
+async function findTransactionByReference(supabase: any, reference: string) {
+  const { data: transaction, error: txError } = await supabase
+    .from('transactions')
+    .select('id')
+    .eq('reference', reference)
+    .single()
+
+  if (txError || !transaction) {
+    return null
+  }
+  
+  return transaction
 }
 
 async function handleRefundProcessed(supabase: any, data: any) {

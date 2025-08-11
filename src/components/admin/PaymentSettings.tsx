@@ -7,13 +7,15 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { getPaystackConfig, setPaystackMode, type PaystackMode } from '@/services/paymentConfigService';
-import { AlertTriangle, Settings, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Settings, CheckCircle, Copy, ExternalLink } from 'lucide-react';
 
 const PaymentSettings = () => {
   const [currentMode, setCurrentMode] = useState<PaystackMode>('live');
   const [isLoading, setIsLoading] = useState(true);
   const [isSwitching, setIsSwitching] = useState(false);
   const { toast } = useToast();
+
+  const webhookUrl = 'https://jxiiletuljcxulpltdss.supabase.co/functions/v1/paystack-webhook';
 
   useEffect(() => {
     fetchCurrentMode();
@@ -59,6 +61,14 @@ const PaymentSettings = () => {
     } finally {
       setIsSwitching(false);
     }
+  };
+
+  const copyWebhookUrl = () => {
+    navigator.clipboard.writeText(webhookUrl);
+    toast({
+      title: "Copied!",
+      description: "Webhook URL copied to clipboard",
+    });
   };
 
   if (isLoading) {
@@ -126,6 +136,57 @@ const PaymentSettings = () => {
               Switching modes...
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ExternalLink className="h-5 w-5" />
+            Webhook Configuration
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium">Webhook URL</Label>
+            <p className="text-xs text-gray-600 mb-2">
+              Use this URL for both Test and Live webhook configurations in your Paystack dashboard
+            </p>
+            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
+              <code className="flex-1 text-sm font-mono break-all">
+                {webhookUrl}
+              </code>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copyWebhookUrl}
+                className="flex-shrink-0"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Events to Subscribe</Label>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• charge.success</li>
+              <li>• charge.failed</li>
+              <li>• refund.processed</li>
+              <li>• dispute.create</li>
+              <li>• dispute.resolve</li>
+            </ul>
+          </div>
+
+          <div className="p-3 bg-blue-50 text-blue-800 rounded-md text-sm">
+            <p className="font-medium mb-1">Configuration Steps:</p>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Copy the webhook URL above</li>
+              <li>Go to your Paystack Dashboard → Settings → Webhooks</li>
+              <li>Add the webhook URL for both Test and Live environments</li>
+              <li>Subscribe to the events listed above</li>
+            </ol>
+          </div>
         </CardContent>
       </Card>
 

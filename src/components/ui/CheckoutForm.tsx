@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { type Product } from './ProductCard';
 import { useAuth } from '@/contexts/AuthContext';
-import { useWebhookPaymentProcessing } from '@/hooks/useWebhookPaymentProcessing';
+import { useUpfrontPaymentProcessing } from '@/hooks/useUpfrontPaymentProcessing';
 import { CustomField } from '@/components/admin/CustomFieldsManager';
 import EmailInput from './checkout/EmailInput';
 import PaymentButton from './checkout/PaymentButton';
 import CustomFieldsForm from './checkout/CustomFieldsForm';
+import PaymentStatusPanel from './checkout/PaymentStatusPanel';
 
 type CheckoutFormProps = {
   product: Product;
@@ -18,7 +19,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [customFieldErrors, setCustomFieldErrors] = useState<Record<string, string>>({});
   const { user } = useAuth();
-  const { loading, processPayment } = useWebhookPaymentProcessing(product, onPaymentSuccess);
+  const { loading, awaitingConfirmation, processPayment, verifyPaymentNow } = useUpfrontPaymentProcessing(product, onPaymentSuccess);
   
   // Pre-fill email with user's email when component mounts
   useEffect(() => {
@@ -86,11 +87,19 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ product, onPaymentSuccess }
         />
       )}
       
-      <PaymentButton 
-        product={product}
+      <PaymentStatusPanel
+        awaitingConfirmation={awaitingConfirmation}
         loading={loading}
-        onSubmit={handleSubmit}
+        onVerifyNow={verifyPaymentNow}
       />
+      
+      {!awaitingConfirmation && (
+        <PaymentButton 
+          product={product}
+          loading={loading}
+          onSubmit={handleSubmit}
+        />
+      )}
     </div>
   );
 };
