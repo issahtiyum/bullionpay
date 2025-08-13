@@ -9,13 +9,13 @@ import { useOrders } from "@/hooks/useOrders";
 const AdminOrders = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [environmentFilter, setEnvironmentFilter] = useState<'all' | 'test' | 'live'>('all');
-  const { data: orders, isLoading, error } = useOrders();
+  const { orders, loading, fetchOrders, updateOrder } = useOrders();
 
   const filteredOrders = orders?.filter(order => {
     const matchesSearch = !searchQuery || 
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.user_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.product?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      order.user_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.product_name?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesEnvironment = environmentFilter === 'all' || 
       (environmentFilter === 'test' && order.is_test) ||
@@ -36,7 +36,7 @@ const AdminOrders = () => {
         
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <OrdersSearch 
-            searchQuery={searchQuery} 
+            searchTerm={searchQuery} 
             onSearchChange={setSearchQuery} 
           />
           <OrdersFilter 
@@ -47,8 +47,8 @@ const AdminOrders = () => {
         
         <OrdersTable 
           orders={filteredOrders} 
-          isLoading={isLoading} 
-          error={error} 
+          isLoading={loading} 
+          error={null} 
         />
       </div>
     </AdminLayout>

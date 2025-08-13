@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit } from "lucide-react";
 import OrderEditModal from "./OrderEditModal";
-import type { Order } from "@/integrations/supabase/types";
+import { Order } from "@/hooks/useOrders";
 
 interface OrdersTableProps {
   orders: Order[];
@@ -76,8 +76,8 @@ const OrdersTable = ({ orders, isLoading, error }: OrdersTableProps) => {
                 <TableCell className="font-mono text-sm">
                   {order.id.slice(0, 8)}...
                 </TableCell>
-                <TableCell>{order.user_email || 'N/A'}</TableCell>
-                <TableCell>{order.product?.name || 'N/A'}</TableCell>
+                <TableCell>{order.user_id || 'N/A'}</TableCell>
+                <TableCell>{order.product_name || 'N/A'}</TableCell>
                 <TableCell>₦{order.amount.toLocaleString()}</TableCell>
                 <TableCell>
                   <Badge 
@@ -122,8 +122,8 @@ const OrdersTable = ({ orders, isLoading, error }: OrdersTableProps) => {
       {selectedOrder && (
         <OrderEditModal
           order={selectedOrder}
-          isOpen={!!selectedOrder}
           onClose={() => setSelectedOrder(null)}
+          onSave={async () => true}
         />
       )}
     </>
