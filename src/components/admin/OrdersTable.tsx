@@ -1,41 +1,31 @@
-
 import React, { useState } from "react";
 import { format } from "date-fns";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit } from "lucide-react";
 import OrderEditModal from "./OrderEditModal";
 import { Order } from "@/hooks/useOrders";
-
 interface OrdersTableProps {
   orders: Order[];
   isLoading: boolean;
   error: any;
 }
-
-const OrdersTable = ({ orders, isLoading, error }: OrdersTableProps) => {
+const OrdersTable = ({
+  orders,
+  isLoading,
+  error
+}: OrdersTableProps) => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-
   if (isLoading) {
     return <div className="text-center p-4">Loading orders...</div>;
   }
-
   if (error) {
     return <div className="text-center p-4 text-red-500">Error loading orders: {error.message}</div>;
   }
-
   if (!orders || orders.length === 0) {
     return <div className="text-center p-4">No orders found.</div>;
   }
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -50,9 +40,7 @@ const OrdersTable = ({ orders, isLoading, error }: OrdersTableProps) => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-
-  return (
-    <>
+  return <>
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -66,18 +54,11 @@ const OrdersTable = ({ orders, isLoading, error }: OrdersTableProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.map((order) => (
-              <TableRow 
-                key={order.id}
-                className={order.is_test ? "bg-yellow-50" : ""}
-              >
+            {orders.map(order => <TableRow key={order.id} className={order.is_test ? "bg-yellow-50" : ""}>
                 <TableCell>{order.product_name || 'N/A'}</TableCell>
                 <TableCell>₵{order.amount.toLocaleString()}</TableCell>
                 <TableCell>
-                  <Badge 
-                    variant={order.is_test ? "secondary" : "default"}
-                    className={order.is_test ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}
-                  >
+                  <Badge variant={order.is_test ? "secondary" : "default"} className={order.is_test ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}>
                     {order.is_test ? 'Test' : 'Live'}
                   </Badge>
                 </TableCell>
@@ -91,37 +72,18 @@ const OrdersTable = ({ orders, isLoading, error }: OrdersTableProps) => {
                 </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedOrder(order)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedOrder(order)}
-                    >
+                    
+                    <Button variant="outline" size="sm" onClick={() => setSelectedOrder(order)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
-              </TableRow>
-            ))}
+              </TableRow>)}
           </TableBody>
         </Table>
       </div>
 
-      {selectedOrder && (
-        <OrderEditModal
-          order={selectedOrder}
-          onClose={() => setSelectedOrder(null)}
-          onSave={async () => true}
-        />
-      )}
-    </>
-  );
+      {selectedOrder && <OrderEditModal order={selectedOrder} onClose={() => setSelectedOrder(null)} onSave={async () => true} />}
+    </>;
 };
-
 export default OrdersTable;
