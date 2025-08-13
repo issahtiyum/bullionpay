@@ -3,18 +3,34 @@ import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import OrdersSearch from '@/components/admin/OrdersSearch';
 import OrdersTable from '@/components/admin/OrdersTable';
+import OrdersFilter, { OrderFilter } from '@/components/admin/OrdersFilter';
 import OrderEditModal from '@/components/admin/OrderEditModal';
 import { useOrders, Order } from '@/hooks/useOrders';
 
 const AdminOrders = () => {
   const { orders, loading, updateOrder, toggleAttendedStatus } = useOrders();
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState<OrderFilter>('all');
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
-  const filteredOrders = orders.filter(order =>
-    order.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.status.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter orders based on search term and environment filter
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = order.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.status.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = activeFilter === 'all' || 
+      (activeFilter === 'live' && !order.is_test) ||
+      (activeFilter === 'test' && order.is_test);
+    
+    return matchesSearch && matchesFilter;
+  });
+
+  // Calculate order counts for filter badges
+  const orderCounts = {
+    total: orders.length,
+    live: orders.filter(order => !order.is_test).length,
+    test: orders.filter(order => order.is_test).length,
+  };
 
   const handleEditOrder = (order: Order) => {
     setEditingOrder(order);
@@ -43,6 +59,12 @@ const AdminOrders = () => {
             <p className="text-gray-600">Manage and track all customer orders</p>
           </div>
         </div>
+
+        <OrdersFilter 
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+          orderCounts={orderCounts}
+        />
 
         <OrdersSearch 
           searchTerm={searchTerm} 

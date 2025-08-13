@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Edit, CheckCircle, Circle, Eye } from 'lucide-react';
+import { Edit, CheckCircle, Circle } from 'lucide-react';
 import { Order } from '@/hooks/useOrders';
 import CustomFieldDataDisplay from './CustomFieldDataDisplay';
 
@@ -24,10 +24,22 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders, onEditOrder, onToggle
     }
   };
 
+  const getEnvironmentBadge = (isTest: boolean) => {
+    return isTest ? (
+      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+        Test
+      </Badge>
+    ) : (
+      <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">
+        Live
+      </Badge>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>All Orders ({orders.length})</CardTitle>
+        <CardTitle>Orders ({orders.length})</CardTitle>
       </CardHeader>
       <CardContent>
         {/* Desktop Table */}
@@ -35,6 +47,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders, onEditOrder, onToggle
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Environment</TableHead>
                 <TableHead>Product</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
@@ -46,7 +59,13 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders, onEditOrder, onToggle
             </TableHeader>
             <TableBody>
               {orders.map((order) => (
-                <TableRow key={order.id}>
+                <TableRow 
+                  key={order.id}
+                  className={order.is_test ? "bg-yellow-50/50" : ""}
+                >
+                  <TableCell>
+                    {getEnvironmentBadge(order.is_test)}
+                  </TableCell>
                   <TableCell className="font-medium">{order.product_name}</TableCell>
                   <TableCell>GH₵{Number(order.amount).toFixed(2)}</TableCell>
                   <TableCell>
@@ -95,9 +114,17 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders, onEditOrder, onToggle
         {/* Mobile Cards */}
         <div className="lg:hidden space-y-4">
           {orders.map((order) => (
-            <div key={order.id} className="border rounded-lg p-4 bg-white">
+            <div 
+              key={order.id} 
+              className={`border rounded-lg p-4 ${
+                order.is_test ? "bg-yellow-50 border-yellow-200" : "bg-white"
+              }`}
+            >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    {getEnvironmentBadge(order.is_test)}
+                  </div>
                   <h3 className="font-medium text-sm">{order.product_name}</h3>
                   <p className="text-lg font-semibold text-bullion-purple">
                     GH₵{Number(order.amount).toFixed(2)}

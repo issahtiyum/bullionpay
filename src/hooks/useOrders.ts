@@ -17,6 +17,7 @@ export type Order = {
   is_subscription: boolean | null;
   next_billing_date: string | null;
   custom_field_data: Json | null;
+  is_test: boolean;
 };
 
 export const useOrders = () => {
@@ -40,7 +41,8 @@ export const useOrders = () => {
           attended,
           is_subscription,
           next_billing_date,
-          custom_field_data
+          custom_field_data,
+          is_test
         `)
         .order('created_at', { ascending: false });
 

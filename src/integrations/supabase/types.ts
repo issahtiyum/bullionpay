@@ -140,6 +140,7 @@ export type Database = {
           delivery_info: string | null
           id: string
           is_subscription: boolean | null
+          is_test: boolean | null
           next_billing_date: string | null
           product_category: string
           product_id: string
@@ -158,6 +159,7 @@ export type Database = {
           delivery_info?: string | null
           id?: string
           is_subscription?: boolean | null
+          is_test?: boolean | null
           next_billing_date?: string | null
           product_category: string
           product_id: string
@@ -176,6 +178,7 @@ export type Database = {
           delivery_info?: string | null
           id?: string
           is_subscription?: boolean | null
+          is_test?: boolean | null
           next_billing_date?: string | null
           product_category?: string
           product_id?: string
