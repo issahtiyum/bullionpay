@@ -57,8 +57,6 @@ const OrdersTable = ({ orders, isLoading, error }: OrdersTableProps) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Order ID</TableHead>
-              <TableHead>Customer</TableHead>
               <TableHead>Product</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Environment</TableHead>
@@ -73,12 +71,8 @@ const OrdersTable = ({ orders, isLoading, error }: OrdersTableProps) => {
                 key={order.id}
                 className={order.is_test ? "bg-yellow-50" : ""}
               >
-                <TableCell className="font-mono text-sm">
-                  {order.id.slice(0, 8)}...
-                </TableCell>
-                <TableCell>{order.user_id || 'N/A'}</TableCell>
                 <TableCell>{order.product_name || 'N/A'}</TableCell>
-                <TableCell>₦{order.amount.toLocaleString()}</TableCell>
+                <TableCell>₵{order.amount.toLocaleString()}</TableCell>
                 <TableCell>
                   <Badge 
                     variant={order.is_test ? "secondary" : "default"}
