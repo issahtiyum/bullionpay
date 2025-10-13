@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { type Product } from '@/components/ui/ProductCard';
 import { securityMonitor } from '@/utils/securityMonitor';
 import { auditLogger, AuditAction } from '@/utils/auditLogger';
+import { getPaystackConfig } from '@/services/paymentConfigService';
 
 export const useUpfrontPaymentProcessing = (product: Product, onSuccess: () => void) => {
   const [loading, setLoading] = useState(false);
@@ -94,8 +95,11 @@ export const useUpfrontPaymentProcessing = (product: Product, onSuccess: () => v
         return acc;
       }, {} as Record<string, string>);
 
-      // Generate reference upfront
-      const mode = 'live'; // Will be determined by the payment config
+      // Fetch current payment mode from config
+      const { mode } = await getPaystackConfig();
+      console.log('Current payment mode:', mode);
+      
+      // Generate reference upfront with correct mode
       const reference = `ps_${mode}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
 
       // Create transaction record BEFORE payment
@@ -113,6 +117,7 @@ export const useUpfrontPaymentProcessing = (product: Product, onSuccess: () => v
         amount: product.price,
         status: 'pending',
         is_subscription: product.category === 'Subscription',
+        is_test: mode === 'test', // Explicitly set based on current mode
         next_billing_date: product.category === 'Subscription' 
           ? new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString()
           : null,
