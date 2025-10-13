@@ -11,17 +11,19 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit } from "lucide-react";
+import { Eye, Edit, Check, Circle } from "lucide-react";
 import OrderEditModal from "./OrderEditModal";
+import CustomFieldDataDisplay from "./CustomFieldDataDisplay";
 import { Order } from "@/hooks/useOrders";
 
 interface OrdersTableProps {
   orders: Order[];
   isLoading: boolean;
   error: any;
+  toggleAttendedStatus: (order: Order) => Promise<boolean>;
 }
 
-const OrdersTable = ({ orders, isLoading, error }: OrdersTableProps) => {
+const OrdersTable = ({ orders, isLoading, error, toggleAttendedStatus }: OrdersTableProps) => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   if (isLoading) {
@@ -61,16 +63,15 @@ const OrdersTable = ({ orders, isLoading, error }: OrdersTableProps) => {
               <TableHead>Amount</TableHead>
               <TableHead>Environment</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Custom Fields</TableHead>
+              <TableHead>Attended</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {orders.map((order) => (
-              <TableRow 
-                key={order.id}
-                className={order.is_test ? "bg-yellow-50" : ""}
-              >
+              <TableRow key={order.id}>
                 <TableCell>{order.product_name || 'N/A'}</TableCell>
                 <TableCell>₵{order.amount.toLocaleString()}</TableCell>
                 <TableCell>
@@ -87,7 +88,32 @@ const OrdersTable = ({ orders, isLoading, error }: OrdersTableProps) => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {format(new Date(order.created_at), 'MMM dd, yyyy')}
+                  {order.custom_field_data ? (
+                    <CustomFieldDataDisplay customFieldData={order.custom_field_data} />
+                  ) : (
+                    <span className="text-muted-foreground">No custom data</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <button
+                    onClick={() => toggleAttendedStatus(order)}
+                    className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+                  >
+                    {order.attended ? (
+                      <>
+                        <Check className="h-4 w-4 text-green-600" />
+                        <span className="text-green-600">Attended</span>
+                      </>
+                    ) : (
+                      <>
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span className="text-gray-500">Pending</span>
+                      </>
+                    )}
+                  </button>
+                </TableCell>
+                <TableCell>
+                  {format(new Date(order.created_at), 'dd/MM/yyyy')}
                 </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">

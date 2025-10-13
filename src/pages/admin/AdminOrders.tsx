@@ -9,7 +9,7 @@ import { useOrders } from "@/hooks/useOrders";
 const AdminOrders = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [environmentFilter, setEnvironmentFilter] = useState<'all' | 'test' | 'live'>('all');
-  const { orders, loading, fetchOrders, updateOrder } = useOrders();
+  const { orders, loading, fetchOrders, updateOrder, toggleAttendedStatus } = useOrders();
 
   const filteredOrders = orders?.filter(order => {
     const matchesSearch = !searchQuery || 
@@ -48,7 +48,8 @@ const AdminOrders = () => {
         <OrdersTable 
           orders={filteredOrders} 
           isLoading={loading} 
-          error={null} 
+          error={null}
+          toggleAttendedStatus={toggleAttendedStatus}
         />
       </div>
     </AdminLayout>
