@@ -63,6 +63,18 @@ serve(async (req) => {
     const serviceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const supabase = createClient(supabaseUrl, serviceRole);
 
+    // Get the requesting user's ID from the JWT
+    const authHeader = req.headers.get('authorization');
+    let userId: string | null = null;
+    if (authHeader) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+        userId = user?.id ?? null;
+      } catch (error) {
+        console.log('Failed to get user from token:', error);
+      }
+    }
+
     // Read current active mode from config (default to 'live' if missing)
     let activeMode: 'live' | 'test' = 'live';
     const { data: configRow } = await supabase
@@ -72,6 +84,21 @@ serve(async (req) => {
       .single();
 
     if (configRow?.active_mode === 'test') activeMode = 'test';
+
+    // Check if the user is an admin with test_mode_override enabled
+    if (userId) {
+      const { data: adminUser } = await supabase
+        .from('admin_users')
+        .select('test_mode_override')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .single();
+      
+      if (adminUser?.test_mode_override) {
+        activeMode = 'test';
+        console.log(`Admin ${userId} using test mode override`);
+      }
+    }
 
     // Pick the correct public key by mode, with sensible fallbacks
     const livePub = Deno.env.get('PAYSTACK_PUBLIC_KEY_LIVE') || Deno.env.get('PAYSTACK_PUBLIC_KEY') || '';

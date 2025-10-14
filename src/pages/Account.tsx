@@ -10,6 +10,7 @@ import { LogOut } from 'lucide-react';
 import ProfileForm from '@/components/account/ProfileForm';
 import PasswordForm from '@/components/account/PasswordForm';
 import AccountSettings from '@/components/account/AccountSettings';
+import AdminTestModeToggle from '@/components/account/AdminTestModeToggle';
 
 const Account = () => {
   const { isAuthenticated, user, profile, logout, isPasswordRecovery } = useAuth();
@@ -80,17 +81,31 @@ const Account = () => {
           </TabsContent>
 
           <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Settings</CardTitle>
-                <CardDescription>
-                  Manage your password and security preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <PasswordForm />
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Security Settings</CardTitle>
+                  <CardDescription>
+                    Manage your password and security preferences
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PasswordForm />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Admin Payment Testing</CardTitle>
+                  <CardDescription>
+                    Configure test mode for your payments without affecting other users
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AdminTestModeToggle />
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="settings">
