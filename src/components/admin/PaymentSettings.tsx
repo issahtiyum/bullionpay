@@ -19,7 +19,7 @@ const PaymentSettings = () => {
   const webhookUrl = 'https://jxiiletuljcxulpltdss.supabase.co/functions/v1/paystack-webhook';
   useEffect(() => {
     fetchCurrentMode();
-  }, []);
+  }, [adminUser]);
   const fetchCurrentMode = async () => {
     try {
       const config = await getPaystackConfig();
@@ -161,82 +161,6 @@ const PaymentSettings = () => {
         </CardContent>
       </Card>
 
-      {/* System-Wide Payment Mode */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            System-Wide Payment Mode
-          </CardTitle>
-          <CardDescription>
-            Controls the payment mode for all customers and admins (unless overridden)
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="paystack-mode" className="text-base font-medium">
-                  Global Payment Mode
-                </Label>
-                <Badge variant={currentMode === 'live' ? 'default' : 'secondary'} className={currentMode === 'live' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                  {currentMode.toUpperCase()}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {currentMode === 'live' 
-                  ? 'Real transactions will be processed for all users' 
-                  : 'Test transactions only - no real money involved for anyone'}
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="paystack-mode" className="text-sm text-muted-foreground">Test</Label>
-              <Switch 
-                id="paystack-mode" 
-                checked={currentMode === 'live'} 
-                onCheckedChange={handleModeSwitch} 
-                disabled={isSwitching} 
-              />
-              <Label htmlFor="paystack-mode" className="text-sm text-muted-foreground">Live</Label>
-            </div>
-          </div>
-
-          {isSwitching && <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-              Switching modes...
-            </div>}
-            
-          <div className="pt-4 border-t">
-            {currentMode === 'live' ? (
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-red-600">
-                    LIVE MODE ACTIVE
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    All customer transactions will process real money. Use test mode for development.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-start gap-2">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-green-600">
-                    TEST MODE ACTIVE
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    All transactions are simulated. No real money will be charged. Perfect for testing.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Admin Testing Tools */}
       {currentMode === 'live' && (
         <Card>
@@ -312,6 +236,82 @@ const PaymentSettings = () => {
             <p className="text-xs text-muted-foreground">
               Add this URL to both test and live webhook settings in your Paystack dashboard
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* System-Wide Payment Mode */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            System-Wide Payment Mode
+          </CardTitle>
+          <CardDescription>
+            Controls the payment mode for all customers and admins (unless overridden)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="paystack-mode" className="text-base font-medium">
+                  Global Payment Mode
+                </Label>
+                <Badge variant={currentMode === 'live' ? 'default' : 'secondary'} className={currentMode === 'live' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                  {currentMode.toUpperCase()}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {currentMode === 'live' 
+                  ? 'Real transactions will be processed for all users' 
+                  : 'Test transactions only - no real money involved for anyone'}
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="paystack-mode" className="text-sm text-muted-foreground">Test</Label>
+              <Switch 
+                id="paystack-mode" 
+                checked={currentMode === 'live'} 
+                onCheckedChange={handleModeSwitch} 
+                disabled={isSwitching} 
+              />
+              <Label htmlFor="paystack-mode" className="text-sm text-muted-foreground">Live</Label>
+            </div>
+          </div>
+
+          {isSwitching && <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              Switching modes...
+            </div>}
+            
+          <div className="pt-4 border-t">
+            {currentMode === 'live' ? (
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-red-600">
+                    LIVE MODE ACTIVE
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    All customer transactions will process real money. Use test mode for development.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-green-600">
+                    TEST MODE ACTIVE
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    All transactions are simulated. No real money will be charged. Perfect for testing.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
