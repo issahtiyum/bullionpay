@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
+  // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -22,7 +22,6 @@ export type Database = {
           id: string
           is_active: boolean | null
           role: Database["public"]["Enums"]["admin_role"]
-          test_mode_override: boolean
           updated_at: string | null
           user_id: string
         }
@@ -33,7 +32,6 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           role?: Database["public"]["Enums"]["admin_role"]
-          test_mode_override?: boolean
           updated_at?: string | null
           user_id: string
         }
@@ -44,7 +42,6 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           role?: Database["public"]["Enums"]["admin_role"]
-          test_mode_override?: boolean
           updated_at?: string | null
           user_id?: string
         }
@@ -396,9 +393,9 @@ export type Database = {
       log_audit_event: {
         Args: {
           p_action: string
-          p_details?: Json
-          p_resource_id?: string
           p_resource_type: string
+          p_resource_id?: string
+          p_details?: Json
         }
         Returns: undefined
       }
@@ -408,8 +405,8 @@ export type Database = {
       }
       update_admin_role: {
         Args: {
-          new_role: Database["public"]["Enums"]["admin_role"]
           target_admin_id: string
+          new_role: Database["public"]["Enums"]["admin_role"]
         }
         Returns: boolean
       }
