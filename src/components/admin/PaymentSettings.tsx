@@ -22,10 +22,17 @@ const PaymentSettings = () => {
   }, [adminUser]);
   const fetchCurrentMode = async () => {
     try {
-      const config = await getPaystackConfig();
-      setCurrentMode(config.mode);
-      
-      // Fetch personal test mode override
+      // Fetch global mode directly from payment_config table
+      const { data: configData, error: configError } = await supabase
+        .from('payment_config')
+        .select('active_mode')
+        .eq('id', 'paystack')
+        .single();
+
+      if (configError) throw configError;
+      setCurrentMode((configData?.active_mode as PaystackMode) || 'live');
+
+      // Fetch personal test mode override separately
       if (adminUser) {
         const { data, error } = await supabase
           .from('admin_users')
