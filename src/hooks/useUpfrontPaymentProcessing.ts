@@ -108,6 +108,8 @@ export const useUpfrontPaymentProcessing = (product: Product, onSuccess: () => v
       console.log('Transaction created upfront:', transaction);
 
       // Create order record BEFORE payment
+      // NOTE: Custom field data is NOT stored until payment is confirmed (to save database space)
+      // It will be added by the webhook handler after successful payment
       const orderData = {
         user_id: user.id,
         transaction_id: transaction.id,
@@ -121,7 +123,7 @@ export const useUpfrontPaymentProcessing = (product: Product, onSuccess: () => v
         next_billing_date: product.category === 'Subscription' 
           ? new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString()
           : null,
-        custom_field_data: sanitizedCustomFields,
+        custom_field_data: {}, // Empty until payment confirmed - saves database space for abandoned carts
       };
 
       const { data: order, error: orderError } = await supabase

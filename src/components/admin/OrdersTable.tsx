@@ -88,7 +88,9 @@ const OrdersTable = ({ orders, isLoading, error, toggleAttendedStatus }: OrdersT
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {order.custom_field_data ? (
+                  {order.status === 'pending' ? (
+                    <span className="text-muted-foreground italic">Not available - Unpaid</span>
+                  ) : order.custom_field_data ? (
                     <CustomFieldDataDisplay customFieldData={order.custom_field_data} />
                   ) : (
                     <span className="text-muted-foreground">No custom data</span>
@@ -121,6 +123,8 @@ const OrdersTable = ({ orders, isLoading, error, toggleAttendedStatus }: OrdersT
                       variant="outline"
                       size="sm"
                       onClick={() => setSelectedOrder(order)}
+                      disabled={order.status === 'pending'}
+                      title={order.status === 'pending' ? 'Cannot view unpaid orders' : 'View order'}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -128,6 +132,8 @@ const OrdersTable = ({ orders, isLoading, error, toggleAttendedStatus }: OrdersT
                       variant="outline"
                       size="sm"
                       onClick={() => setSelectedOrder(order)}
+                      disabled={order.status === 'pending'}
+                      title={order.status === 'pending' ? 'Cannot edit unpaid orders' : 'Edit order'}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
